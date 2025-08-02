@@ -74,14 +74,6 @@ export function Header() {
         >
           <Moon size={18} />
         </Button>
-        {/* Connect Wallet */}
-        <Button
-          variant="secondary"
-          className="bg-green-100 text-green-900 hover:bg-green-200 flex items-center gap-2 font-medium px-4"
-        >
-          <Wallet2 size={18} className="mr-1" />
-          Connect Wallet
-        </Button>
 
         <WalletManagementPopover />
       </div>
