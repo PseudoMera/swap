@@ -1,13 +1,12 @@
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Search, Wallet2, Moon } from "lucide-react";
+import { Search, Moon } from "lucide-react";
 import { Input } from "../ui/input";
 import { WalletManagementPopover } from "../wallet-management/popover";
 
 const navLinks = [
   { name: "Swap", active: true },
-  { name: "Order Book", active: false },
   { name: "History", active: false },
   { name: "Stats", active: false },
 ];

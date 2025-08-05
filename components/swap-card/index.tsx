@@ -10,8 +10,38 @@ import {
 } from "@/components/ui/select";
 import Image from "next/image";
 import { ArrowDown, Settings } from "lucide-react";
+import { ProcessedOrder } from "@/components/order-book";
+import { useMemo } from "react";
 
-export function SwapCard() {
+interface SwapCardProps {
+  selectedOrders: ProcessedOrder[];
+  onClearOrders?: () => void;
+}
+
+export function SwapCard({ selectedOrders = [], onClearOrders }: SwapCardProps) {
+  // Calculate totals from selected orders
+  const orderTotals = useMemo(() => {
+    if (selectedOrders.length === 0) {
+      return {
+        totalUSDC: 0,
+        totalCNPY: 0,
+        averageRate: 0,
+        orderCount: 0,
+      };
+    }
+
+    const totalUSDC = selectedOrders.reduce((sum, order) => sum + order.total, 0);
+    const totalCNPY = selectedOrders.reduce((sum, order) => sum + order.amountForSale, 0);
+    const averageRate = totalCNPY > 0 ? totalUSDC / totalCNPY : 0;
+
+    return {
+      totalUSDC,
+      totalCNPY,
+      averageRate,
+      orderCount: selectedOrders.length,
+    };
+  }, [selectedOrders]);
+
   return (
     <Card className="max-w-md w-full mx-auto">
       <CardHeader className="pb-2 flex flex-row items-center justify-between">
@@ -67,7 +97,11 @@ export function SwapCard() {
                 <SelectItem value="usdt">USDT</SelectItem>
               </SelectContent>
             </Select>
-            <Input className="ml-auto w-20 text-right" placeholder="0" />
+            <Input 
+              className="ml-auto w-20 text-right" 
+              value={orderTotals.totalUSDC > 0 ? orderTotals.totalUSDC.toFixed(2) : "0"}
+              readOnly
+            />
           </div>
           <div className="text-xs text-muted-foreground text-right">
             Balance: 1,245.00
@@ -119,7 +153,7 @@ export function SwapCard() {
             </Select>
             <Input
               className="ml-auto w-20 text-right"
-              placeholder="0"
+              value={orderTotals.totalCNPY > 0 ? orderTotals.totalCNPY.toLocaleString() : "0"}
               disabled
             />
           </div>
@@ -128,15 +162,71 @@ export function SwapCard() {
           </div>
         </div>
         {/* Orders */}
-        <div className="rounded-xl bg-[#F8F9FA] p-4 flex items-center justify-between text-muted-foreground text-base">
-          <span>Orders</span>
-          <span className="text-black font-medium">None Selected</span>
+        <div className="rounded-xl bg-[#F8F9FA] p-4">
+          <div className="flex items-center justify-between text-muted-foreground text-base mb-2">
+            <span>Orders</span>
+            <div className="flex items-center gap-2">
+              <span className="text-black font-medium">
+                {orderTotals.orderCount === 0 ? "None Selected" : `${orderTotals.orderCount} Selected`}
+              </span>
+              {orderTotals.orderCount > 0 && onClearOrders && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={onClearOrders}
+                  className="text-xs h-6 px-2"
+                >
+                  Clear
+                </Button>
+              )}
+            </div>
+          </div>
+          
+          {orderTotals.orderCount > 0 && (
+            <div className="space-y-2 text-xs">
+              {/* Individual Order List */}
+              <div className="space-y-1 max-h-32 overflow-y-auto">
+                {selectedOrders.map((order) => (
+                  <div key={order.id} className="flex justify-between items-center py-1">
+                    <div className="flex items-center space-x-1 text-muted-foreground">
+                      <span className="font-mono">{order.amountForSale.toLocaleString()}</span>
+                      <span>CNPY</span>
+                      <span>@</span>
+                      <span className="font-mono">{order.price.toFixed(4)}</span>
+                    </div>
+                    <div className="font-mono text-muted-foreground">
+                      {order.total.toFixed(2)} USDC
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              {/* Totals Section */}
+              <div className="border-t pt-2 space-y-1">
+                <div className="flex justify-between text-muted-foreground font-medium">
+                  <span>Total:</span>
+                  <span className="font-mono">{orderTotals.totalCNPY.toLocaleString()} CNPY</span>
+                </div>
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Avg Price:</span>
+                  <span className="font-mono">{orderTotals.averageRate.toFixed(4)} USDC</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
         {/* Rate, Fee, Time */}
         <div className="rounded-xl bg-[#F8F9FA] p-4 flex flex-col gap-1 text-sm">
           <div className="flex justify-between">
-            <span className="text-muted-foreground">Last Rate</span>
-            <span className="text-black">1 USDC = 2.45 CNPY</span>
+            <span className="text-muted-foreground">
+              {orderTotals.orderCount > 0 ? "Average Rate" : "Last Rate"}
+            </span>
+            <span className="text-black">
+              {orderTotals.orderCount > 0 
+                ? `1 USDC = ${orderTotals.averageRate.toFixed(4)} CNPY`
+                : "1 USDC = 2.45 CNPY"
+              }
+            </span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Network Fee</span>

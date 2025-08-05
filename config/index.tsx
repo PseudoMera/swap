@@ -22,3 +22,15 @@ export const wagmiAdapter = new WagmiAdapter({
 });
 
 export const config = wagmiAdapter.wagmiConfig;
+
+// API Configuration
+const isDevelopment = process.env.NODE_ENV === "development";
+
+export const API_CONFIG = {
+  QUERY_URL: isDevelopment
+    ? `${process.env.NEXT_PUBLIC_RPC_URL || "http://localhost:50002"}/v1/query`
+    : "/api/v1/query",
+  ADMIN_URL: isDevelopment
+    ? `${process.env.NEXT_PUBLIC_ADMIN_RPC_URL || "http://localhost:50003"}/v1/admin`
+    : "/api/v1/admin",
+} as const;

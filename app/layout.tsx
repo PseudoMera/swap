@@ -7,6 +7,8 @@ import { Footer } from "@/components/footer";
 import { headers } from "next/headers"; // added
 import AppkitProvider from "@/context/appkit";
 import { WalletProvider } from "@/context/wallet";
+import { PollingProvider } from "@/context/polling-context";
+import { POLLING_INTERVALS } from "@/constants/api";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,11 +40,17 @@ export default async function RootLayout({
       >
         <AppkitProvider cookies={cookies}>
           <WalletProvider>
-            <Header />
-            <main className="w-full max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
-              {children}
-            </main>
-            <Footer />
+            <PollingProvider 
+              ordersInterval={POLLING_INTERVALS.ORDERS} 
+              balanceInterval={POLLING_INTERVALS.BALANCE} 
+              heightInterval={POLLING_INTERVALS.HEIGHT}
+            >
+              <Header />
+              <main className="w-full max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
+                {children}
+              </main>
+              <Footer />
+            </PollingProvider>
           </WalletProvider>
         </AppkitProvider>
       </body>
