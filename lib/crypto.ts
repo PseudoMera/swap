@@ -134,7 +134,7 @@ export class CryptoUtils {
   /**
    * Convert ArrayBuffer to base64 string
    */
-  private static arrayBufferToBase64(buffer: ArrayBuffer): string {
+  private static arrayBufferToBase64(buffer: ArrayBufferLike): string {
     const bytes = new Uint8Array(buffer);
     let binary = "";
     for (let i = 0; i < bytes.byteLength; i++) {
