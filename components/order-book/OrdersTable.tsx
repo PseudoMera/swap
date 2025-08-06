@@ -20,6 +20,7 @@ interface OrdersTableProps {
   onOrderSelect: (order: ProcessedOrder) => void;
   onOrderRemove: (order: ProcessedOrder) => void;
   selectedOrders: ProcessedOrder[];
+  isSwapped: boolean;
 }
 
 export function OrdersTable({
@@ -28,6 +29,7 @@ export function OrdersTable({
   onOrderSelect,
   onOrderRemove,
   selectedOrders,
+  isSwapped,
 }: OrdersTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
@@ -89,6 +91,7 @@ export function OrdersTable({
             size="sm"
             className="bg-order-remove hover:bg-order-remove/80 text-black px-4 py-1"
             onClick={handleClick}
+            disabled={isSwapped}
           >
             Remove
           </Button>
@@ -97,6 +100,7 @@ export function OrdersTable({
             size="sm"
             className="bg-green-500 hover:bg-green-600 text-white px-4 py-1"
             onClick={handleClick}
+            disabled={isSwapped}
           >
             Buy
           </Button>

@@ -4,7 +4,7 @@ import "./globals.css";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 
-import { headers } from "next/headers"; // added
+import { headers } from "next/headers";
 import AppkitProvider from "@/context/appkit";
 import { WalletProvider } from "@/context/wallet";
 import { PollingProvider } from "@/context/polling-context";
@@ -40,9 +40,9 @@ export default async function RootLayout({
       >
         <AppkitProvider cookies={cookies}>
           <WalletProvider>
-            <PollingProvider 
-              ordersInterval={POLLING_INTERVALS.ORDERS} 
-              balanceInterval={POLLING_INTERVALS.BALANCE} 
+            <PollingProvider
+              ordersInterval={POLLING_INTERVALS.ORDERS}
+              balanceInterval={POLLING_INTERVALS.BALANCE}
               heightInterval={POLLING_INTERVALS.HEIGHT}
             >
               <Header />

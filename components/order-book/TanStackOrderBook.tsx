@@ -9,28 +9,37 @@ import { blockchainUValueToNumber } from "@/utils/blockchain";
 import { ProcessedOrder, AggregatedOrder } from "./StableOrderBook";
 import { DepthTable } from "./DepthTable";
 import { OrdersTable } from "./OrdersTable";
+import { TradingPair } from "@/constants/trading-pairs";
+import { getAssetById } from "@/constants/assets";
 
 interface TanStackOrderBookProps {
   onOrderSelect: (order: ProcessedOrder) => void;
   onOrderRemove: (order: ProcessedOrder) => void;
   selectedOrders: ProcessedOrder[];
+  tradingPair?: TradingPair;
+  isSwapped: boolean;
 }
 
 export function TanStackOrderBook({
   onOrderSelect,
   onOrderRemove,
   selectedOrders,
+  tradingPair,
+  isSwapped,
 }: TanStackOrderBookProps) {
   const { orders, ordersLoading, ordersError, refetchOrders } =
     usePollingData();
 
-  // Process orders: filter CNPY orders and convert values
+  // Process orders: filter by trading pair and convert values
   const processedOrders = useMemo(() => {
     if (!orders || !Array.isArray(orders)) return [];
+    if (!tradingPair) return [];
 
     try {
+      const targetCommittee = tradingPair.baseAsset.committee;
+
       return orders
-        .filter((order) => order && order.committee === 1) // CNPY sell orders only
+        .filter((order) => order && order.committee === targetCommittee)
         .map((order) => {
           const amountForSale = blockchainUValueToNumber(
             order.amountForSale || 0,
@@ -54,7 +63,7 @@ export function TanStackOrderBook({
       console.error("Error processing orders:", error);
       return [];
     }
-  }, [orders]);
+  }, [orders, tradingPair]);
 
   // Aggregate orders by price for depth view (top 10 only)
   const aggregatedOrders = useMemo(() => {
@@ -116,7 +125,7 @@ export function TanStackOrderBook({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            Order Book (USDC/CNPY)
+            Order Book ({tradingPair?.displayName || "Loading..."})
             <Button variant="outline" size="sm" onClick={() => refetchOrders()}>
               <RefreshCw className="h-4 w-4" />
               Retry
@@ -136,7 +145,7 @@ export function TanStackOrderBook({
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          Order Book (USDC/CNPY)
+          Order Book ({tradingPair?.displayName || "Loading..."})
           <Button
             variant="outline"
             size="sm"
@@ -164,6 +173,7 @@ export function TanStackOrderBook({
             onOrderSelect={onOrderSelect}
             onOrderRemove={onOrderRemove}
             selectedOrders={selectedOrders}
+            isSwapped={isSwapped}
           />
         </div>
       </CardContent>

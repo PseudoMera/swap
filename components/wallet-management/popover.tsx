@@ -13,28 +13,24 @@ import { useWallets } from "@/context/wallet";
 import React from "react";
 import { useAppKitAccount } from "@reown/appkit/react";
 import { ellipsizeAddress } from "@/utils/address";
+import { Chain, WalletType } from "@/types/wallet";
+import CanopyWalletManagement from "./canopy-wallet-management";
 
 type SupportedWallet = "MetaMask" | "Canopy Wallet";
 
 type ConnectWallets = {
   name: SupportedWallet;
   icon: string;
-  connected: boolean;
-  address: string;
+  reownName: WalletType;
+  chain: Chain;
 };
 
-const supportedWallets: ConnectWallets[] = [
+const reownSupportedWallets: ConnectWallets[] = [
   {
     name: "MetaMask",
     icon: "/metamask.png",
-    connected: false,
-    address: "",
-  },
-  {
-    name: "Canopy Wallet",
-    icon: "/canopy-logo.svg",
-    connected: false,
-    address: "",
+    chain: "ethereum",
+    reownName: "metamask",
   },
 ];
 
@@ -63,8 +59,8 @@ export function WalletManagementPopover() {
         </div>
         <div className="p-6 pt-0 flex flex-col gap-0">
           {/* Wallet options */}
-          <div className="rounded-2xl  bg-[#F8F9FA]">
-            {supportedWallets.map((wallet, idx) => (
+          <div className="rounded-lg  bg-[#F8F9FA]">
+            {reownSupportedWallets.map((wallet, idx) => (
               <React.Fragment key={wallet.name}>
                 <Button
                   variant="ghost"
@@ -82,24 +78,26 @@ export function WalletManagementPopover() {
                     <span className="font-semibold text-sm">{wallet.name}</span>
                   </div>
 
-                  {wallet.name === "MetaMask" &&
-                    eip155Account.isConnected &&
-                    eip155Account.address && (
-                      <div className="max-w-32 flex items-center gap-2 bg-green-100 text-green-900 rounded-xl px-3 py-1 font-medium ml-auto">
-                        <span>{ellipsizeAddress(eip155Account.address)}</span>
-                        <span
-                          className="h-6 w-6 p-0 flex items-center"
-                          onClick={() => disconnect("metamask", "ethereum")}
-                        >
-                          <X size={16} />
-                        </span>
-                      </div>
-                    )}
+                  {eip155Account.isConnected && eip155Account.address && (
+                    <div className="max-w-32 flex items-center gap-2 bg-green-100 text-green-900 rounded-xl px-3 py-1 font-medium ml-auto">
+                      <span>{ellipsizeAddress(eip155Account.address)}</span>
+                      <span
+                        className="h-6 w-6 p-0 flex items-center"
+                        onClick={() =>
+                          disconnect(wallet.reownName, wallet.chain)
+                        }
+                      >
+                        <X size={16} />
+                      </span>
+                    </div>
+                  )}
                 </Button>
-                {idx < supportedWallets.length - 1 && <Separator />}
+                {idx < reownSupportedWallets.length - 1 && <Separator />}
               </React.Fragment>
             ))}
           </div>
+          <Separator />
+          <CanopyWalletManagement />
         </div>
       </PopoverContent>
     </Popover>
