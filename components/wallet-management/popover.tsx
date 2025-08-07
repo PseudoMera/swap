@@ -28,7 +28,7 @@ type ConnectWallets = {
 const reownSupportedWallets: ConnectWallets[] = [
   {
     name: "MetaMask",
-    icon: "/metamask.png",
+    icon: "/chains-icons/metamask.png",
     chain: "ethereum",
     reownName: "metamask",
   },

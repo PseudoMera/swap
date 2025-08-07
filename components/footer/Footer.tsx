@@ -34,7 +34,7 @@ export function Footer() {
         {/* Left: Logo and Brand */}
         <div className="flex items-center gap-2 min-w-[180px]">
           <Image
-            src="/canopy-logo.svg"
+            src="/chains-icons/canopy-logo.svg"
             alt="Canopy Swap Logo"
             width={28}
             height={28}

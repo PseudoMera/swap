@@ -20,7 +20,7 @@ import type { CanopyKeyfile } from "@/types/wallet";
 
 const canopyWallet = {
   name: "Canopy Wallet",
-  icon: "/canopy-logo.svg",
+  icon: "/chains-icons/canopy-logo.svg",
 };
 
 function CanopyWalletManagement() {

@@ -2,11 +2,11 @@
 
 import { createContext, useContext, ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchOrders } from "@/services/orders";
+import { fetchOrdersFromCommittee } from "@/services/orders";
 import { Order } from "@/types/order";
-// import { fetchUserBalance } from "@/services/balance";
 import { fetchHeight } from "@/services/height";
 import { QUERY_KEYS, POLLING_INTERVALS } from "@/constants/api";
+import { fetchUserBalance } from "@/services/balance";
 
 interface PollingContextValue {
   orders: Order[] | undefined;
@@ -14,10 +14,10 @@ interface PollingContextValue {
   ordersError: Error | null;
   refetchOrders: () => void;
 
-  // userBalance: any | undefined;
-  // balanceLoading: boolean;
-  // balanceError: Error | null;
-  // refetchBalance: () => void;
+  userBalance: number | undefined;
+  balanceLoading: boolean;
+  balanceError: Error | null;
+  refetchBalance: () => void;
 
   height: number | undefined;
   heightLoading: boolean;
@@ -63,8 +63,8 @@ export function PollingProvider({
     error: ordersError,
     refetch: refetchOrders,
   } = useQuery({
-    queryKey: ['orders', height],
-    queryFn: () => fetchOrders(height || 0),
+    queryKey: ["orders", height],
+    queryFn: () => fetchOrdersFromCommittee(height || 0, 0),
     refetchInterval: height ? ordersInterval : false, // Only poll if we have height
     enabled: Boolean(height && height > 0),
     staleTime: ordersInterval, // Cache for the polling interval
@@ -75,17 +75,17 @@ export function PollingProvider({
     retry: 1,
   });
 
-  // const {
-  //   data: userBalance,
-  //   isLoading: balanceLoading,
-  //   error: balanceError,
-  //   refetch: refetchBalance,
-  // } = useQuery({
-  //   queryKey: QUERY_KEYS.USER_BALANCE,
-  //   queryFn: fetchUserBalance,
-  //   refetchInterval: balanceInterval,
-  //   staleTime: 0,
-  // });
+  const {
+    data: userBalance,
+    isLoading: balanceLoading,
+    error: balanceError,
+    refetch: refetchBalance,
+  } = useQuery({
+    queryKey: QUERY_KEYS.USER_BALANCE,
+    queryFn: () => fetchUserBalance(height || 0, ""),
+    refetchInterval: balanceInterval,
+    staleTime: 0,
+  });
 
   return (
     <PollingContext.Provider
@@ -94,10 +94,10 @@ export function PollingProvider({
         ordersLoading,
         ordersError: ordersError as Error | null,
         refetchOrders,
-        // userBalance: undefined,
-        // balanceLoading: false,
-        // balanceError: null,
-        // refetchBalance: () => {},
+        userBalance,
+        balanceLoading,
+        balanceError,
+        refetchBalance,
         height,
         heightLoading,
         heightError: heightError as Error | null,

@@ -15,6 +15,7 @@ import { useMemo, useState } from "react";
 import { TradingPair } from "@/constants/trading-pairs";
 import { getAllChains } from "@/constants/chains";
 import { getBuyableAssets, getSellableAssets } from "@/constants/assets";
+import { usePollingData } from "@/context/polling-context";
 
 // Get available chains and assets outside component
 const chains = getAllChains();
@@ -38,6 +39,7 @@ export function SwapCard({
   handleSwapDirection,
   isSwapped,
 }: SwapCardProps) {
+  const { userBalance: canopyBalance } = usePollingData();
   const [baseAmount, setBaseAmount] = useState(0);
   const [quoteAmount, setQuoteAmount] = useState(0);
 
@@ -131,11 +133,7 @@ export function SwapCard({
             <Select value={payAsset.chainId || ""}>
               <SelectTrigger className="w-24">
                 <Image
-                  src={
-                    payAsset.chainId === "ethereum"
-                      ? "/globe.svg"
-                      : "/canopy-logo.svg"
-                  }
+                  src={payAsset.chainIcon}
                   alt={payAsset.chainId || "Chain"}
                   width={20}
                   height={20}
@@ -159,11 +157,7 @@ export function SwapCard({
             <Select value={payAsset.id || ""}>
               <SelectTrigger className="w-28">
                 <Image
-                  src={
-                    payAsset.symbol === "USDC"
-                      ? "/file.svg"
-                      : "/canopy-logo.svg"
-                  }
+                  src={payAsset.assetIcon}
                   alt={payAsset.symbol || "Asset"}
                   width={20}
                   height={20}
@@ -220,11 +214,7 @@ export function SwapCard({
             <Select value={receiveAsset.chainId || ""}>
               <SelectTrigger className="w-24">
                 <Image
-                  src={
-                    receiveAsset.chainId === "ethereum"
-                      ? "/globe.svg"
-                      : "/canopy-logo.svg"
-                  }
+                  src={receiveAsset.chainIcon}
                   alt={receiveAsset.chainId || "Chain"}
                   width={20}
                   height={20}
@@ -248,11 +238,7 @@ export function SwapCard({
             <Select value={receiveAsset.id || ""}>
               <SelectTrigger className="w-28">
                 <Image
-                  src={
-                    receiveAsset.symbol === "CNPY"
-                      ? "/canopy-logo.svg"
-                      : "/file.svg"
-                  }
+                  src={receiveAsset.assetIcon}
                   alt={receiveAsset.symbol || "Asset"}
                   width={20}
                   height={20}
