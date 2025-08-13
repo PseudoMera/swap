@@ -3,9 +3,11 @@
 import { useState, useCallback } from "react";
 import RecentTransactionsCard from "@/components/recent-transactions/RecentTransactionsCard";
 import SwapCard from "@/components/swap-card";
-import { ProcessedOrder } from "@/components/order-book/StableOrderBook";
-import { TanStackOrderBook } from "@/components/order-book/TanStackOrderBook";
-import { getDefaultTradingPair } from "@/constants/trading-pairs";
+import {
+  ProcessedOrder,
+  TanStackOrderBook,
+} from "@/components/order-book/TanStackOrderBook";
+import { getDefaultTradingPair } from "@/utils/trading-pairs";
 
 const defaultTradingPair = getDefaultTradingPair();
 

@@ -1,6 +1,5 @@
-import { Chain } from "@/constants/chains";
-import { Asset } from "@/constants/assets";
-import { TradingPair } from "@/constants/trading-pairs";
+import { Asset } from "./assets";
+import { TradingPair } from "./trading-pair";
 
 export interface ChainConfig {
   chain: Chain;
@@ -13,4 +12,11 @@ export interface SwapContext {
   availableTradingPairs: TradingPair[];
 }
 
-export type { Chain, Asset, TradingPair };
+export interface Chain {
+  id: string;
+  name: string;
+  rpcUrl: {
+    query: string;
+    admin: string;
+  };
+}

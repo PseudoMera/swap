@@ -1,6 +1,7 @@
 import { cookieStorage, createStorage } from "@wagmi/core";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
 import { mainnet } from "@reown/appkit/networks";
+import { getChainByCommittee, getChainById } from "@/utils/chains";
 
 // Environment configuration
 export const ENV_CONFIG = {
@@ -34,10 +35,7 @@ export const wagmiAdapter = new WagmiAdapter({
   networks,
 });
 
-export const config = wagmiAdapter.wagmiConfig;
-
-// API Configuration - Now supports multiple chains
-import { getChainById, getChainByCommittee } from "@/constants/chains";
+export const wagmiConfig = wagmiAdapter.wagmiConfig;
 
 const isDevelopment = process.env.NODE_ENV === "development";
 

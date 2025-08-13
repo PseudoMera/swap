@@ -1,18 +1,23 @@
-export interface Chain {
-  id: string;
-  name: string;
-  rpcUrl: {
-    query: string;
-    admin: string;
-  };
-}
+import { Chain } from "@/types/chain";
 
-// Both chains use same local ports in development
-// In production, they'll point to different remote endpoints but same paths
-const createRpcUrls = (baseUrl: string) => ({
-  query: `${baseUrl}/v1/query`,
-  admin: `${baseUrl}/v1/admin`,
-});
+// In production: same URL with different paths
+const createRpcUrls = (queryUrl: string, adminUrl?: string) => {
+  const isDevelopment = process.env.NODE_ENV === "development";
+
+  if (isDevelopment && adminUrl) {
+    // Development: use separate ports/URLs
+    return {
+      query: `${queryUrl}/v1/query`,
+      admin: `${adminUrl}/v1/admin`,
+    };
+  } else {
+    // Production: same base URL with different paths
+    return {
+      query: `${queryUrl}/v1/query`,
+      admin: `${queryUrl}/v1/admin`,
+    };
+  }
+};
 
 export const CHAINS: Record<string, Chain> = {
   canopy: {
@@ -20,6 +25,7 @@ export const CHAINS: Record<string, Chain> = {
     name: "Canopy",
     rpcUrl: createRpcUrls(
       process.env.NEXT_PUBLIC_RPC_URL || "http://localhost:50002",
+      process.env.NEXT_PUBLIC_ADMIN_RPC_URL || "http://localhost:50003",
     ),
   },
   ethereum: {
@@ -27,31 +33,8 @@ export const CHAINS: Record<string, Chain> = {
     name: "Ethereum",
     rpcUrl: createRpcUrls(
       process.env.NEXT_PUBLIC_ETHEREUM_RPC_URL || "http://localhost:50004",
+      process.env.NEXT_PUBLIC_ETHEREUM_ADMIN_RPC_URL ||
+        "http://localhost:50005",
     ),
   },
-};
-
-export const getChainById = (chainId: string): Chain => {
-  const chain = CHAINS[chainId];
-  if (!chain) {
-    throw new Error(`Chain not found: ${chainId}`);
-  }
-  return chain;
-};
-
-export const getAllChains = (): Chain[] => {
-  return Object.values(CHAINS);
-};
-
-export const getChainByCommittee = (committee: number): Chain => {
-  // Map committee IDs to chain IDs
-  switch (committee) {
-    case 0: // CNPY
-    case 1:
-      return getChainById("canopy");
-    case 2: // USDC
-      return getChainById("ethereum");
-    default:
-      throw new Error(`No chain mapping found for committee: ${committee}`);
-  }
 };

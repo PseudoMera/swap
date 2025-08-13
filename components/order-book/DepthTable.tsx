@@ -6,7 +6,7 @@ import {
   flexRender,
   ColumnDef,
 } from "@tanstack/react-table";
-import { AggregatedOrder } from "./StableOrderBook";
+import { AggregatedOrder } from "./TanStackOrderBook";
 
 interface DepthTableProps {
   data: AggregatedOrder[];
@@ -54,10 +54,12 @@ export function DepthTable({ data, loading }: DepthTableProps) {
   const table = useReactTable({
     data,
     columns,
+    getRowId: (row) => row.price.toString(), // Use stable ID based on price
     getCoreRowModel: getCoreRowModel(),
+    autoResetPageIndex: false,
   });
 
-  if (loading) {
+  if (loading && data.length === 0) {
     return (
       <div className="space-y-2">
         {Array.from({ length: 10 }).map((_, i) => (
@@ -101,7 +103,7 @@ export function DepthTable({ data, loading }: DepthTableProps) {
           {table.getRowModel().rows.map((row) => (
             <tr
               key={row.id}
-              className="border-b last:border-b-0 hover:opacity-80 transition-opacity relative "
+              className="border-b last:border-b-0 hover:opacity-80 transition-opacity relative"
               style={{
                 background: `linear-gradient(to right, #76e698 0%, #76e698 ${row.original.volumePercentage}%, #F0FDF4 ${row.original.volumePercentage}%, #F0FDF4 100%)`,
               }}

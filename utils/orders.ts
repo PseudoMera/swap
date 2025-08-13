@@ -1,15 +1,6 @@
 import { FlattenOrder, Orders } from "@/types/order";
 import { blockchainUValueToNumber } from "./blockchain";
-
-export const COMMITTEES_ID_NAME_MAP: Record<number, string> = {
-  1: "CNPY",
-  2: "USDC",
-};
-
-export const COMMITTEES_NAME_TO_ID_MAP: Record<string, number> = {
-  CNPY: 1,
-  USDC: 2,
-};
+import { COMMITTEES_ID_NAME_MAP } from "@/constants/orders";
 
 export const flattenOrder = (orders: Orders[]): FlattenOrder[] => {
   return orders.flatMap((chain) =>

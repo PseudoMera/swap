@@ -9,6 +9,7 @@ import AppkitProvider from "@/context/appkit";
 import { WalletProvider } from "@/context/wallet";
 import { PollingProvider } from "@/context/polling-context";
 import { POLLING_INTERVALS } from "@/constants/api";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -46,10 +47,11 @@ export default async function RootLayout({
               heightInterval={POLLING_INTERVALS.HEIGHT}
             >
               <Header />
-              <main className="w-full max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
+              <main className="w-full max-w-screen-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
                 {children}
               </main>
               <Footer />
+              <Toaster />
             </PollingProvider>
           </WalletProvider>
         </AppkitProvider>

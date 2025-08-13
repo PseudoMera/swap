@@ -13,7 +13,7 @@ import { useWallets } from "@/context/wallet";
 import React from "react";
 import { useAppKitAccount } from "@reown/appkit/react";
 import { ellipsizeAddress } from "@/utils/address";
-import { Chain, WalletType } from "@/types/wallet";
+import { ChainType, WalletType } from "@/types/wallet";
 import CanopyWalletManagement from "./canopy-wallet-management";
 
 type SupportedWallet = "MetaMask" | "Canopy Wallet";
@@ -22,7 +22,7 @@ type ConnectWallets = {
   name: SupportedWallet;
   icon: string;
   reownName: WalletType;
-  chain: Chain;
+  chain: ChainType;
 };
 
 const reownSupportedWallets: ConnectWallets[] = [

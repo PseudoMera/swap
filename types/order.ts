@@ -89,3 +89,18 @@ export type FlattenOrder = {
   buyerChainDeadline?: number;
   buyerReceiveAddress?: Address;
 };
+
+// Transaction History Types
+export interface TransactionHistoryFilters {
+  pair: string;
+  status: string;
+  timeRange: string;
+  search: string;
+}
+
+export interface TransactionHistoryStats {
+  totalTransactions: number;
+  totalVolume: number;
+  successRate: number;
+  avgFee: number;
+}

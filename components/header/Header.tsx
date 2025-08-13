@@ -1,4 +1,8 @@
+"use client";
+
 import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Search, Moon } from "lucide-react";
@@ -6,21 +10,22 @@ import { Input } from "../ui/input";
 import { WalletManagementPopover } from "../wallet-management/popover";
 
 const navLinks = [
-  { name: "Swap", active: true },
-  { name: "History", active: false },
-  { name: "Stats", active: false },
+  { name: "Swap", href: "/" },
+  { name: "History", href: "/transaction-history" },
 ];
 
 export function Header() {
+  const pathname = usePathname();
+
   return (
     <header className="w-full border-b bg-white flex items-center h-16 px-4 md:px-8">
       {/* Logo and Brand */}
       <div className="flex items-center gap-2 min-w-[180px]">
         <Image
-          src="/canopy-logo.svg"
+          src="/chains-icons/canopy-logo.svg"
           alt="Canopy Swap Logo"
-          width={32}
-          height={32}
+          width={28}
+          height={28}
           className="rounded-full"
           priority
         />
@@ -29,23 +34,26 @@ export function Header() {
 
       {/* Navigation */}
       <nav className="ml-8 flex gap-6">
-        {navLinks.map((link) => (
-          <a
-            key={link.name}
-            href="#"
-            className={cn(
-              "relative text-base font-medium transition-colors",
-              link.active
-                ? "text-black"
-                : "text-muted-foreground hover:text-black",
-            )}
-          >
-            {link.name}
-            {link.active && (
-              <span className="absolute left-0 -bottom-1 w-full h-[2px] bg-green-800 rounded" />
-            )}
-          </a>
-        ))}
+        {navLinks.map((link) => {
+          const isActive = pathname === link.href;
+          return (
+            <Link
+              key={link.name}
+              href={link.href}
+              className={cn(
+                "relative text-base font-medium transition-colors",
+                isActive
+                  ? "text-black"
+                  : "text-muted-foreground hover:text-black",
+              )}
+            >
+              {link.name}
+              {isActive && (
+                <span className="absolute left-0 -bottom-1 w-full h-[2px] bg-green-800 rounded" />
+              )}
+            </Link>
+          );
+        })}
       </nav>
 
       {/* Spacer */}

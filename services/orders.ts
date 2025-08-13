@@ -1,22 +1,5 @@
-import { Order, Orders } from "@/types/order";
-import { API_CONFIG, getApiConfigByCommittee } from "@/config";
-
-// Legacy function for backward compatibility
-export async function fetchOrders(height: number): Promise<Order[]> {
-  const response = await fetch(`${API_CONFIG.QUERY_URL}/orders`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ height, id: 2 }),
-  });
-  if (!response.ok) throw new Error("Failed to fetch orders");
-
-  const data: Orders[] = await response.json();
-
-  // Flatten the orders from all chains into a single array
-  return data.flatMap((chainData) => chainData.orders);
-}
+import { CreateOrder, Order, Orders } from "@/types/order";
+import { getApiConfigByCommittee } from "@/config";
 
 // Chain-aware order fetching
 export async function fetchOrdersFromCommittee(
@@ -39,3 +22,18 @@ export async function fetchOrdersFromCommittee(
   // Flatten the orders from all chains into a single array
   return data.flatMap((chainData) => chainData.orders);
 }
+
+export const createOrder = async (payload: CreateOrder): Promise<string> => {
+  const apiConfig = getApiConfigByCommittee(Number(payload.committees));
+  console.log(apiConfig);
+  const response = await fetch(`${apiConfig.ADMIN_URL}/tx-create-order`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) throw new Error("Failed to create order");
+
+  return await response.json();
+};

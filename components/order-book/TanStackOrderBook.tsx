@@ -6,11 +6,26 @@ import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { usePollingData } from "@/context/polling-context";
 import { blockchainUValueToNumber } from "@/utils/blockchain";
-import { ProcessedOrder, AggregatedOrder } from "./StableOrderBook";
 import { DepthTable } from "./DepthTable";
 import { OrdersTable } from "./OrdersTable";
-import { TradingPair } from "@/constants/trading-pairs";
-import { getAssetById } from "@/constants/assets";
+import { Order } from "@/types/order";
+import { TradingPair } from "@/types/trading-pair";
+
+export interface ProcessedOrder
+  extends Omit<Order, "amountForSale" | "requestedAmount"> {
+  price: number;
+  amountForSale: number;
+  requestedAmount: number;
+  total: number;
+}
+
+export interface AggregatedOrder {
+  price: number;
+  totalAmount: number;
+  totalValue: number;
+  orderCount: number;
+  volumePercentage: number;
+}
 
 interface TanStackOrderBookProps {
   onOrderSelect: (order: ProcessedOrder) => void;

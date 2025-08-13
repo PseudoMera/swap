@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -12,7 +12,7 @@ import {
 } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { ProcessedOrder } from "./StableOrderBook";
+import { ProcessedOrder } from "./TanStackOrderBook";
 
 interface OrdersTableProps {
   data: ProcessedOrder[];
@@ -33,89 +33,94 @@ export function OrdersTable({
 }: OrdersTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
-  const columns: ColumnDef<ProcessedOrder>[] = [
-    {
-      accessorKey: "price",
-      header: "Price (USDC)",
-      cell: ({ getValue }) => {
-        const price = getValue() as number;
-        return (
-          <span className="font-mono text-green-600 font-medium">
-            {price.toFixed(4)}
-          </span>
-        );
+  const columns: ColumnDef<ProcessedOrder>[] = useMemo(
+    () => [
+      {
+        accessorKey: "price",
+        header: "Price (USDC)",
+        cell: ({ getValue }) => {
+          const price = getValue() as number;
+          return (
+            <span className="font-mono text-green-600 font-medium">
+              {price.toFixed(4)}
+            </span>
+          );
+        },
+        sortingFn: "basic",
       },
-      sortingFn: "basic",
-    },
-    {
-      accessorKey: "amountForSale",
-      header: "Amount (CNPY)",
-      cell: ({ getValue }) => {
-        const amount = getValue() as number;
-        return <span className="font-mono">{amount.toLocaleString()}</span>;
+      {
+        accessorKey: "amountForSale",
+        header: "Amount (CNPY)",
+        cell: ({ getValue }) => {
+          const amount = getValue() as number;
+          return <span className="font-mono">{amount.toLocaleString()}</span>;
+        },
       },
-    },
-    {
-      accessorKey: "total",
-      header: "Total (USDC)",
-      cell: ({ getValue }) => {
-        const total = getValue() as number;
-        return <span className="font-mono">{total.toFixed(2)}</span>;
+      {
+        accessorKey: "total",
+        header: "Total (USDC)",
+        cell: ({ getValue }) => {
+          const total = getValue() as number;
+          return <span className="font-mono">{total.toFixed(2)}</span>;
+        },
       },
-    },
-    {
-      id: "actions",
-      header: "Action",
-      cell: ({ row }) => {
-        const order = row.original;
-        const isSelected = selectedOrders.some(
-          (selectedOrder) => selectedOrder.id === order.id,
-        );
+      {
+        id: "actions",
+        header: "Action",
+        cell: ({ row }) => {
+          const order = row.original;
+          const isSelected = selectedOrders.some(
+            (selectedOrder) => selectedOrder.id === order.id,
+          );
 
-        const handleClick = (e: React.MouseEvent) => {
-          e.preventDefault();
-          e.stopPropagation();
-          try {
-            if (isSelected) {
-              onOrderRemove(order);
-            } else {
-              onOrderSelect(order);
+          const handleClick = (e: React.MouseEvent) => {
+            e.preventDefault();
+            e.stopPropagation();
+            try {
+              if (isSelected) {
+                onOrderRemove(order);
+              } else {
+                onOrderSelect(order);
+              }
+            } catch (error) {
+              console.error("Error handling order action:", error);
             }
-          } catch (error) {
-            console.error("Error handling order action:", error);
-          }
-        };
+          };
 
-        return isSelected ? (
-          <Button
-            size="sm"
-            className="bg-order-remove hover:bg-order-remove/80 text-black px-4 py-1"
-            onClick={handleClick}
-            disabled={isSwapped}
-          >
-            Remove
-          </Button>
-        ) : (
-          <Button
-            size="sm"
-            className="bg-green-500 hover:bg-green-600 text-white px-4 py-1"
-            onClick={handleClick}
-            disabled={isSwapped}
-          >
-            Buy
-          </Button>
-        );
+          return isSelected ? (
+            <Button
+              size="sm"
+              className="bg-order-remove hover:bg-order-remove/80 text-black px-4 py-1"
+              onClick={handleClick}
+              disabled={isSwapped}
+            >
+              Remove
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              className="bg-green-400 hover:bg-green-600 text-white px-4 py-1"
+              onClick={handleClick}
+              disabled={isSwapped}
+            >
+              Buy
+            </Button>
+          );
+        },
       },
-    },
-  ];
+    ],
+    [isSwapped, onOrderRemove, onOrderSelect, selectedOrders],
+  );
 
   const table = useReactTable({
     data,
     columns,
+    getRowId: (row) => row.id, // Use stable ID instead of array index
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     onSortingChange: setSorting,
+    autoResetPageIndex: false,
     state: {
       sorting,
     },
@@ -126,7 +131,7 @@ export function OrdersTable({
     },
   });
 
-  if (loading) {
+  if (loading && data.length === 0) {
     return (
       <div className="space-y-2">
         {Array.from({ length: 15 }).map((_, i) => (

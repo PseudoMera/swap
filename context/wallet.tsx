@@ -9,20 +9,24 @@ import React, {
 } from "react";
 import { useAppKitWallet } from "@reown/appkit-wallet-button/react";
 import { useDisconnect } from "@reown/appkit/react";
-import { Chain, WalletType, type CanopyWalletAccount } from "@/types/wallet";
+import {
+  ChainType,
+  WalletType,
+  type CanopyWalletAccount,
+} from "@/types/wallet";
 import { secureStorage, type KeyfileMetadata } from "@/lib/secure-storage";
 
 export interface WalletInfo {
   type: WalletType;
-  chain: Chain;
+  chain: ChainType;
   address: string;
   connected: boolean;
 }
 
 interface WalletContextType {
   wallets: WalletInfo[];
-  connect: (type: WalletType, chain: Chain) => void;
-  disconnect: (type: WalletType, chain: Chain) => Promise<void>;
+  connect: (type: WalletType, chain: ChainType) => void;
+  disconnect: (type: WalletType, chain: ChainType) => Promise<void>;
   // Canopy wallet state
   storedKeyfiles: KeyfileMetadata[];
   selectedCanopyWallet: CanopyWalletAccount | null;
@@ -82,7 +86,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         ),
         {
           type: "metamask",
-          chain: parsedCaipAddress.chainNamespace.toString() as Chain,
+          chain: parsedCaipAddress.chainNamespace.toString() as ChainType,
           address: parsedCaipAddress.address,
           connected: true,
         },
@@ -93,7 +97,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     },
   });
 
-  const connectWallet = (type: WalletType, chain: Chain) => {
+  const connectWallet = (type: WalletType, chain: ChainType) => {
     console.log(`Connecting ${type} on ${chain}`);
     if (type === "metamask" && chain === "ethereum") {
       connectEVM("metamask");
@@ -102,7 +106,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   };
 
   // Disconnect wallet by type/chain
-  const disconnectWallet = async (type: WalletType, chain: Chain) => {
+  const disconnectWallet = async (type: WalletType, chain: ChainType) => {
     if (type === "metamask" && chain === "ethereum") {
       await disconnect({
         namespace: "eip155",

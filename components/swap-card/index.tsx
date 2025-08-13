@@ -10,12 +10,13 @@ import {
 } from "@/components/ui/select";
 import Image from "next/image";
 import { ArrowDown, Settings } from "lucide-react";
-import { ProcessedOrder } from "@/components/order-book/StableOrderBook";
 import { useMemo, useState } from "react";
-import { TradingPair } from "@/constants/trading-pairs";
-import { getAllChains } from "@/constants/chains";
-import { getBuyableAssets, getSellableAssets } from "@/constants/assets";
 import { usePollingData } from "@/context/polling-context";
+import { TransactionSummaryModal } from "@/components/transaction-summary/modal";
+import { getAllChains } from "@/utils/chains";
+import { getBuyableAssets, getSellableAssets } from "@/utils/assets";
+import { ProcessedOrder } from "../order-book/TanStackOrderBook";
+import { TradingPair } from "@/types/trading-pair";
 
 // Get available chains and assets outside component
 const chains = getAllChains();
@@ -42,6 +43,8 @@ export function SwapCard({
   const { userBalance: canopyBalance } = usePollingData();
   const [baseAmount, setBaseAmount] = useState(0);
   const [quoteAmount, setQuoteAmount] = useState(0);
+  const [isTransactionSummaryModalOpen, setIsTransactionSummaryModalOpen] =
+    useState(false);
 
   // Get current pay and receive assets based on swap direction
   const payAsset = isSwapped ? tradingPair.baseAsset : tradingPair.quoteAsset;
@@ -124,69 +127,68 @@ export function SwapCard({
       <CardContent className="flex flex-col gap-4">
         {/* Pay Section */}
         <div className="rounded-xl bg-background p-4 flex flex-col gap-2">
-          <div className="flex items-center justify-between text-muted-foreground text-sm mb-2">
-            <span>Chain</span>
-            <span>Asset</span>
-            <span>You pay</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Select value={payAsset.chainId || ""}>
-              <SelectTrigger className="w-24">
-                <Image
-                  src={payAsset.chainIcon}
-                  alt={payAsset.chainId || "Chain"}
-                  width={20}
-                  height={20}
-                  className="mr-2"
-                />
-                <SelectValue
-                  placeholder={
-                    chains.find((c) => c.id === payAsset.chainId)?.name ||
-                    "Chain"
-                  }
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {payChains.map((chain) => (
-                  <SelectItem key={chain.id} value={chain.id}>
-                    {chain.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={payAsset.id || ""}>
-              <SelectTrigger className="w-28">
-                <Image
-                  src={payAsset.assetIcon}
-                  alt={payAsset.symbol || "Asset"}
-                  width={20}
-                  height={20}
-                  className="mr-2"
-                />
-                <SelectValue placeholder={payAsset.symbol || "Asset"} />
-              </SelectTrigger>
-              <SelectContent>
-                {payAssets.map((asset) => (
-                  <SelectItem key={asset.id} value={asset.id}>
-                    {asset.symbol}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Input
-              className="ml-auto w-20 text-right"
-              value={
-                isSwapped
-                  ? baseAmount
-                  : orderTotals.totalQuote > 0
-                    ? orderTotals.totalQuote.toFixed(2)
-                    : "0"
-              }
-              disabled={!isSwapped}
-              onChange={
-                isSwapped ? (e) => handleBaseAmountChange(e) : undefined
-              }
-            />
+          <div className="grid grid-cols-[60px_1fr_120px] gap-2">
+            <div className="flex flex-col gap-2">
+              <span className="text-muted-foreground text-sm">Chain</span>
+              <Select value={payAsset.chainId || ""}>
+                <SelectTrigger className="w-full">
+                  <Image
+                    src={payAsset.chainIcon}
+                    alt={payAsset.chainId || "Chain"}
+                    width={20}
+                    height={20}
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {payChains.map((chain) => (
+                    <SelectItem key={chain.id} value={chain.id}>
+                      {chain.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-2">
+              <span className="text-muted-foreground text-sm">Asset</span>
+              <Select value={payAsset.id || ""}>
+                <SelectTrigger className="w-full">
+                  <Image
+                    src={payAsset.assetIcon}
+                    alt={payAsset.symbol || "Asset"}
+                    width={20}
+                    height={20}
+                    className="mr-2"
+                  />
+                  <SelectValue placeholder={payAsset.symbol || "Asset"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {payAssets.map((asset) => (
+                    <SelectItem key={asset.id} value={asset.id}>
+                      {asset.symbol}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-2">
+              <span className="text-muted-foreground text-sm text-right">
+                You pay
+              </span>
+              <Input
+                className="text-right"
+                value={
+                  isSwapped
+                    ? baseAmount
+                    : orderTotals.totalQuote > 0
+                      ? orderTotals.totalQuote.toFixed(2)
+                      : "0"
+                }
+                disabled={!isSwapped}
+                onChange={
+                  isSwapped ? (e) => handleBaseAmountChange(e) : undefined
+                }
+              />
+            </div>
           </div>
           <div className="text-xs text-muted-foreground text-right">
             Balance: 1,245.00
@@ -205,67 +207,66 @@ export function SwapCard({
         </div>
         {/* Receive Section */}
         <div className="rounded-xl bg-[#F8F9FA] p-4 flex flex-col gap-2">
-          <div className="flex items-center justify-between text-muted-foreground text-sm mb-2">
-            <span>Chain</span>
-            <span>Asset</span>
-            <span>You receive</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Select value={receiveAsset.chainId || ""}>
-              <SelectTrigger className="w-24">
-                <Image
-                  src={receiveAsset.chainIcon}
-                  alt={receiveAsset.chainId || "Chain"}
-                  width={20}
-                  height={20}
-                  className="mr-2"
-                />
-                <SelectValue
-                  placeholder={
-                    chains.find((c) => c.id === receiveAsset.chainId)?.name ||
-                    "Chain"
-                  }
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {receiveChains.map((chain) => (
-                  <SelectItem key={chain.id} value={chain.id}>
-                    {chain.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={receiveAsset.id || ""}>
-              <SelectTrigger className="w-28">
-                <Image
-                  src={receiveAsset.assetIcon}
-                  alt={receiveAsset.symbol || "Asset"}
-                  width={20}
-                  height={20}
-                  className="mr-2"
-                />
-                <SelectValue placeholder={receiveAsset.symbol || "Asset"} />
-              </SelectTrigger>
-              <SelectContent>
-                {receiveAssets.map((asset) => (
-                  <SelectItem key={asset.id} value={asset.id}>
-                    {asset.symbol}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Input
-              className="ml-auto w-20 text-right"
-              value={
-                isSwapped
-                  ? quoteAmount
-                  : orderTotals.totalBase > 0
-                    ? orderTotals.totalBase.toLocaleString()
-                    : "0"
-              }
-              disabled={!isSwapped}
-              onChange={isSwapped ? handleQuoteAmountChange : undefined}
-            />
+          <div className="grid grid-cols-[60px_1fr_120px] gap-2">
+            <div className="flex flex-col gap-2">
+              <span className="text-muted-foreground text-sm">Chain</span>
+              <Select value={receiveAsset.chainId || ""}>
+                <SelectTrigger className="w-full">
+                  <Image
+                    src={receiveAsset.chainIcon}
+                    alt={receiveAsset.chainId || "Chain"}
+                    width={20}
+                    height={20}
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {receiveChains.map((chain) => (
+                    <SelectItem key={chain.id} value={chain.id}>
+                      {chain.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-2">
+              <span className="text-muted-foreground text-sm">Asset</span>
+              <Select value={receiveAsset.id || ""}>
+                <SelectTrigger className="w-full">
+                  <Image
+                    src={receiveAsset.assetIcon}
+                    alt={receiveAsset.symbol || "Asset"}
+                    width={20}
+                    height={20}
+                    className="mr-2"
+                  />
+                  <SelectValue placeholder={receiveAsset.symbol || "Asset"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {receiveAssets.map((asset) => (
+                    <SelectItem key={asset.id} value={asset.id}>
+                      {asset.symbol}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-2">
+              <span className="text-muted-foreground text-sm text-right">
+                You receive
+              </span>
+              <Input
+                className="text-right"
+                value={
+                  isSwapped
+                    ? quoteAmount
+                    : orderTotals.totalBase > 0
+                      ? orderTotals.totalBase.toLocaleString()
+                      : "0"
+                }
+                disabled={!isSwapped}
+                onChange={isSwapped ? handleQuoteAmountChange : undefined}
+              />
+            </div>
           </div>
           <div className="text-xs text-muted-foreground text-right">
             Balance: 1,245.00
@@ -364,10 +365,30 @@ export function SwapCard({
             <span className="text-black">~120 seconds</span>
           </div>
         </div>
-        {/* Connect Wallet Button */}
-        <Button className="w-full bg-green-100 text-green-900 hover:bg-green-200 mt-2 h-12 text-lg font-medium rounded-xl">
-          Connect Wallet
-        </Button>
+        {/* Transaction Summary Modal */}
+        <TransactionSummaryModal
+          open={isTransactionSummaryModalOpen}
+          onOpenChange={setIsTransactionSummaryModalOpen}
+          selectedOrders={selectedOrders}
+          tradingPair={tradingPair}
+          isSwapped={isSwapped}
+          payAmount={
+            isSwapped
+              ? baseAmount.toString()
+              : orderTotals.totalQuote > 0
+                ? orderTotals.totalQuote.toFixed(2)
+                : "0"
+          }
+          receiveAmount={
+            isSwapped
+              ? quoteAmount.toString()
+              : orderTotals.totalBase > 0
+                ? orderTotals.totalBase.toLocaleString()
+                : "0"
+          }
+          payBalance="1,245.00"
+          receiveBalance="1,245.00"
+        />
       </CardContent>
     </Card>
   );
