@@ -12,7 +12,7 @@ import { OrdersTable } from "./OrdersTable";
 import { Order } from "@/types/order";
 import { TradingPair } from "@/types/trading-pair";
 import OrderFilters from "./OrderFilters";
-import { SizeCategory, RangeType, OrderStatus } from "@/types/order-book-filters";
+import { SizeCategory, RangeType, OrderStatus, SpreadFilter } from "@/types/order-book-filters";
 
 export interface ProcessedOrder
   extends Omit<Order, "amountForSale" | "requestedAmount"> {
@@ -51,6 +51,7 @@ export function TanStackOrderBook({
   const [totalRange, setTotalRange] = useState<[number, number] | null>(null);
   const [sizeCategory, setSizeCategory] = useState<SizeCategory>("all");
   const [orderStatus, setOrderStatus] = useState<OrderStatus>("all");
+  const [spreadFilter, setSpreadFilter] = useState<SpreadFilter>("all");
 
   const {
     orders,
@@ -218,6 +219,24 @@ export function TanStackOrderBook({
         });
       }
 
+      // Apply spread filter
+      if (spreadFilter !== "all") {
+        const bestPrice = Math.min(...allOrders.map(o => o.price));
+        const spreadMultiplier = {
+          "1%": 1.01,
+          "2%": 1.02,
+          "5%": 1.05,
+          "10%": 1.10,
+        }[spreadFilter];
+        
+        if (spreadMultiplier) {
+          const maxAllowedPrice = bestPrice * spreadMultiplier;
+          filteredOrders = filteredOrders.filter((order) => {
+            return order.price <= maxAllowedPrice;
+          });
+        }
+      }
+
       return filteredOrders;
     } catch (error) {
       console.error("Error processing orders:", error);
@@ -232,6 +251,7 @@ export function TanStackOrderBook({
     totalRange,
     sizeCategory,
     orderStatus,
+    spreadFilter,
     sizeCategoryThresholds,
   ]);
 
@@ -309,6 +329,7 @@ export function TanStackOrderBook({
     setTotalRange(null);
     setSizeCategory("all");
     setOrderStatus("all");
+    setSpreadFilter("all");
   };
 
   const handleRangeChange = (type: RangeType, values: number[]) => {
@@ -356,6 +377,14 @@ export function TanStackOrderBook({
 
   const handleClearOrderStatus = () => {
     setOrderStatus("all");
+  };
+
+  const handleSpreadFilterChange = (filter: SpreadFilter) => {
+    setSpreadFilter(filter);
+  };
+
+  const handleClearSpreadFilter = () => {
+    setSpreadFilter("all");
   };
 
   if (ordersError) {
@@ -427,6 +456,7 @@ export function TanStackOrderBook({
             totalRange={totalRange}
             sizeCategory={sizeCategory}
             orderStatus={orderStatus}
+            spreadFilter={spreadFilter}
             selectedPrice={selectedPrice}
             onRangeChange={handleRangeChange}
             onClearRange={handleClearRange}
@@ -434,6 +464,8 @@ export function TanStackOrderBook({
             onClearSizeCategory={handleClearSizeCategory}
             onOrderStatusChange={handleOrderStatusChange}
             onClearOrderStatus={handleClearOrderStatus}
+            onSpreadFilterChange={handleSpreadFilterChange}
+            onClearSpreadFilter={handleClearSpreadFilter}
             onClearAllFilters={handleClearFilter}
           />
 

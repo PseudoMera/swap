@@ -7,7 +7,8 @@ import { X } from "lucide-react";
 import RangeFilter from "./RangeFilter";
 import SizeCategoryFilter from "./SizeCategoryFilter";
 import OrderStatusFilter from "./OrderStatusFilter";
-import { SizeCategory, RangeType, OrderStatus } from "@/types/order-book-filters";
+import SpreadFilter from "./SpreadFilter";
+import { SizeCategory, RangeType, OrderStatus, SpreadFilter as SpreadFilterType } from "@/types/order-book-filters";
 import { ProcessedOrder } from "./TanStackOrderBook";
 import { TradingPair } from "@/types/trading-pair";
 
@@ -21,6 +22,7 @@ interface OrderFiltersProps {
   totalRange: [number, number] | null;
   sizeCategory: SizeCategory;
   orderStatus: OrderStatus;
+  spreadFilter: SpreadFilterType;
   selectedPrice: number | null;
 
   // Filter handlers
@@ -30,6 +32,8 @@ interface OrderFiltersProps {
   onClearSizeCategory: () => void;
   onOrderStatusChange: (status: OrderStatus) => void;
   onClearOrderStatus: () => void;
+  onSpreadFilterChange: (filter: SpreadFilterType) => void;
+  onClearSpreadFilter: () => void;
   onClearAllFilters: () => void;
 }
 
@@ -41,6 +45,7 @@ function OrderFilters({
   totalRange,
   sizeCategory,
   orderStatus,
+  spreadFilter,
   selectedPrice,
   onRangeChange,
   onClearRange,
@@ -48,6 +53,8 @@ function OrderFilters({
   onClearSizeCategory,
   onOrderStatusChange,
   onClearOrderStatus,
+  onSpreadFilterChange,
+  onClearSpreadFilter,
   onClearAllFilters,
 }: OrderFiltersProps) {
   const rangeMinMax = useMemo(() => {
@@ -123,6 +130,16 @@ function OrderFilters({
     return { available, locked };
   }, [allProcessedOrders]);
 
+  // Calculate best price (lowest price) for spread filter
+  const bestPrice = useMemo(() => {
+    if (!allProcessedOrders || allProcessedOrders.length === 0) {
+      return null;
+    }
+
+    const prices = allProcessedOrders.map(order => order.price);
+    return Math.min(...prices);
+  }, [allProcessedOrders]);
+
   if (!allProcessedOrders || allProcessedOrders.length === 0) {
     return null;
   }
@@ -144,7 +161,7 @@ function OrderFilters({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <RangeFilter
             title="Price Range"
             min={rangeMinMax.price.min}
@@ -197,6 +214,15 @@ function OrderFilters({
             onClear={onClearOrderStatus}
             availableCount={orderStatusCounts.available}
             lockedCount={orderStatusCounts.locked}
+          />
+
+          <SpreadFilter
+            title="Price Spread"
+            value={spreadFilter}
+            onValueChange={onSpreadFilterChange}
+            onClear={onClearSpreadFilter}
+            bestPrice={bestPrice}
+            tradingPairSymbol={tradingPair?.quoteAsset.symbol || "USDC"}
           />
         </div>
       </CardContent>
