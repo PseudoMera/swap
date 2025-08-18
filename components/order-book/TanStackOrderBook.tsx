@@ -11,6 +11,8 @@ import { DepthTable } from "./DepthTable";
 import { OrdersTable } from "./OrdersTable";
 import { Order } from "@/types/order";
 import { TradingPair } from "@/types/trading-pair";
+import OrderFilters from "./OrderFilters";
+import { SizeCategory, RangeType } from "@/types/order-book-filters";
 
 export interface ProcessedOrder
   extends Omit<Order, "amountForSale" | "requestedAmount"> {
@@ -44,7 +46,11 @@ export function TanStackOrderBook({
   isSwapped,
 }: TanStackOrderBookProps) {
   const [selectedPrice, setSelectedPrice] = useState<number | null>(null);
-  
+  const [priceRange, setPriceRange] = useState<[number, number] | null>(null);
+  const [amountRange, setAmountRange] = useState<[number, number] | null>(null);
+  const [totalRange, setTotalRange] = useState<[number, number] | null>(null);
+  const [sizeCategory, setSizeCategory] = useState<SizeCategory>("all");
+
   const {
     orders,
     ordersLoading,
@@ -53,53 +59,7 @@ export function TanStackOrderBook({
     ordersLastUpdated,
   } = usePollingData();
 
-  // Process orders: filter by trading pair and convert values
-  const processedOrders = useMemo(() => {
-    if (!orders || !Array.isArray(orders)) return [];
-    if (!tradingPair) return [];
-
-    try {
-      const targetCommittee = tradingPair.baseAsset.committee;
-
-      const allOrders = orders
-        .filter((order) => order && order.committee === targetCommittee)
-        .map((order) => {
-          const amountForSale = blockchainUValueToNumber(
-            order.amountForSale || 0,
-          );
-          const requestedAmount = blockchainUValueToNumber(
-            order.requestedAmount || 0,
-          );
-          const price = amountForSale > 0 ? requestedAmount / amountForSale : 0;
-
-          return {
-            ...order,
-            price,
-            amountForSale,
-            requestedAmount,
-            total: price * amountForSale,
-          } as ProcessedOrder;
-        })
-        .filter((order) => order.price > 0 && order.amountForSale > 0)
-        .sort((a, b) => a.price - b.price); // Best prices first
-
-      // Apply price filter if selected
-      if (selectedPrice !== null) {
-        return allOrders.filter((order) => {
-          const priceKey = order.price.toFixed(4);
-          const selectedPriceKey = selectedPrice.toFixed(4);
-          return priceKey === selectedPriceKey;
-        });
-      }
-
-      return allOrders;
-    } catch (error) {
-      console.error("Error processing orders:", error);
-      return [];
-    }
-  }, [orders, tradingPair, selectedPrice]);
-
-  // Get all orders without price filter for aggregation
+  // Get all orders without price filter for aggregation and threshold calculation
   const allProcessedOrders = useMemo(() => {
     if (!orders || !Array.isArray(orders)) return [];
     if (!tradingPair) return [];
@@ -133,6 +93,131 @@ export function TanStackOrderBook({
       return [];
     }
   }, [orders, tradingPair]);
+
+  // Calculate size category thresholds based on amount for sale - MOVED UP
+  const sizeCategoryThresholds = useMemo(() => {
+    if (!allProcessedOrders || allProcessedOrders.length === 0) {
+      return { small: 0, medium: 100, large: 1000 };
+    }
+
+    const amounts = allProcessedOrders
+      .map((order) => order.amountForSale)
+      .sort((a, b) => a - b);
+    const length = amounts.length;
+
+    // Use percentiles: small (0-33%), medium (33-66%), large (66-100%)
+    const smallThreshold = amounts[Math.floor(length * 0.33)];
+    const mediumThreshold = amounts[Math.floor(length * 0.66)];
+
+    return {
+      small: smallThreshold,
+      medium: mediumThreshold,
+      large: amounts[length - 1], // max value
+    };
+  }, [allProcessedOrders]);
+
+  // Process orders: filter by trading pair and convert values
+  const processedOrders = useMemo(() => {
+    if (!orders || !Array.isArray(orders)) return [];
+    if (!tradingPair) return [];
+
+    try {
+      const targetCommittee = tradingPair.baseAsset.committee;
+
+      const allOrders = orders
+        .filter((order) => order && order.committee === targetCommittee)
+        .map((order) => {
+          const amountForSale = blockchainUValueToNumber(
+            order.amountForSale || 0,
+          );
+          const requestedAmount = blockchainUValueToNumber(
+            order.requestedAmount || 0,
+          );
+          const price = amountForSale > 0 ? requestedAmount / amountForSale : 0;
+
+          return {
+            ...order,
+            price,
+            amountForSale,
+            requestedAmount,
+            total: price * amountForSale,
+          } as ProcessedOrder;
+        })
+        .filter((order) => order.price > 0 && order.amountForSale > 0)
+        .sort((a, b) => a.price - b.price); // Best prices first
+
+      // Apply filters
+      let filteredOrders = allOrders;
+
+      // Apply price selection filter (from depth table click)
+      if (selectedPrice !== null) {
+        filteredOrders = filteredOrders.filter((order) => {
+          const priceKey = order.price.toFixed(4);
+          const selectedPriceKey = selectedPrice.toFixed(4);
+          return priceKey === selectedPriceKey;
+        });
+      }
+
+      // Apply price range filter (from slider) - only if no specific price is selected
+      if (priceRange !== null && selectedPrice === null) {
+        const [minPrice, maxPrice] = priceRange;
+        filteredOrders = filteredOrders.filter((order) => {
+          return order.price >= minPrice && order.price <= maxPrice;
+        });
+      }
+
+      // Apply amount range filter
+      if (amountRange !== null) {
+        const [minAmount, maxAmount] = amountRange;
+        filteredOrders = filteredOrders.filter((order) => {
+          return (
+            order.amountForSale >= minAmount && order.amountForSale <= maxAmount
+          );
+        });
+      }
+
+      // Apply total range filter
+      if (totalRange !== null) {
+        const [minTotal, maxTotal] = totalRange;
+        filteredOrders = filteredOrders.filter((order) => {
+          return order.total >= minTotal && order.total <= maxTotal;
+        });
+      }
+
+      // Apply size category filter
+      if (sizeCategory !== "all") {
+        filteredOrders = filteredOrders.filter((order) => {
+          switch (sizeCategory) {
+            case "small":
+              return order.amountForSale < sizeCategoryThresholds.small;
+            case "medium":
+              return (
+                order.amountForSale >= sizeCategoryThresholds.small &&
+                order.amountForSale < sizeCategoryThresholds.medium
+              );
+            case "large":
+              return order.amountForSale >= sizeCategoryThresholds.medium;
+            default:
+              return true;
+          }
+        });
+      }
+
+      return filteredOrders;
+    } catch (error) {
+      console.error("Error processing orders:", error);
+      return [];
+    }
+  }, [
+    orders,
+    tradingPair,
+    selectedPrice,
+    priceRange,
+    amountRange,
+    totalRange,
+    sizeCategory,
+    sizeCategoryThresholds,
+  ]);
 
   // Aggregate orders by price for depth view (top 10 only)
   const aggregatedOrders = useMemo(() => {
@@ -191,7 +276,10 @@ export function TanStackOrderBook({
 
   const handlePriceSelect = (price: number) => {
     // Toggle filter: if same price is clicked, clear filter
-    if (selectedPrice !== null && selectedPrice.toFixed(4) === price.toFixed(4)) {
+    if (
+      selectedPrice !== null &&
+      selectedPrice.toFixed(4) === price.toFixed(4)
+    ) {
       setSelectedPrice(null);
     } else {
       setSelectedPrice(price);
@@ -200,6 +288,49 @@ export function TanStackOrderBook({
 
   const handleClearFilter = () => {
     setSelectedPrice(null);
+    setPriceRange(null);
+    setAmountRange(null);
+    setTotalRange(null);
+    setSizeCategory("all");
+  };
+
+  const handleRangeChange = (type: RangeType, values: number[]) => {
+    if (values.length === 2) {
+      switch (type) {
+        case "price":
+          setPriceRange([values[0], values[1]]);
+          setSelectedPrice(null); // Clear specific price selection when using range
+          break;
+        case "amount":
+          setAmountRange([values[0], values[1]]);
+          break;
+        case "total":
+          setTotalRange([values[0], values[1]]);
+          break;
+      }
+    }
+  };
+
+  const handleClearRange = (type: RangeType) => {
+    switch (type) {
+      case "price":
+        setPriceRange(null);
+        break;
+      case "amount":
+        setAmountRange(null);
+        break;
+      case "total":
+        setTotalRange(null);
+        break;
+    }
+  };
+
+  const handleSizeCategoryChange = (category: SizeCategory) => {
+    setSizeCategory(category);
+  };
+
+  const handleClearSizeCategory = () => {
+    setSizeCategory("all");
   };
 
   if (ordersError) {
@@ -252,9 +383,9 @@ export function TanStackOrderBook({
       <CardContent className="space-y-6">
         {/* Market Depth Table */}
         <div>
-          <DepthTable 
-            data={aggregatedOrders} 
-            loading={ordersLoading} 
+          <DepthTable
+            data={aggregatedOrders}
+            loading={ordersLoading}
             onPriceSelect={handlePriceSelect}
             selectedPrice={selectedPrice}
           />
@@ -262,12 +393,30 @@ export function TanStackOrderBook({
 
         {/* Individual Orders Table */}
         <div>
+          {/* Filter Controls */}
+          <OrderFilters
+            allProcessedOrders={allProcessedOrders}
+            tradingPair={tradingPair}
+            priceRange={priceRange}
+            amountRange={amountRange}
+            totalRange={totalRange}
+            sizeCategory={sizeCategory}
+            selectedPrice={selectedPrice}
+            onRangeChange={handleRangeChange}
+            onClearRange={handleClearRange}
+            onSizeCategoryChange={handleSizeCategoryChange}
+            onClearSizeCategory={handleClearSizeCategory}
+            onClearAllFilters={handleClearFilter}
+          />
+
+          {/* Price Selection Filter (from depth table) */}
           {selectedPrice !== null && (
             <div className="flex items-center justify-between mb-3 p-3 bg-muted/50 rounded-md">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium">Filtered by price:</span>
                 <span className="font-mono text-green-600 font-semibold">
-                  {selectedPrice.toFixed(4)} USDC
+                  {selectedPrice.toFixed(4)}{" "}
+                  {tradingPair?.quoteAsset.symbol || "USDC"}
                 </span>
                 <span className="text-sm text-muted-foreground">
                   ({processedOrders.length} orders)
