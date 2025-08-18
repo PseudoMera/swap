@@ -12,7 +12,7 @@ import { OrdersTable } from "./OrdersTable";
 import { Order } from "@/types/order";
 import { TradingPair } from "@/types/trading-pair";
 import OrderFilters from "./OrderFilters";
-import { SizeCategory, RangeType } from "@/types/order-book-filters";
+import { SizeCategory, RangeType, OrderStatus } from "@/types/order-book-filters";
 
 export interface ProcessedOrder
   extends Omit<Order, "amountForSale" | "requestedAmount"> {
@@ -50,6 +50,7 @@ export function TanStackOrderBook({
   const [amountRange, setAmountRange] = useState<[number, number] | null>(null);
   const [totalRange, setTotalRange] = useState<[number, number] | null>(null);
   const [sizeCategory, setSizeCategory] = useState<SizeCategory>("all");
+  const [orderStatus, setOrderStatus] = useState<OrderStatus>("all");
 
   const {
     orders,
@@ -203,6 +204,20 @@ export function TanStackOrderBook({
         });
       }
 
+      // Apply order status filter
+      if (orderStatus !== "all") {
+        filteredOrders = filteredOrders.filter((order) => {
+          switch (orderStatus) {
+            case "available":
+              return !order.buyerSendAddress; // Available orders have no buyer
+            case "locked":
+              return !!order.buyerSendAddress; // Locked orders have a buyer
+            default:
+              return true;
+          }
+        });
+      }
+
       return filteredOrders;
     } catch (error) {
       console.error("Error processing orders:", error);
@@ -216,6 +231,7 @@ export function TanStackOrderBook({
     amountRange,
     totalRange,
     sizeCategory,
+    orderStatus,
     sizeCategoryThresholds,
   ]);
 
@@ -292,6 +308,7 @@ export function TanStackOrderBook({
     setAmountRange(null);
     setTotalRange(null);
     setSizeCategory("all");
+    setOrderStatus("all");
   };
 
   const handleRangeChange = (type: RangeType, values: number[]) => {
@@ -331,6 +348,14 @@ export function TanStackOrderBook({
 
   const handleClearSizeCategory = () => {
     setSizeCategory("all");
+  };
+
+  const handleOrderStatusChange = (status: OrderStatus) => {
+    setOrderStatus(status);
+  };
+
+  const handleClearOrderStatus = () => {
+    setOrderStatus("all");
   };
 
   if (ordersError) {
@@ -401,11 +426,14 @@ export function TanStackOrderBook({
             amountRange={amountRange}
             totalRange={totalRange}
             sizeCategory={sizeCategory}
+            orderStatus={orderStatus}
             selectedPrice={selectedPrice}
             onRangeChange={handleRangeChange}
             onClearRange={handleClearRange}
             onSizeCategoryChange={handleSizeCategoryChange}
             onClearSizeCategory={handleClearSizeCategory}
+            onOrderStatusChange={handleOrderStatusChange}
+            onClearOrderStatus={handleClearOrderStatus}
             onClearAllFilters={handleClearFilter}
           />
 

@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import RangeFilter from "./RangeFilter";
 import SizeCategoryFilter from "./SizeCategoryFilter";
-import { SizeCategory, RangeType } from "@/types/order-book-filters";
+import OrderStatusFilter from "./OrderStatusFilter";
+import { SizeCategory, RangeType, OrderStatus } from "@/types/order-book-filters";
 import { ProcessedOrder } from "./TanStackOrderBook";
 import { TradingPair } from "@/types/trading-pair";
 
@@ -19,6 +20,7 @@ interface OrderFiltersProps {
   amountRange: [number, number] | null;
   totalRange: [number, number] | null;
   sizeCategory: SizeCategory;
+  orderStatus: OrderStatus;
   selectedPrice: number | null;
 
   // Filter handlers
@@ -26,6 +28,8 @@ interface OrderFiltersProps {
   onClearRange: (type: RangeType) => void;
   onSizeCategoryChange: (category: SizeCategory) => void;
   onClearSizeCategory: () => void;
+  onOrderStatusChange: (status: OrderStatus) => void;
+  onClearOrderStatus: () => void;
   onClearAllFilters: () => void;
 }
 
@@ -36,11 +40,14 @@ function OrderFilters({
   amountRange,
   totalRange,
   sizeCategory,
+  orderStatus,
   selectedPrice,
   onRangeChange,
   onClearRange,
   onSizeCategoryChange,
   onClearSizeCategory,
+  onOrderStatusChange,
+  onClearOrderStatus,
   onClearAllFilters,
 }: OrderFiltersProps) {
   const rangeMinMax = useMemo(() => {
@@ -104,6 +111,18 @@ function OrderFilters({
     };
   }, [sizeCategoryThresholds, tradingPair]);
 
+  // Calculate order status counts
+  const orderStatusCounts = useMemo(() => {
+    if (!allProcessedOrders || allProcessedOrders.length === 0) {
+      return { available: 0, locked: 0 };
+    }
+
+    const available = allProcessedOrders.filter(order => !order.buyerSendAddress).length;
+    const locked = allProcessedOrders.filter(order => !!order.buyerSendAddress).length;
+
+    return { available, locked };
+  }, [allProcessedOrders]);
+
   if (!allProcessedOrders || allProcessedOrders.length === 0) {
     return null;
   }
@@ -125,7 +144,7 @@ function OrderFilters({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-5 gap-4">
           <RangeFilter
             title="Price Range"
             min={rangeMinMax.price.min}
@@ -169,6 +188,15 @@ function OrderFilters({
             onValueChange={onSizeCategoryChange}
             onClear={onClearSizeCategory}
             categories={sizeCategoryDefinitions}
+          />
+
+          <OrderStatusFilter
+            title="Order Status"
+            value={orderStatus}
+            onValueChange={onOrderStatusChange}
+            onClear={onClearOrderStatus}
+            availableCount={orderStatusCounts.available}
+            lockedCount={orderStatusCounts.locked}
           />
         </div>
       </CardContent>
