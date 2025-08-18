@@ -8,6 +8,8 @@ import {
 import { TransactionSummary } from "./index";
 import { ProcessedOrder } from "../order-book/TanStackOrderBook";
 import { TradingPair } from "@/types/trading-pair";
+import { useWallets } from "@/context/wallet";
+import { useAccount } from "wagmi";
 
 interface TransactionSummaryModalProps {
   open: boolean;
@@ -38,8 +40,14 @@ export function TransactionSummaryModal({
   triggerClassName = "w-full bg-green-100 text-green-900 hover:bg-green-200 mt-2 h-12 text-lg font-medium rounded-xl",
   disabled = false,
 }: TransactionSummaryModalProps) {
-  // Only show modal if there are selected orders
-  const hasValidTransaction = !isSwapped ? selectedOrders.length > 0 : true;
+  const { wallets } = useWallets();
+  const { isConnected } = useAccount();
+  
+  // Check if any wallet is connected (either Ethereum/MetaMask or Canopy)
+  const hasWalletConnected = isConnected || wallets.some(wallet => wallet.connected);
+  
+  // Only show modal if there are selected orders AND wallet is connected
+  const hasValidTransaction = !isSwapped ? selectedOrders.length > 0 && hasWalletConnected : hasWalletConnected;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -48,7 +56,11 @@ export function TransactionSummaryModal({
           className={triggerClassName}
           disabled={disabled || !hasValidTransaction}
         >
-          {hasValidTransaction ? "Review Transaction" : triggerLabel}
+          {!hasWalletConnected 
+            ? "Connect Wallet" 
+            : selectedOrders.length === 0 && !isSwapped
+              ? "Select Orders"
+              : "Review Transaction"}
         </Button>
       </DialogTrigger>
       <DialogContent
