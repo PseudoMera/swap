@@ -1,4 +1,12 @@
-import { CreateOrder, Order, Orders } from "@/types/order";
+import {
+  CreateOrder,
+  DeleteOrder,
+  DeleteOrderResponse,
+  EditOrder,
+  EditOrderResponse,
+  Order,
+  Orders,
+} from "@/types/order";
 import { getApiConfigByCommittee } from "@/config";
 
 // Chain-aware order fetching
@@ -25,7 +33,6 @@ export async function fetchOrdersFromCommittee(
 
 export const createOrder = async (payload: CreateOrder): Promise<string> => {
   const apiConfig = getApiConfigByCommittee(Number(payload.committees));
-  console.log(apiConfig);
   const response = await fetch(`${apiConfig.ADMIN_URL}/tx-create-order`, {
     method: "POST",
     headers: {
@@ -35,5 +42,35 @@ export const createOrder = async (payload: CreateOrder): Promise<string> => {
   });
   if (!response.ok) throw new Error("Failed to create order");
 
+  return await response.json();
+};
+
+export const editOrder = async (
+  payload: EditOrder,
+): Promise<EditOrderResponse> => {
+  const apiConfig = getApiConfigByCommittee(Number(payload.committees));
+  const response = await fetch(`${apiConfig.ADMIN_URL}/tx-edit-order`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) throw new Error("Failed to create order");
+  return await response.json();
+};
+
+export const deleteOrder = async (
+  payload: DeleteOrder,
+): Promise<DeleteOrderResponse> => {
+  const apiConfig = getApiConfigByCommittee(Number(payload.committees));
+  const response = await fetch(`${apiConfig.ADMIN_URL}/tx-delete-order`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) throw new Error("Failed to create order");
   return await response.json();
 };

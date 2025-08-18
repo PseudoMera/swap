@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import { useAppKitWallet } from "@reown/appkit-wallet-button/react";
 import { useDisconnect } from "@reown/appkit/react";
+import { useAccount } from "wagmi";
 import {
   ChainType,
   WalletType,
@@ -21,6 +22,7 @@ export interface WalletInfo {
   chain: ChainType;
   address: string;
   connected: boolean;
+  connectorName?: string;
 }
 
 interface WalletContextType {
@@ -46,6 +48,9 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     useState<CanopyWalletAccount | null>(null);
 
   const { disconnect } = useDisconnect();
+  
+  // Standard Wagmi account info
+  const { address: wagmiAddress, isConnected: wagmiConnected, chain, connector } = useAccount();
 
   const refreshStoredKeyfiles = async () => {
     try {
@@ -118,8 +123,12 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     // Add more wallet types/chains here as needed
   };
 
+  // Sync with both useAppKitWallet and standard Wagmi connection
   useEffect(() => {
-    if (dataEVM?.address) {
+    const evmAddress = dataEVM?.address || wagmiAddress;
+    const evmConnected = dataEVM?.address ? true : wagmiConnected;
+    
+    if (evmAddress && evmConnected) {
       setWallets((prev) => [
         ...prev.filter(
           (w) => !(w.type === "metamask" && w.chain === "ethereum"),
@@ -127,8 +136,9 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         {
           type: "metamask",
           chain: "ethereum",
-          address: dataEVM.address,
+          address: evmAddress,
           connected: true,
+          connectorName: connector?.name || "MetaMask",
         },
       ]);
     } else {
@@ -136,7 +146,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         prev.filter((w) => !(w.type === "metamask" && w.chain === "ethereum")),
       );
     }
-  }, [dataEVM]);
+  }, [dataEVM, wagmiAddress, wagmiConnected, connector]);
 
   // Initialize secure storage and load keyfiles
   useEffect(() => {

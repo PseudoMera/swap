@@ -1,6 +1,6 @@
 import { cookieStorage, createStorage } from "@wagmi/core";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
-import { mainnet } from "@reown/appkit/networks";
+import { mainnet, sepolia } from "@reown/appkit/networks";
 import { getChainByCommittee, getChainById } from "@/utils/chains";
 
 // Environment configuration
@@ -23,7 +23,7 @@ if (!ENV_CONFIG.KEYFILE_SECRET) {
   throw new Error("NEXT_PUBLIC_KEYFILE_SECRET is not defined");
 }
 
-export const networks = [mainnet];
+export const networks = [mainnet, sepolia];
 
 //Set up the Wagmi Adapter (Config)
 export const wagmiAdapter = new WagmiAdapter({

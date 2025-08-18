@@ -12,6 +12,7 @@ import { WalletManagementPopover } from "../wallet-management/popover";
 const navLinks = [
   { name: "Swap", href: "/" },
   { name: "History", href: "/transaction-history" },
+  { name: "Testing", href: "/testing" },
 ];
 
 export function Header() {

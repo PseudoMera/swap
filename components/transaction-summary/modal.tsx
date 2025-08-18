@@ -6,7 +6,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { TransactionSummary } from "./index";
-import { useWallets } from "@/context/wallet";
 import { ProcessedOrder } from "../order-book/TanStackOrderBook";
 import { TradingPair } from "@/types/trading-pair";
 
@@ -39,8 +38,6 @@ export function TransactionSummaryModal({
   triggerClassName = "w-full bg-green-100 text-green-900 hover:bg-green-200 mt-2 h-12 text-lg font-medium rounded-xl",
   disabled = false,
 }: TransactionSummaryModalProps) {
-  const { selectedCanopyWallet } = useWallets();
-
   // Only show modal if there are selected orders
   const hasValidTransaction = !isSwapped ? selectedOrders.length > 0 : true;
 
@@ -55,7 +52,7 @@ export function TransactionSummaryModal({
         </Button>
       </DialogTrigger>
       <DialogContent
-        className="p-0 w-full h-full max-w-md max-h-[90vh] overflow-hidden"
+        className="p-0 w-full h-fit max-w-md overflow-hidden"
         showCloseButton={false}
       >
         <DialogTitle className="sr-only">Transaction Summary</DialogTitle>
@@ -67,7 +64,6 @@ export function TransactionSummaryModal({
           receiveAmount={receiveAmount}
           payBalance={payBalance}
           receiveBalance={receiveBalance}
-          destinationAddress={selectedCanopyWallet?.address}
           onClose={() => onOpenChange(false)}
           estimatedTime="~120 seconds"
         />

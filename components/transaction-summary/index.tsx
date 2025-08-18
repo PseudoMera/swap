@@ -1,16 +1,30 @@
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Select, SelectTrigger } from "@/components/ui/select";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
-import { ArrowDown, ArrowRight, RefreshCcw, X } from "lucide-react";
+import { ArrowDown, X } from "lucide-react";
 import { createOrder } from "@/services/orders";
 import { useWallets } from "@/context/wallet";
 import { numberToBlockchainUValue } from "@/utils/blockchain";
 import { toast } from "sonner";
-import { useEffect, useRef, useState } from "react";
-import { Progress } from "../ui/progress";
-import { ProcessedOrder } from "../order-book/TanStackOrderBook";
+import { useEffect, useState } from "react";
 import { TradingPair } from "@/types/trading-pair";
+import { LockOrder } from "@/types/order";
+import { usePollingData } from "@/context/polling-context";
+import {
+  USDC_CONTRACT_SEPOLIA,
+  usdcTransferMethodID,
+} from "@/constants/tokens";
+import { sendTransaction } from "wagmi/actions";
+import { wagmiConfig } from "@/config";
+import { useCapabilities, useSendCalls } from "wagmi";
+import ProgressToast from "../headless-toast/progress-toast";
+import { ProcessedOrder } from "../order-book/TanStackOrderBook";
 
 interface TransactionSummaryProps {
   selectedOrders: ProcessedOrder[];
@@ -20,7 +34,6 @@ interface TransactionSummaryProps {
   receiveAmount: string;
   payBalance: string;
   receiveBalance: string;
-  destinationAddress?: string;
   onClose: () => void;
   estimatedTime?: string;
 }
@@ -33,20 +46,47 @@ export function TransactionSummary({
   receiveAmount,
   payBalance,
   receiveBalance,
-  destinationAddress,
   onClose,
   estimatedTime = "~120 seconds",
 }: TransactionSummaryProps) {
-  const { selectedCanopyWallet } = useWallets();
+  const { selectedCanopyWallet, wallets } = useWallets();
+  const { height } = usePollingData();
 
-  const [progress, setProgress] = useState(100);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  // Wagmi hooks for batch transactions
+  const { data: capabilities } = useCapabilities();
+  const { sendCalls } = useSendCalls();
+
+  const [selectedDestination, setSelectedDestination] = useState<string>("");
 
   // Get current pay and receive assets based on swap direction
   const payAsset = isSwapped ? tradingPair.baseAsset : tradingPair.quoteAsset;
   const receiveAsset = isSwapped
     ? tradingPair.quoteAsset
     : tradingPair.baseAsset;
+
+  // Determine order type and destination logic
+  const isOrderLocked =
+    selectedOrders.length > 0 && selectedOrders[0].buyerReceiveAddress;
+  const isBuyOrder = !isSwapped;
+  const isSellOrder = isSwapped;
+
+  // Destination address logic
+  const getDestinationAddress = () => {
+    if (isBuyOrder) {
+      if (isOrderLocked) {
+        // Close order: use the buyer's receive address from the order
+        return selectedOrders[0].buyerReceiveAddress || "";
+      } else {
+        // Lock order: self-send to current wagmi wallet
+        return wallets[0]?.address || "";
+      }
+    } else {
+      // Sell order: use selected destination from dropdown
+      return selectedDestination || wallets[0]?.address || "";
+    }
+  };
+
+  const finalDestinationAddress = getDestinationAddress();
 
   // Calculate order totals and average price
   const orderSummary = selectedOrders.reduce(
@@ -71,51 +111,24 @@ export function TransactionSummary({
         data: "",
         amount: numberToBlockchainUValue(Number(receiveAmount)),
         receiveAmount: numberToBlockchainUValue(Number(payAmount)),
-        receiveAddress: selectedCanopyWallet?.address || "",
+        // Use the calculated destination address
+        receiveAddress: "b75e5da448b5848196e7589d6f4666c98564a635",
+        // || finalDestinationAddress,
         memo: "",
         fee: 0,
         submit: true,
         password: "test",
       });
 
-      // Start timer to decrease progress
-      const interval = 100; // ms between updates
-      const decrement = 100 / (20_000 / interval);
-
-      if (timerRef.current) clearInterval(timerRef.current); // Clear any previous timer
-
-      timerRef.current = setInterval(() => {
-        setProgress((prev) => {
-          const next = prev - decrement;
-          if (next <= 0) {
-            if (timerRef.current) clearInterval(timerRef.current);
-            return 0;
-          }
-          return next;
-        });
-      }, interval);
-
       toast("Transaction Status", {
         description: (
-          <div className="w-full min-w-[320px] text-black">
-            <div className="w-full flex justify-between flex-col gap-2">
-              <RefreshCcw />
-              <div className="text-muted">
-                <p className="text-black">Ask Creation in Progress</p>
-                <span className="flex gap-4">
-                  {payAsset.symbol} <ArrowRight /> {receiveAsset.symbol}
-                </span>
-              </div>
-              <div className="text-xs text-muted-foreground">
-                Estimated completion: {Math.ceil((progress / 100) * 20)} seconds
-              </div>
-            </div>
-            <Progress
-              value={progress}
-              className="w-full bg-[#76E698] fill-[#76E698]"
-            />
-          </div>
+          <ProgressToast
+            payAssetSymbol={payAsset.symbol}
+            receiveAssetSymbol={receiveAsset.symbol}
+            duration={20000}
+          />
         ),
+        duration: 20000, // Keep toast visible for 20 seconds
       });
 
       onClose();
@@ -125,14 +138,155 @@ export function TransactionSummary({
   };
 
   const handleBuyOrder = async () => {
-    console.log("Buy order!");
+    if (!selectedCanopyWallet || wallets.length === 0) {
+      return;
+    }
+
+    try {
+      console.log(`Processing ${selectedOrders.length} orders...`);
+
+      // Check if batch transactions are supported via Wagmi capabilities
+      const chainId = 11155111; // Sepolia
+      const atomicStatus = capabilities?.[chainId]?.atomic?.status;
+      const canBatch = selectedOrders.length > 1 && (atomicStatus === "supported" || atomicStatus === "ready");
+
+      console.log(`Atomic batch status: ${atomicStatus}`);
+      console.log(`Can use batch: ${canBatch}`);
+
+      if (canBatch) {
+        if (atomicStatus === "ready") {
+          console.log("🔄 Using sendCalls - will prompt user to upgrade to smart account");
+        } else {
+          console.log("🚀 Using sendCalls - smart account ready");
+        }
+        await handleBatchTransactions();
+      } else {
+        console.log("📝 Using sequential transactions");
+        await handleSequentialTransactions();
+      }
+
+      // Show progress toast after transactions
+      toast("Transaction Status", {
+        description: (
+          <ProgressToast
+            payAssetSymbol={payAsset.symbol}
+            receiveAssetSymbol={receiveAsset.symbol}
+            duration={20000}
+          />
+        ),
+        duration: 20000,
+      });
+
+      onClose();
+    } catch (error) {
+      console.error("❌ Transaction failed:", error);
+    }
   };
 
+  const handleBatchTransactions = async () => {
+    try {
+      // Prepare calls for batch transaction
+      const calls = selectedOrders.map((order) => {
+        const lockOrder: LockOrder = {
+          chainId: 1,
+          orderId: order.id,
+          buyerChainDeadline: height ? height + 4 : 4,
+          buyerReceiveAddress: finalDestinationAddress,
+          buyerSendAddress: wallets[0].address,
+        };
+
+        const orderAmount = order.total;
+        const amountInUnits = Math.floor(orderAmount * 1000000);
+        const paddedTo = wallets[0]?.address.slice(2).padStart(64, "0");
+        const paddedAmount = amountInUnits.toString(16).padStart(64, "0");
+
+        const memoJson = JSON.stringify(lockOrder);
+        const memoBytes = new TextEncoder().encode(memoJson);
+        const memoHex = Array.from(memoBytes)
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("");
+
+        const data =
+          `0x${usdcTransferMethodID}${paddedTo}${paddedAmount}${memoHex}` as `0x${string}`;
+
+        return {
+          to: USDC_CONTRACT_SEPOLIA as `0x${string}`,
+          value: BigInt(0),
+          data,
+        };
+      });
+
+      // Execute batch transaction using sendCalls
+      sendCalls({
+        calls,
+      });
+
+      console.log(
+        `🎯 Batch transaction submitted for ${selectedOrders.length} orders`,
+      );
+    } catch (error) {
+      console.warn("❌ Batch transaction failed (user may have declined upgrade):", error);
+      console.log("🔄 Falling back to sequential transactions");
+      
+      // Fallback to sequential transactions
+      await handleSequentialTransactions();
+    }
+  };
+
+  const handleSequentialTransactions = async () => {
+    // Fallback to sequential transactions
+    for (let i = 0; i < selectedOrders.length; i++) {
+      const order = selectedOrders[i];
+
+      const lockOrder: LockOrder = {
+        chainId: 1,
+        orderId: order.id,
+        buyerChainDeadline: height ? height + 4 : 4,
+        buyerReceiveAddress: finalDestinationAddress,
+        buyerSendAddress: wallets[0].address,
+      };
+
+      const orderAmount = order.total;
+      const amountInUnits = Math.floor(orderAmount * 1000000);
+      const paddedTo = wallets[0]?.address.slice(2).padStart(64, "0");
+      const paddedAmount = amountInUnits.toString(16).padStart(64, "0");
+
+      const memoJson = JSON.stringify(lockOrder);
+      const memoBytes = new TextEncoder().encode(memoJson);
+      const memoHex = Array.from(memoBytes)
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+
+      const data =
+        `0x${usdcTransferMethodID}${paddedTo}${paddedAmount}${memoHex}` as `0x${string}`;
+
+      console.log(
+        `Sending transaction ${i + 1}/${selectedOrders.length} for order ${order.id} (${orderAmount} USDC)`,
+      );
+
+      await sendTransaction(wagmiConfig, {
+        to: USDC_CONTRACT_SEPOLIA,
+        value: BigInt(0),
+        data,
+      });
+
+      console.log(`✅ Transaction ${i + 1} completed`);
+
+      if (i < selectedOrders.length - 1) {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        console.log(`⏳ Waiting 1s before next transaction...`);
+      }
+    }
+
+    console.log(`🎉 Successfully sent ${selectedOrders.length} transactions`);
+  };
+
+  // Initialize selected destination for sell orders
   useEffect(() => {
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, []);
+    if (isSellOrder && wallets.length > 0 && !selectedDestination) {
+      setSelectedDestination(wallets[0].address);
+    }
+  }, [isSellOrder, wallets, selectedDestination]);
 
   return (
     <div className="h-full w-full flex flex-col bg-white">
@@ -292,28 +446,88 @@ export function TransactionSummary({
         )}
 
         {/* Destination Address */}
-        <div className="space-y-2">
-          <Label className="text-muted-foreground">Destination Address:</Label>
-          <div className="w-full p-4 rounded-xl bg-[#F8F9FA] border">
-            <div className="flex items-center gap-3">
-              <Image
-                src="/chains-icons/canopy-logo.svg"
-                alt="Canopy Wallet"
-                width={24}
-                height={24}
-                className="rounded-full bg-white border"
-              />
-              <span className="font-semibold text-sm">Canopy Wallet</span>
-              <div className="ml-auto">
-                <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-medium">
-                  {destinationAddress
-                    ? `${destinationAddress.slice(0, 6)}...${destinationAddress.slice(-4)}`
-                    : "0x1234...5678"}
+        <Card className="bg-[#F8F9FA]">
+          <CardHeader>
+            <CardTitle className="text-muted-foreground text-sm">
+              Destination Address
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isSellOrder ? (
+              // Sell Order: Show dropdown with all Wagmi wallets
+              <Select
+                value={selectedDestination}
+                onValueChange={setSelectedDestination}
+              >
+                <SelectTrigger className="w-full border-0 bg-white rounded-lg p-3">
+                  <div className="flex items-center gap-3 w-full">
+                    <Image
+                      src="/chains-icons/ethereum-logo.svg"
+                      alt="Ethereum Wallet"
+                      width={20}
+                      height={20}
+                      className="rounded-full"
+                    />
+                    <span className="font-medium text-sm">
+                      {wallets[0]?.connectorName || "MetaMask"}
+                    </span>
+                    {selectedDestination && (
+                      <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-medium ml-auto">
+                        {`${selectedDestination.slice(0, 6)}...${selectedDestination.slice(-4)}`}
+                      </span>
+                    )}
+                  </div>
+                </SelectTrigger>
+                <SelectContent className="bg-white border shadow-lg">
+                  {wallets.map((wallet, index) => (
+                    <SelectItem
+                      key={wallet.address}
+                      value={wallet.address}
+                      className="bg-white hover:bg-gray-50 cursor-pointer focus:bg-gray-50"
+                    >
+                      <div className="flex items-center gap-3 py-2 w-full">
+                        <Image
+                          src="/chains-icons/ethereum-logo.svg"
+                          alt="Ethereum Wallet"
+                          width={16}
+                          height={16}
+                          className="rounded-full"
+                        />
+                        <span className="text-sm font-medium">
+                          {wallet.connectorName || "MetaMask"}
+                        </span>
+                        <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-medium ml-auto">
+                          {`${wallet.address.slice(0, 6)}...${wallet.address.slice(-4)}`}
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              // Buy Order: Show fixed destination based on order type
+              <div className="bg-white rounded-lg p-3 flex items-center gap-3">
+                <Image
+                  src="/chains-icons/ethereum-logo.svg"
+                  alt={isOrderLocked ? "Order Address" : "Ethereum Wallet"}
+                  width={20}
+                  height={20}
+                  className="rounded-full"
+                />
+                <span className="font-medium text-sm">
+                  {isOrderLocked
+                    ? "Order Destination"
+                    : wallets[0]?.connectorName || "MetaMask"}
                 </span>
+                {finalDestinationAddress && (
+                  <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-medium ml-auto">
+                    {`${finalDestinationAddress.slice(0, 6)}...${finalDestinationAddress.slice(-4)}`}
+                  </span>
+                )}
               </div>
-            </div>
-          </div>
-        </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Estimated Time */}
         <div className="flex justify-between items-center text-sm">

@@ -17,6 +17,10 @@ import { truncateHash, formatAmount } from "@/utils/transactions";
 import StatusBadge from "./StatusBadge";
 import TransactionTypeBadge from "./TransactionTypeBadge";
 import { ProcessedTransaction } from "@/types/transactions";
+import EditCloseOrderSummaryModal from "../edit-close-order-summary/modal";
+import { getDefaultTradingPair } from "@/utils/trading-pairs";
+
+const defaultTradingPair = getDefaultTradingPair();
 
 interface TransactionHistoryTableProps {
   data: ProcessedTransaction[];
@@ -31,6 +35,11 @@ export function TransactionHistoryTable({
   onRefresh,
   onExport,
 }: TransactionHistoryTableProps) {
+  const [isEditCloseModalOpen, setIsEditCloseModalOpen] =
+    useState<boolean>(false);
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<ProcessedTransaction | null>(null);
+
   const [sorting, setSorting] = useState<SortingState>([]);
 
   const columns: ColumnDef<ProcessedTransaction>[] = [
@@ -155,8 +164,8 @@ export function TransactionHistoryTable({
             variant="outline"
             className="h-8 px-3 text-xs"
             onClick={() => {
-              // TODO: Implement edit functionality
-              console.log("Edit transaction:", transaction.id);
+              setSelectedTransaction(transaction);
+              setIsEditCloseModalOpen(true);
             }}
           >
             Edit
@@ -340,6 +349,25 @@ export function TransactionHistoryTable({
             )}
           </div>
         )}
+
+        <EditCloseOrderSummaryModal
+          open={isEditCloseModalOpen}
+          onOpenChange={setIsEditCloseModalOpen}
+          tradingPair={
+            defaultTradingPair ?? selectedTransaction?.tradingPairInfo
+          }
+          disabled={false}
+          isBuySide={true}
+          payAmount={
+            selectedTransaction ? String(selectedTransaction.amount) : ""
+          }
+          payBalance={"1,200"}
+          receiveAmount={
+            selectedTransaction ? String(selectedTransaction.total) : ""
+          }
+          receiveBalance={"1,200"}
+          transaction={selectedTransaction!}
+        />
       </CardContent>
     </Card>
   );

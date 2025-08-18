@@ -32,12 +32,11 @@ export interface CreateOrder {
 }
 
 export interface LockOrder {
-  address: Address; // address sending nested chain counter asset
-  receiveAddress: Address; // address receiving root chain sell order funds
   orderId: string;
-  fee: number;
-  submit: boolean;
-  password: string;
+  buyerSendAddress: Address;
+  buyerReceiveAddress: Address;
+  buyerChainDeadline: number;
+  chainId: number;
 }
 
 export interface CloseOrder {
@@ -103,4 +102,84 @@ export interface TransactionHistoryStats {
   totalVolume: number;
   successRate: number;
   avgFee: number;
+}
+
+export interface EditOrder {
+  /** The address that originally created the sell order (hex string) */
+  address: Address;
+  /** The address that is receiving the 'counter-asset' funds (hex string) */
+  receiveAddress: Address;
+  /** The id of the committee responsible for the 'counter asset' */
+  committees: string;
+  /** The unique id of the sell-order (hex string) */
+  orderId: string;
+  /** The amount of 'root-chain-asset' to lock in escrow (smallest denomination) */
+  amount: number;
+  /** The amount of 'counter-asset' to receive (smallest denomination) */
+  receiveAmount: number;
+  /** Arbitrary string code associated with the order (hex string, e.g. sub-asset contract address) */
+  data: string;
+  /** Transaction fee in micro denomination (optional, minimum fee filled if 0) */
+  fee?: number;
+  /** Arbitrary message encoded in the transaction */
+  memo: string;
+  /** Submit this transaction or not (returns the tx-hash if true) */
+  submit: boolean;
+  /** Password to decrypt the private key to sign the transaction */
+  password: string;
+}
+
+export interface EditOrderResponse {
+  type: "editOrder";
+  msg: {
+    orderID: string; // hex string
+    chainID: number;
+    data: string; // hex string
+    amountForSale: number;
+    requestedAmount: number;
+    sellerReceiveAddress: string; // hex string
+  };
+  signature: {
+    publicKey: string; // hex string
+    signature: string; // hex string
+  };
+  time: number; // large integer timestamp
+  createdHeight: number;
+  fee: number;
+  networkID: number;
+  chainID: number;
+}
+
+export interface DeleteOrder {
+  /** The address that originally created the sell order (hex string) */
+  address: string;
+  /** The id of the committee responsible for the 'counter asset' */
+  committees: string;
+  /** The unique id of the sell-order (hex string) */
+  orderId: string;
+  /** Transaction fee in micro denomination (optional, minimum fee filled if 0) */
+  fee?: number;
+  /** Arbitrary message encoded in the transaction */
+  memo: string;
+  /** Submit this transaction or not (returns the tx-hash if true) */
+  submit: boolean;
+  /** Password to decrypt the private key to sign the transaction */
+  password: string;
+}
+
+export interface DeleteOrderResponse {
+  type: "deleteOrder";
+  msg: {
+    orderID: string; // hex string
+    chainID: number;
+  };
+  signature: {
+    publicKey: string; // hex string
+    signature: string; // hex string
+  };
+  time: number; // large integer timestamp
+  createdHeight: number;
+  fee: number;
+  networkID: number;
+  chainID: number;
 }

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { usePollingData } from "@/context/polling-context";
 import { blockchainUValueToNumber } from "@/utils/blockchain";
+import { formatLastUpdated } from "@/utils/time";
 import { DepthTable } from "./DepthTable";
 import { OrdersTable } from "./OrdersTable";
 import { Order } from "@/types/order";
@@ -42,8 +43,13 @@ export function TanStackOrderBook({
   tradingPair,
   isSwapped,
 }: TanStackOrderBookProps) {
-  const { orders, ordersLoading, ordersError, refetchOrders } =
-    usePollingData();
+  const {
+    orders,
+    ordersLoading,
+    ordersError,
+    refetchOrders,
+    ordersLastUpdated,
+  } = usePollingData();
 
   // Process orders: filter by trading pair and convert values
   const processedOrders = useMemo(() => {
@@ -161,17 +167,25 @@ export function TanStackOrderBook({
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           Order Book ({tradingPair?.displayName || "Loading..."})
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => refetchOrders()}
-            disabled={ordersLoading}
-          >
-            <RefreshCw
-              className={`h-4 w-4 ${ordersLoading ? "animate-spin" : ""}`}
-            />
-            Refresh
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => refetchOrders()}
+              disabled={ordersLoading}
+            >
+              <RefreshCw
+                className={`h-4 w-4 ${ordersLoading ? "animate-spin" : ""}`}
+              />
+              Refresh
+            </Button>
+            {ordersLastUpdated && (
+              <span className="text-sm text-muted-foreground font-normal flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                Last updated: {formatLastUpdated(ordersLastUpdated)}
+              </span>
+            )}
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">

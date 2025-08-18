@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, ReactNode } from "react";
+import { createContext, useContext, ReactNode, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchOrdersFromCommittee } from "@/services/orders";
 import { Order } from "@/types/order";
@@ -13,6 +13,7 @@ interface PollingContextValue {
   ordersLoading: boolean;
   ordersError: Error | null;
   refetchOrders: () => void;
+  ordersLastUpdated: Date | undefined;
 
   userBalance: number | undefined;
   balanceLoading: boolean;
@@ -62,6 +63,7 @@ export function PollingProvider({
     isLoading: ordersLoading,
     error: ordersError,
     refetch: refetchOrders,
+    dataUpdatedAt: ordersUpdatedAt,
   } = useQuery({
     queryKey: ["orders", height],
     queryFn: () => fetchOrdersFromCommittee(height || 0, 0),
@@ -74,6 +76,8 @@ export function PollingProvider({
     refetchOnReconnect: false,
     retry: 1,
   });
+
+  const ordersLastUpdated = ordersUpdatedAt ? new Date(ordersUpdatedAt) : undefined;
 
   const {
     data: userBalance,
@@ -94,6 +98,7 @@ export function PollingProvider({
         ordersLoading,
         ordersError: ordersError as Error | null,
         refetchOrders,
+        ordersLastUpdated,
         userBalance,
         balanceLoading,
         balanceError,

@@ -1,9 +1,8 @@
 "use client";
 
-import { wagmiAdapter, projectId } from "@/config";
+import { wagmiAdapter, projectId, networks } from "@/config";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createAppKit } from "@reown/appkit/react";
-import { mainnet, arbitrum } from "@reown/appkit/networks";
 import React, { type ReactNode } from "react";
 import { cookieToInitialState, WagmiProvider, type Config } from "wagmi";
 import { createAppKitWalletButton } from "@reown/appkit-wallet-button";
@@ -27,8 +26,8 @@ const metadata = {
 createAppKit({
   adapters: [wagmiAdapter],
   projectId,
-  networks: [mainnet, arbitrum],
-  defaultNetwork: mainnet,
+  networks: networks, // Use networks from config (includes mainnet and sepolia)
+  defaultNetwork: networks[0], // mainnet
   metadata: metadata,
   features: {
     analytics: true, // Optional - defaults to your Cloud configuration

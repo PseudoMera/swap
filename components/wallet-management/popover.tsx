@@ -8,7 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import Image from "next/image";
-import { X, Wallet2 } from "lucide-react";
+import { X, Wallet2, ChevronDown } from "lucide-react";
 import { useWallets } from "@/context/wallet";
 import React from "react";
 import { useAppKitAccount } from "@reown/appkit/react";
@@ -35,8 +35,15 @@ const reownSupportedWallets: ConnectWallets[] = [
 ];
 
 export function WalletManagementPopover() {
-  const { connect, disconnect } = useWallets();
+  const { connect, disconnect, wallets, selectedCanopyWallet } = useWallets();
   const eip155Account = useAppKitAccount({ namespace: "eip155" });
+  
+  // Check if any wallet is connected - first check external wallets, then fallback to Canopy
+  const isExternalWalletConnected = wallets.length > 0 && wallets[0].connected;
+  const connectedAddress = isExternalWalletConnected 
+    ? wallets[0].address 
+    : selectedCanopyWallet?.address || null;
+  const isConnected = !!connectedAddress;
 
   return (
     <Popover>
@@ -45,8 +52,18 @@ export function WalletManagementPopover() {
           variant="secondary"
           className="bg-green-100 text-green-900 hover:bg-green-200 flex items-center gap-2 font-medium px-4"
         >
-          <Wallet2 size={18} className="mr-1" />
-          Connect Wallet
+          {isConnected ? (
+            <>
+              <Wallet2 size={18} />
+              <span>{ellipsizeAddress(connectedAddress || "")}</span>
+              <ChevronDown size={16} />
+            </>
+          ) : (
+            <>
+              <Wallet2 size={18} className="mr-1" />
+              Connect Wallet
+            </>
+          )}
         </Button>
       </PopoverTrigger>
       <PopoverContent
