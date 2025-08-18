@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { ProcessedOrder } from "./TanStackOrderBook";
+import { cn } from "@/lib/utils";
 
 interface OrdersTableProps {
   data: ProcessedOrder[];
@@ -87,23 +88,18 @@ export function OrdersTable({
             }
           };
 
-          return isSelected ? (
+          return (
             <Button
-              size="sm"
-              className="bg-order-remove hover:bg-order-remove/80 text-black px-4 py-1"
+              className={cn(
+                isSelected
+                  ? "bg-order-remove hover:bg-order-remove/80 text-black px-4 py-1"
+                  : "bg-green-400 hover:bg-green-600 text-white px-4 py-1",
+                "w-20",
+              )}
               onClick={handleClick}
               disabled={isSwapped}
             >
-              Remove
-            </Button>
-          ) : (
-            <Button
-              size="sm"
-              className="bg-green-400 hover:bg-green-600 text-white px-4 py-1"
-              onClick={handleClick}
-              disabled={isSwapped}
-            >
-              Buy
+              {isSelected ? "Remove" : "Buy"}
             </Button>
           );
         },

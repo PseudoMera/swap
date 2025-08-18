@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, X } from "lucide-react";
 import { usePollingData } from "@/context/polling-context";
 import { blockchainUValueToNumber } from "@/utils/blockchain";
 import { formatLastUpdated } from "@/utils/time";
@@ -43,6 +43,8 @@ export function TanStackOrderBook({
   tradingPair,
   isSwapped,
 }: TanStackOrderBookProps) {
+  const [selectedPrice, setSelectedPrice] = useState<number | null>(null);
+  
   const {
     orders,
     ordersLoading,
@@ -53,6 +55,52 @@ export function TanStackOrderBook({
 
   // Process orders: filter by trading pair and convert values
   const processedOrders = useMemo(() => {
+    if (!orders || !Array.isArray(orders)) return [];
+    if (!tradingPair) return [];
+
+    try {
+      const targetCommittee = tradingPair.baseAsset.committee;
+
+      const allOrders = orders
+        .filter((order) => order && order.committee === targetCommittee)
+        .map((order) => {
+          const amountForSale = blockchainUValueToNumber(
+            order.amountForSale || 0,
+          );
+          const requestedAmount = blockchainUValueToNumber(
+            order.requestedAmount || 0,
+          );
+          const price = amountForSale > 0 ? requestedAmount / amountForSale : 0;
+
+          return {
+            ...order,
+            price,
+            amountForSale,
+            requestedAmount,
+            total: price * amountForSale,
+          } as ProcessedOrder;
+        })
+        .filter((order) => order.price > 0 && order.amountForSale > 0)
+        .sort((a, b) => a.price - b.price); // Best prices first
+
+      // Apply price filter if selected
+      if (selectedPrice !== null) {
+        return allOrders.filter((order) => {
+          const priceKey = order.price.toFixed(4);
+          const selectedPriceKey = selectedPrice.toFixed(4);
+          return priceKey === selectedPriceKey;
+        });
+      }
+
+      return allOrders;
+    } catch (error) {
+      console.error("Error processing orders:", error);
+      return [];
+    }
+  }, [orders, tradingPair, selectedPrice]);
+
+  // Get all orders without price filter for aggregation
+  const allProcessedOrders = useMemo(() => {
     if (!orders || !Array.isArray(orders)) return [];
     if (!tradingPair) return [];
 
@@ -79,22 +127,22 @@ export function TanStackOrderBook({
           } as ProcessedOrder;
         })
         .filter((order) => order.price > 0 && order.amountForSale > 0)
-        .sort((a, b) => a.price - b.price); // Best prices first
+        .sort((a, b) => a.price - b.price);
     } catch (error) {
-      console.error("Error processing orders:", error);
+      console.error("Error processing all orders:", error);
       return [];
     }
   }, [orders, tradingPair]);
 
   // Aggregate orders by price for depth view (top 10 only)
   const aggregatedOrders = useMemo(() => {
-    if (!processedOrders || processedOrders.length === 0) return [];
+    if (!allProcessedOrders || allProcessedOrders.length === 0) return [];
 
     try {
       const priceMap = new Map<string, AggregatedOrder>();
 
       // Group by price level
-      processedOrders.forEach((order) => {
+      allProcessedOrders.forEach((order) => {
         if (!order || typeof order.price !== "number" || isNaN(order.price))
           return;
 
@@ -139,7 +187,20 @@ export function TanStackOrderBook({
       console.error("Error aggregating orders:", error);
       return [];
     }
-  }, [processedOrders]);
+  }, [allProcessedOrders]);
+
+  const handlePriceSelect = (price: number) => {
+    // Toggle filter: if same price is clicked, clear filter
+    if (selectedPrice !== null && selectedPrice.toFixed(4) === price.toFixed(4)) {
+      setSelectedPrice(null);
+    } else {
+      setSelectedPrice(price);
+    }
+  };
+
+  const handleClearFilter = () => {
+    setSelectedPrice(null);
+  };
 
   if (ordersError) {
     return (
@@ -191,11 +252,38 @@ export function TanStackOrderBook({
       <CardContent className="space-y-6">
         {/* Market Depth Table */}
         <div>
-          <DepthTable data={aggregatedOrders} loading={ordersLoading} />
+          <DepthTable 
+            data={aggregatedOrders} 
+            loading={ordersLoading} 
+            onPriceSelect={handlePriceSelect}
+            selectedPrice={selectedPrice}
+          />
         </div>
 
         {/* Individual Orders Table */}
         <div>
+          {selectedPrice !== null && (
+            <div className="flex items-center justify-between mb-3 p-3 bg-muted/50 rounded-md">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">Filtered by price:</span>
+                <span className="font-mono text-green-600 font-semibold">
+                  {selectedPrice.toFixed(4)} USDC
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  ({processedOrders.length} orders)
+                </span>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleClearFilter}
+                className="h-8"
+              >
+                <X className="h-3 w-3 mr-1" />
+                Clear Filter
+              </Button>
+            </div>
+          )}
           <OrdersTable
             data={processedOrders}
             loading={ordersLoading}

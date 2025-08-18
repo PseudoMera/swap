@@ -11,9 +11,11 @@ import { AggregatedOrder } from "./TanStackOrderBook";
 interface DepthTableProps {
   data: AggregatedOrder[];
   loading: boolean;
+  onPriceSelect: (price: number) => void;
+  selectedPrice: number | null;
 }
 
-export function DepthTable({ data, loading }: DepthTableProps) {
+export function DepthTable({ data, loading, onPriceSelect, selectedPrice }: DepthTableProps) {
   const columns: ColumnDef<AggregatedOrder>[] = [
     {
       accessorKey: "price",
@@ -100,21 +102,29 @@ export function DepthTable({ data, loading }: DepthTableProps) {
           ))}
         </thead>
         <tbody>
-          {table.getRowModel().rows.map((row) => (
-            <tr
-              key={row.id}
-              className="border-b last:border-b-0 hover:opacity-80 transition-opacity relative"
-              style={{
-                background: `linear-gradient(to right, #76e698 0%, #76e698 ${row.original.volumePercentage}%, #F0FDF4 ${row.original.volumePercentage}%, #F0FDF4 100%)`,
-              }}
-            >
-              {row.getVisibleCells().map((cell) => (
-                <td key={cell.id} className="p-3">
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
-              ))}
-            </tr>
-          ))}
+          {table.getRowModel().rows.map((row) => {
+            const isSelected = selectedPrice !== null && 
+              row.original.price.toFixed(4) === selectedPrice.toFixed(4);
+            
+            return (
+              <tr
+                key={row.id}
+                className={`border-b last:border-b-0 hover:opacity-80 transition-all cursor-pointer relative ${
+                  isSelected ? 'ring-2 ring-green-600 ring-inset' : ''
+                }`}
+                style={{
+                  background: `linear-gradient(to right, #76e698 0%, #76e698 ${row.original.volumePercentage}%, #F0FDF4 ${row.original.volumePercentage}%, #F0FDF4 100%)`,
+                }}
+                onClick={() => onPriceSelect(row.original.price)}
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <td key={cell.id} className="p-3">
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
