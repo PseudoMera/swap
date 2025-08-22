@@ -1,7 +1,11 @@
 import { useState } from 'react'
-import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi'
+import { useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi'
+import { useUnifiedWallet } from '@/hooks/useUnifiedWallet'
+import { useChainValidation } from '@/hooks/useChainValidation'
 import { sendTransaction } from 'wagmi/actions'
 import { wagmiConfig } from '@/config'
+import { CHAIN_IDS } from '@/constants/tokens'
+import { getContract } from '@/contracts/registry'
 
 // Sepolia USDC Contract Address
 const USDC_CONTRACT_SEPOLIA = '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238' as const
@@ -31,7 +35,12 @@ const USDC_ABI = [
 ] as const
 
 export function USDCSelfSend() {
-  const { address, isConnected, chain } = useAccount()
+  const { wallet, isConnected } = useUnifiedWallet()
+  const { isCorrectChain, currentChain, isSwitching, switchToRequiredChain } = useChainValidation(CHAIN_IDS.SEPOLIA)
+  const address = wallet?.address
+  
+  // Get contract info from registry
+  const usdcContract = currentChain?.id ? getContract(currentChain.id, 'USDC') : null
   const [amount, setAmount] = useState('')
   const [usesMemo, setUsesMemo] = useState(false)
   const [memoTxHash, setMemoTxHash] = useState<`0x${string}` | null>(null)
@@ -44,12 +53,12 @@ export function USDCSelfSend() {
 
   // Read user's USDC balance
   const { data: balance } = useReadContract({
-    address: USDC_CONTRACT_SEPOLIA,
-    abi: USDC_ABI,
+    address: usdcContract?.address || USDC_CONTRACT_SEPOLIA,
+    abi: usdcContract?.abi || USDC_ABI,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
     query: {
-      enabled: !!address && chain?.id === 11155111, // Only on Sepolia
+      enabled: !!address && isCorrectChain && !!usdcContract,
     },
   })
 
@@ -64,8 +73,8 @@ export function USDCSelfSend() {
         await handleSelfSendWithMemo(address, amountInUnits)
       } else {
         writeContract({
-          address: USDC_CONTRACT_SEPOLIA,
-          abi: USDC_ABI,
+          address: usdcContract?.address || USDC_CONTRACT_SEPOLIA,
+          abi: usdcContract?.abi || USDC_ABI,
           functionName: 'transfer',
           args: [address, amountInUnits], // Self-send: send to own address
         })
@@ -124,14 +133,21 @@ export function USDCSelfSend() {
     )
   }
 
-  if (chain?.id !== 11155111) {
+  if (!isCorrectChain) {
     return (
       <div className="p-6 border rounded-lg">
         <h2 className="text-xl font-bold mb-4">USDC Self-Send Test</h2>
         <div className="p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded">
           <p><strong>Wrong Network!</strong></p>
           <p>Please switch to Sepolia testnet to test USDC transactions.</p>
-          <p>Current network: {chain?.name}</p>
+          <p>Current network: {currentChain?.name} (ID: {currentChain?.id})</p>
+          <button 
+            onClick={switchToRequiredChain}
+            disabled={isSwitching}
+            className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+          >
+            {isSwitching ? 'Switching...' : 'Switch to Sepolia'}
+          </button>
         </div>
       </div>
     )
@@ -267,9 +283,9 @@ export function USDCSelfSend() {
       )}
 
       <div className="mt-4 text-xs text-gray-500 space-y-1">
-        <p><strong>Network:</strong> {chain?.name} ({chain?.id})</p>
+        <p><strong>Network:</strong> {currentChain?.name} ({currentChain?.id})</p>
         <p><strong>Your Address:</strong> {address}</p>
-        <p><strong>USDC Contract:</strong> {USDC_CONTRACT_SEPOLIA}</p>
+        <p><strong>USDC Contract:</strong> {usdcContract?.address || USDC_CONTRACT_SEPOLIA}</p>
       </div>
     </div>
   )

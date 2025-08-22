@@ -23,6 +23,7 @@
     "@reown/appkit-adapter-wagmi": "^1.7.17",
     "@reown/appkit-wallet-button": "^1.7.17",
     "@tanstack/react-query": "^5.84.1",
+    "@tanstack/react-query-devtools": "^5.85.5",
     "@tanstack/react-table": "^8.21.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

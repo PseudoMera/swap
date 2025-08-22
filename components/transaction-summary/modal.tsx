@@ -9,7 +9,7 @@ import { TransactionSummary } from "./index";
 import { ProcessedOrder } from "../order-book/TanStackOrderBook";
 import { TradingPair } from "@/types/trading-pair";
 import { useWallets } from "@/context/wallet";
-import { useAccount } from "wagmi";
+import { useUnifiedWallet } from "@/hooks/useUnifiedWallet";
 
 interface TransactionSummaryModalProps {
   open: boolean;
@@ -40,14 +40,17 @@ export function TransactionSummaryModal({
   triggerClassName = "w-full bg-green-100 text-green-900 hover:bg-green-200 mt-2 h-12 text-lg font-medium rounded-xl",
   disabled = false,
 }: TransactionSummaryModalProps) {
-  const { wallets } = useWallets();
-  const { isConnected } = useAccount();
+  const { selectedCanopyWallet } = useWallets();
+  const { isConnected: isExternalConnected } = useUnifiedWallet();
   
-  // Check if any wallet is connected (either Ethereum/MetaMask or Canopy)
-  const hasWalletConnected = isConnected || wallets.some(wallet => wallet.connected);
+  // Buy orders (!isSwapped) require external wallet for USDC payments
+  // Sell orders (isSwapped) require Canopy wallet for base asset payments
+  const hasRequiredWallet = !isSwapped 
+    ? isExternalConnected  // Buy orders need external wallet
+    : Boolean(selectedCanopyWallet);  // Sell orders need Canopy wallet
   
-  // Only show modal if there are selected orders AND wallet is connected
-  const hasValidTransaction = !isSwapped ? selectedOrders.length > 0 && hasWalletConnected : hasWalletConnected;
+  // Only show modal if there are selected orders AND required wallet is connected
+  const hasValidTransaction = !isSwapped ? selectedOrders.length > 0 && hasRequiredWallet : hasRequiredWallet;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -56,7 +59,7 @@ export function TransactionSummaryModal({
           className={triggerClassName}
           disabled={disabled || !hasValidTransaction}
         >
-          {!hasWalletConnected 
+          {!hasRequiredWallet 
             ? "Connect Wallet" 
             : selectedOrders.length === 0 && !isSwapped
               ? "Select Orders"

@@ -8,7 +8,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { Upload, AlertCircle } from "lucide-react";
+import { Upload, AlertCircle, Trash2, X } from "lucide-react";
+import { Button } from "../ui/button";
 import { useState } from "react";
 import { secureStorage } from "@/lib/secure-storage";
 import { useWallets } from "@/context/wallet";
@@ -16,6 +17,7 @@ import {
   validateKeyfileFormat,
   getValidationErrorMessage,
 } from "@/utils/keyfile-validation";
+import { ellipsizeAddress } from "@/utils/address";
 import type { CanopyKeyfile } from "@/types/wallet";
 
 const canopyWallet = {
@@ -110,6 +112,26 @@ function CanopyWalletManagement() {
     }
   };
 
+  const handleRemoveKeyfile = async (keyfileId: string) => {
+    try {
+      setIsLoading(true);
+      await secureStorage.deleteKeyfile(keyfileId);
+      
+      // Clear selection if the removed keyfile was selected
+      if (selectedCanopyWallet?.keyfileId === keyfileId) {
+        setSelectedCanopyWallet(null);
+      }
+      
+      await refreshStoredKeyfiles();
+    } catch (err) {
+      setValidationError(
+        `Failed to remove keyfile: ${err instanceof Error ? err.message : "Unknown error"}`,
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="w-full p-4 flex flex-col gap-4 justify-baseline rounded-lg  bg-[#F8F9FA]">
       <div className="flex items-center gap-3">
@@ -121,6 +143,18 @@ function CanopyWalletManagement() {
           className="rounded-full bg-white border"
         />
         <span className="font-semibold text-sm">{canopyWallet.name}</span>
+        
+        {selectedCanopyWallet?.address && (
+          <div className="max-w-32 flex items-center gap-2 bg-green-100 text-green-900 rounded-xl px-3 py-1 font-medium ml-auto">
+            <span className="text-sm">{ellipsizeAddress(selectedCanopyWallet.address)}</span>
+            <span
+              className="h-6 w-6 p-0 flex items-center"
+              onClick={() => handleRemoveKeyfile(selectedCanopyWallet.keyfileId)}
+            >
+              <X size={16} />
+            </span>
+          </div>
+        )}
       </div>
 
       <div className="flex flex-col gap-3">
@@ -159,7 +193,7 @@ function CanopyWalletManagement() {
           </div>
         )}
 
-        {/* Show stored keyfiles dropdown if any exist */}
+        {/* Show stored keyfiles if any exist */}
         {storedKeyfiles.length > 0 && (
           <>
             <Label className="text-muted-foreground">Select Account:</Label>
@@ -182,6 +216,35 @@ function CanopyWalletManagement() {
                 )}
               </SelectContent>
             </Select>
+
+            {/* Stored keyfiles list with remove buttons */}
+            <div className="space-y-2">
+              <Label className="text-muted-foreground">Stored Keyfiles:</Label>
+              {storedKeyfiles.map((keyfile) => (
+                <div
+                  key={keyfile.id}
+                  className="flex items-center justify-between p-2 bg-white border rounded-lg"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-gray-900 truncate">
+                      {keyfile.filename}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {keyfile.accountAddresses.length} account{keyfile.accountAddresses.length !== 1 ? 's' : ''}
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleRemoveKeyfile(keyfile.id)}
+                    disabled={isLoading}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
           </>
         )}
       </div>

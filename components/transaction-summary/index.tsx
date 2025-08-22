@@ -10,11 +10,12 @@ import Image from "next/image";
 import { ArrowDown, X } from "lucide-react";
 import { createOrder } from "@/services/orders";
 import { useWallets } from "@/context/wallet";
+import { useUnifiedWallet } from "@/hooks/useUnifiedWallet";
 import { numberToBlockchainUValue } from "@/utils/blockchain";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { TradingPair } from "@/types/trading-pair";
-import { LockOrder } from "@/types/order";
+import { CloseOrder, LockOrder } from "@/types/order";
 import { usePollingData } from "@/context/polling-context";
 import {
   USDC_CONTRACT_SEPOLIA,
@@ -25,6 +26,9 @@ import { wagmiConfig } from "@/config";
 import { useCapabilities, useSendCalls } from "wagmi";
 import ProgressToast from "../headless-toast/progress-toast";
 import { ProcessedOrder } from "../order-book/TanStackOrderBook";
+//TODO: Metamask stores previous transactions, need to do a cleanup everytime this component opens :)
+//TODO: Only group locked orders together
+//TODO: NEVER group a locked order with an order thats not locked
 
 interface TransactionSummaryProps {
   selectedOrders: ProcessedOrder[];
@@ -49,7 +53,8 @@ export function TransactionSummary({
   onClose,
   estimatedTime = "~120 seconds",
 }: TransactionSummaryProps) {
-  const { selectedCanopyWallet, wallets } = useWallets();
+  const { selectedCanopyWallet } = useWallets();
+  const { wallet: externalWallet } = useUnifiedWallet();
   const { height } = usePollingData();
 
   // Wagmi hooks for batch transactions
@@ -65,6 +70,8 @@ export function TransactionSummary({
     : tradingPair.baseAsset;
 
   // Determine order type and destination logic
+  // TODO: Only group locked orders together
+  // NEVER group a locked order with an order thats not locked
   const isOrderLocked =
     selectedOrders.length > 0 && selectedOrders[0].buyerReceiveAddress;
   const isBuyOrder = !isSwapped;
@@ -75,14 +82,14 @@ export function TransactionSummary({
     if (isBuyOrder) {
       if (isOrderLocked) {
         // Close order: use the buyer's receive address from the order
-        return selectedOrders[0].buyerReceiveAddress || "";
+        return selectedOrders[0].sellerReceiveAddress || "";
       } else {
         // Lock order: self-send to current wagmi wallet
-        return wallets[0]?.address || "";
+        return selectedCanopyWallet?.address;
       }
     } else {
       // Sell order: use selected destination from dropdown
-      return selectedDestination || wallets[0]?.address || "";
+      return selectedDestination || externalWallet?.address || "";
     }
   };
 
@@ -108,11 +115,12 @@ export function TransactionSummary({
       await createOrder({
         address: selectedCanopyWallet?.address || "",
         committees: "1",
-        data: "",
+        data: "5FbDB2315678afecb367f032d93F642f64180aa3",
         amount: numberToBlockchainUValue(Number(receiveAmount)),
         receiveAmount: numberToBlockchainUValue(Number(payAmount)),
         // Use the calculated destination address
-        receiveAddress: "b75e5da448b5848196e7589d6f4666c98564a635",
+        receiveAddress: externalWallet?.address.slice(2) || "",
+        // receiveAddress: "b75e5da448b5848196e7589d6f4666c98564a635",
         // || finalDestinationAddress,
         memo: "",
         fee: 0,
@@ -138,24 +146,26 @@ export function TransactionSummary({
   };
 
   const handleBuyOrder = async () => {
-    if (!selectedCanopyWallet || wallets.length === 0) {
+    if (!selectedCanopyWallet || !externalWallet) {
       return;
     }
 
     try {
-      console.log(`Processing ${selectedOrders.length} orders...`);
-
       // Check if batch transactions are supported via Wagmi capabilities
       const chainId = 11155111; // Sepolia
       const atomicStatus = capabilities?.[chainId]?.atomic?.status;
-      const canBatch = selectedOrders.length > 1 && (atomicStatus === "supported" || atomicStatus === "ready");
+      const canBatch =
+        selectedOrders.length > 1 &&
+        (atomicStatus === "supported" || atomicStatus === "ready");
 
       console.log(`Atomic batch status: ${atomicStatus}`);
       console.log(`Can use batch: ${canBatch}`);
 
       if (canBatch) {
         if (atomicStatus === "ready") {
-          console.log("🔄 Using sendCalls - will prompt user to upgrade to smart account");
+          console.log(
+            "🔄 Using sendCalls - will prompt user to upgrade to smart account",
+          );
         } else {
           console.log("🚀 Using sendCalls - smart account ready");
         }
@@ -184,23 +194,35 @@ export function TransactionSummary({
   };
 
   const handleBatchTransactions = async () => {
+    if (!externalWallet) return;
+
     try {
       // Prepare calls for batch transaction
       const calls = selectedOrders.map((order) => {
-        const lockOrder: LockOrder = {
-          chainId: 1,
+        const closeOrder: CloseOrder = {
+          chain_id: order.committee,
+          closeOrder: true,
           orderId: order.id,
-          buyerChainDeadline: height ? height + 4 : 4,
-          buyerReceiveAddress: finalDestinationAddress,
-          buyerSendAddress: wallets[0].address,
         };
 
-        const orderAmount = order.total;
+        const lockOrder: LockOrder = {
+          chain_id: order.committee,
+          orderId: order.id,
+          buyerChainDeadline: height ? height + 10 : 10,
+          buyerReceiveAddress: finalDestinationAddress,
+          buyerSendAddress: externalWallet.address,
+        };
+
+        const orderAmount = isOrderLocked ? order.total : 0;
         const amountInUnits = Math.floor(orderAmount * 1000000);
-        const paddedTo = wallets[0]?.address.slice(2).padStart(64, "0");
+        const paddedTo = externalWallet.address.slice(2).padStart(64, "0");
         const paddedAmount = amountInUnits.toString(16).padStart(64, "0");
 
-        const memoJson = JSON.stringify(lockOrder);
+        const orderToSendAsMemo = JSON.stringify(
+          isOrderLocked ? closeOrder : lockOrder,
+        );
+
+        const memoJson = orderToSendAsMemo;
         const memoBytes = new TextEncoder().encode(memoJson);
         const memoHex = Array.from(memoBytes)
           .map((b) => b.toString(16).padStart(2, "0"))
@@ -220,38 +242,51 @@ export function TransactionSummary({
       sendCalls({
         calls,
       });
-
-      console.log(
-        `🎯 Batch transaction submitted for ${selectedOrders.length} orders`,
-      );
     } catch (error) {
-      console.warn("❌ Batch transaction failed (user may have declined upgrade):", error);
-      console.log("🔄 Falling back to sequential transactions");
-      
       // Fallback to sequential transactions
       await handleSequentialTransactions();
     }
   };
 
   const handleSequentialTransactions = async () => {
+    //TODO: Add proper validation and display error message
+    if (!externalWallet) return;
+
     // Fallback to sequential transactions
     for (let i = 0; i < selectedOrders.length; i++) {
       const order = selectedOrders[i];
 
-      const lockOrder: LockOrder = {
-        chainId: 1,
+      const closeOrder: CloseOrder = {
+        chain_id: order.committee,
+        closeOrder: true,
         orderId: order.id,
-        buyerChainDeadline: height ? height + 4 : 4,
-        buyerReceiveAddress: finalDestinationAddress,
-        buyerSendAddress: wallets[0].address,
       };
 
-      const orderAmount = order.total;
+      const lockOrder: LockOrder = {
+        chain_id: order.committee,
+        orderId: order.id,
+        buyerChainDeadline: height ? height + 10 : 4,
+        buyerReceiveAddress: finalDestinationAddress,
+        buyerSendAddress: externalWallet.address.slice(2),
+      };
+
+      // TODO: USE 0 WHEN ITS A LOCK ORDER
+      // const orderAmount = order.total;
+      const orderAmount = isOrderLocked ? order.total : 0;
       const amountInUnits = Math.floor(orderAmount * 1000000);
-      const paddedTo = wallets[0]?.address.slice(2).padStart(64, "0");
+      console.log("selected: ", selectedOrders);
+      console.log("finalDestinationAddress", finalDestinationAddress);
+      console.log("IS ORDER LOCKED", isOrderLocked);
+      const paddedTo = isOrderLocked
+        ? finalDestinationAddress.padStart(64, "0")
+        : externalWallet.address.slice(2).padStart(64, "0");
       const paddedAmount = amountInUnits.toString(16).padStart(64, "0");
 
-      const memoJson = JSON.stringify(lockOrder);
+      const orderToSendAsMemo = JSON.stringify(
+        isOrderLocked ? closeOrder : lockOrder,
+      );
+
+      const memoJson = orderToSendAsMemo;
       const memoBytes = new TextEncoder().encode(memoJson);
       const memoHex = Array.from(memoBytes)
         .map((b) => b.toString(16).padStart(2, "0"))
@@ -260,33 +295,24 @@ export function TransactionSummary({
       const data =
         `0x${usdcTransferMethodID}${paddedTo}${paddedAmount}${memoHex}` as `0x${string}`;
 
-      console.log(
-        `Sending transaction ${i + 1}/${selectedOrders.length} for order ${order.id} (${orderAmount} USDC)`,
-      );
-
       await sendTransaction(wagmiConfig, {
-        to: USDC_CONTRACT_SEPOLIA,
+        to: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
         value: BigInt(0),
         data,
       });
 
-      console.log(`✅ Transaction ${i + 1} completed`);
-
       if (i < selectedOrders.length - 1) {
         await new Promise((resolve) => setTimeout(resolve, 1000));
-        console.log(`⏳ Waiting 1s before next transaction...`);
       }
     }
-
-    console.log(`🎉 Successfully sent ${selectedOrders.length} transactions`);
   };
 
   // Initialize selected destination for sell orders
   useEffect(() => {
-    if (isSellOrder && wallets.length > 0 && !selectedDestination) {
-      setSelectedDestination(wallets[0].address);
+    if (isSellOrder && externalWallet && !selectedDestination) {
+      setSelectedDestination(externalWallet.address);
     }
-  }, [isSellOrder, wallets, selectedDestination]);
+  }, [isSellOrder, externalWallet, selectedDestination]);
 
   return (
     <div className="h-full w-full flex flex-col bg-white">
@@ -454,7 +480,7 @@ export function TransactionSummary({
           </CardHeader>
           <CardContent>
             {isSellOrder ? (
-              // Sell Order: Show dropdown with all Wagmi wallets
+              // Sell Order: Show dropdown with external wallet
               <Select
                 value={selectedDestination}
                 onValueChange={setSelectedDestination}
@@ -469,7 +495,7 @@ export function TransactionSummary({
                       className="rounded-full"
                     />
                     <span className="font-medium text-sm">
-                      {wallets[0]?.connectorName || "MetaMask"}
+                      {externalWallet?.connector?.name || "MetaMask"}
                     </span>
                     {selectedDestination && (
                       <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-medium ml-auto">
@@ -479,10 +505,10 @@ export function TransactionSummary({
                   </div>
                 </SelectTrigger>
                 <SelectContent className="bg-white border shadow-lg">
-                  {wallets.map((wallet, index) => (
+                  {externalWallet && (
                     <SelectItem
-                      key={wallet.address}
-                      value={wallet.address}
+                      key={externalWallet.address}
+                      value={externalWallet.address}
                       className="bg-white hover:bg-gray-50 cursor-pointer focus:bg-gray-50"
                     >
                       <div className="flex items-center gap-3 py-2 w-full">
@@ -494,14 +520,14 @@ export function TransactionSummary({
                           className="rounded-full"
                         />
                         <span className="text-sm font-medium">
-                          {wallet.connectorName || "MetaMask"}
+                          {externalWallet.connector?.name || "MetaMask"}
                         </span>
                         <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-medium ml-auto">
-                          {`${wallet.address.slice(0, 6)}...${wallet.address.slice(-4)}`}
+                          {`${externalWallet.address.slice(0, 6)}...${externalWallet.address.slice(-4)}`}
                         </span>
                       </div>
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             ) : (
@@ -517,7 +543,7 @@ export function TransactionSummary({
                 <span className="font-medium text-sm">
                   {isOrderLocked
                     ? "Order Destination"
-                    : wallets[0]?.connectorName || "MetaMask"}
+                    : externalWallet?.connector?.name || "MetaMask"}
                 </span>
                 {finalDestinationAddress && (
                   <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-medium ml-auto">

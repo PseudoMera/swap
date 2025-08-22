@@ -10,6 +10,7 @@ import { WalletProvider } from "@/context/wallet";
 import { PollingProvider } from "@/context/polling-context";
 import { POLLING_INTERVALS } from "@/constants/api";
 import { Toaster } from "@/components/ui/sonner";
+import { QueryProvider } from "@/providers/QueryClientProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,22 +40,24 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
-        <AppkitProvider cookies={cookies}>
-          <WalletProvider>
-            <PollingProvider
-              ordersInterval={POLLING_INTERVALS.ORDERS}
-              balanceInterval={POLLING_INTERVALS.BALANCE}
-              heightInterval={POLLING_INTERVALS.HEIGHT}
-            >
-              <Header />
-              <main className="w-full max-w-screen-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
-                {children}
-              </main>
-              <Footer />
-              <Toaster />
-            </PollingProvider>
-          </WalletProvider>
-        </AppkitProvider>
+        <QueryProvider>
+          <AppkitProvider cookies={cookies}>
+            <WalletProvider>
+              <PollingProvider
+                ordersInterval={POLLING_INTERVALS.ORDERS}
+                balanceInterval={POLLING_INTERVALS.BALANCE}
+                heightInterval={POLLING_INTERVALS.HEIGHT}
+              >
+                <Header />
+                <main className="w-full max-w-screen-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
+                  {children}
+                </main>
+                <Footer />
+                <Toaster />
+              </PollingProvider>
+            </WalletProvider>
+          </AppkitProvider>
+        </QueryProvider>
       </body>
     </html>
   );

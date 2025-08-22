@@ -6,10 +6,11 @@ import React, {
   useState,
   ReactNode,
   useEffect,
+  useCallback,
+  useMemo,
 } from "react";
 import { useAppKitWallet } from "@reown/appkit-wallet-button/react";
 import { useDisconnect } from "@reown/appkit/react";
-import { useAccount } from "wagmi";
 import {
   ChainType,
   WalletType,
@@ -17,16 +18,8 @@ import {
 } from "@/types/wallet";
 import { secureStorage, type KeyfileMetadata } from "@/lib/secure-storage";
 
-export interface WalletInfo {
-  type: WalletType;
-  chain: ChainType;
-  address: string;
-  connected: boolean;
-  connectorName?: string;
-}
-
 interface WalletContextType {
-  wallets: WalletInfo[];
+  // External wallet connection functions
   connect: (type: WalletType, chain: ChainType) => void;
   disconnect: (type: WalletType, chain: ChainType) => Promise<void>;
   // Canopy wallet state
@@ -39,20 +32,14 @@ interface WalletContextType {
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
 export function WalletProvider({ children }: { children: ReactNode }) {
-  // For now, just one wallet: USDC on Ethereum via MetaMask
-  const [wallets, setWallets] = useState<WalletInfo[]>([]);
-
-  // Canopy wallet state
+  // Canopy wallet state only
   const [storedKeyfiles, setStoredKeyfiles] = useState<KeyfileMetadata[]>([]);
   const [selectedCanopyWallet, setSelectedCanopyWallet] =
     useState<CanopyWalletAccount | null>(null);
 
   const { disconnect } = useDisconnect();
-  
-  // Standard Wagmi account info
-  const { address: wagmiAddress, isConnected: wagmiConnected, chain, connector } = useAccount();
 
-  const refreshStoredKeyfiles = async () => {
+  const refreshStoredKeyfiles = useCallback(async () => {
     try {
       const keyfiles = await secureStorage.listKeyfiles();
       setStoredKeyfiles(keyfiles);
@@ -79,74 +66,40 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error("Failed to refresh stored keyfiles:", error);
     }
-  };
+  }, [selectedCanopyWallet]);
 
-  // Hook for EVM wallets (MetaMask, etc.)
-  const { connect: connectEVM, data: dataEVM } = useAppKitWallet({
+  // Hook for external wallet connections (MetaMask, etc.)
+  const { connect: connectEVM } = useAppKitWallet({
     namespace: "eip155",
-    onSuccess(parsedCaipAddress) {
-      setWallets((prev) => [
-        ...prev.filter(
-          (w) => !(w.type === "metamask" && w.chain === "ethereum"),
-        ),
-        {
-          type: "metamask",
-          chain: parsedCaipAddress.chainNamespace.toString() as ChainType,
-          address: parsedCaipAddress.address,
-          connected: true,
-        },
-      ]);
-    },
     onError(error) {
       console.error("Wallet connect error:", error);
     },
   });
 
-  const connectWallet = (type: WalletType, chain: ChainType) => {
-    console.log(`Connecting ${type} on ${chain}`);
-    if (type === "metamask" && chain === "ethereum") {
-      connectEVM("metamask");
-    }
-    // Add more wallet types/chains here as needed
-  };
+  const connectWallet = useCallback(
+    async (type: WalletType, chain: ChainType) => {
+      if (type === "metamask" && chain === "ethereum") {
+        try {
+          await connectEVM("metamask");
+        } catch (error) {
+          console.error("Failed to connect wallet:", error);
+          throw error;
+        }
+      }
+    },
+    [connectEVM],
+  );
 
-  // Disconnect wallet by type/chain
-  const disconnectWallet = async (type: WalletType, chain: ChainType) => {
-    if (type === "metamask" && chain === "ethereum") {
-      await disconnect({
-        namespace: "eip155",
-      });
-      setWallets((prev) =>
-        prev.filter((w) => !(w.type === "metamask" && w.chain === "ethereum")),
-      );
-    }
-    // Add more wallet types/chains here as needed
-  };
-
-  // Sync with both useAppKitWallet and standard Wagmi connection
-  useEffect(() => {
-    const evmAddress = dataEVM?.address || wagmiAddress;
-    const evmConnected = dataEVM?.address ? true : wagmiConnected;
-    
-    if (evmAddress && evmConnected) {
-      setWallets((prev) => [
-        ...prev.filter(
-          (w) => !(w.type === "metamask" && w.chain === "ethereum"),
-        ),
-        {
-          type: "metamask",
-          chain: "ethereum",
-          address: evmAddress,
-          connected: true,
-          connectorName: connector?.name || "MetaMask",
-        },
-      ]);
-    } else {
-      setWallets((prev) =>
-        prev.filter((w) => !(w.type === "metamask" && w.chain === "ethereum")),
-      );
-    }
-  }, [dataEVM, wagmiAddress, wagmiConnected, connector]);
+  const disconnectWallet = useCallback(
+    async (type: WalletType, chain: ChainType) => {
+      if (type === "metamask" && chain === "ethereum") {
+        await disconnect({
+          namespace: "eip155",
+        });
+      }
+    },
+    [disconnect],
+  );
 
   // Initialize secure storage and load keyfiles
   useEffect(() => {
@@ -162,18 +115,27 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     initializeStorage();
   }, []);
 
+  // Memoize context value to prevent unnecessary re-renders
+  const contextValue = useMemo(
+    () => ({
+      connect: connectWallet,
+      disconnect: disconnectWallet,
+      storedKeyfiles,
+      selectedCanopyWallet,
+      setSelectedCanopyWallet,
+      refreshStoredKeyfiles,
+    }),
+    [
+      connectWallet,
+      disconnectWallet,
+      storedKeyfiles,
+      selectedCanopyWallet,
+      refreshStoredKeyfiles,
+    ],
+  );
+
   return (
-    <WalletContext.Provider
-      value={{
-        wallets,
-        connect: connectWallet,
-        disconnect: disconnectWallet,
-        storedKeyfiles,
-        selectedCanopyWallet,
-        setSelectedCanopyWallet,
-        refreshStoredKeyfiles,
-      }}
-    >
+    <WalletContext.Provider value={contextValue}>
       {children}
     </WalletContext.Provider>
   );

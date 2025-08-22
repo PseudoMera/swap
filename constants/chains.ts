@@ -32,9 +32,9 @@ export const CHAINS: Record<string, Chain> = {
     id: "ethereum",
     name: "Ethereum",
     rpcUrl: createRpcUrls(
-      process.env.NEXT_PUBLIC_ETHEREUM_RPC_URL || "http://localhost:50004",
+      process.env.NEXT_PUBLIC_ETHEREUM_RPC_URL || "http://localhost:50002",
       process.env.NEXT_PUBLIC_ETHEREUM_ADMIN_RPC_URL ||
-        "http://localhost:50005",
+        "http://localhost:50003",
     ),
   },
 };

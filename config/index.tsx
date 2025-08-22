@@ -2,28 +2,33 @@ import { cookieStorage, createStorage } from "@wagmi/core";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
 import { mainnet, sepolia } from "@reown/appkit/networks";
 import { getChainByCommittee, getChainById } from "@/utils/chains";
+import { validatedConfig } from "./validation";
 
-// Environment configuration
-export const ENV_CONFIG = {
-  PROJECT_ID: process.env.NEXT_PUBLIC_REOWN_PROJECT_ID,
-  RPC_URL: process.env.NEXT_PUBLIC_RPC_URL || "http://localhost:50002",
-  ADMIN_RPC_URL:
-    process.env.NEXT_PUBLIC_ADMIN_RPC_URL || "http://localhost:50003",
-  KEYFILE_SECRET: process.env.NEXT_PUBLIC_KEYFILE_SECRET,
-} as const;
+// Use validated environment configuration
+export const ENV_CONFIG = validatedConfig;
 
-// Get projectId from https://dashboard.reown.com
+// Get projectId from validated config
 export const projectId = ENV_CONFIG.PROJECT_ID;
 
-if (!projectId) {
-  throw new Error("Project ID is not defined");
-}
+const canopyNetwork = {
+  id: 10042,
+  name: "Canopy Network",
+  nativeCurrency: {
+    decimals: 18,
+    name: "Canopy",
+    symbol: "CNPY",
+  },
+  rpcUrls: {
+    default: {
+      http: ["https://anvil.neochiba.net"],
+    },
+    public: {
+      http: ["https://anvil.neochiba.net"],
+    },
+  },
+};
 
-if (!ENV_CONFIG.KEYFILE_SECRET) {
-  throw new Error("NEXT_PUBLIC_KEYFILE_SECRET is not defined");
-}
-
-export const networks = [mainnet, sepolia];
+export const networks = [mainnet, sepolia, canopyNetwork];
 
 //Set up the Wagmi Adapter (Config)
 export const wagmiAdapter = new WagmiAdapter({

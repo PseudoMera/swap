@@ -36,15 +36,13 @@ export interface LockOrder {
   buyerSendAddress: Address;
   buyerReceiveAddress: Address;
   buyerChainDeadline: number;
-  chainId: number;
+  chain_id: number;
 }
 
 export interface CloseOrder {
-  address: Address;
   orderId: string;
-  fee: number;
-  submit: boolean;
-  password: string;
+  chain_id: number;
+  closeOrder: boolean;
 }
 
 export interface SwapOrderResponse {

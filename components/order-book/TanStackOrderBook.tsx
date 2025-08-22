@@ -12,7 +12,12 @@ import { OrdersTable } from "./OrdersTable";
 import { Order } from "@/types/order";
 import { TradingPair } from "@/types/trading-pair";
 import OrderFilters from "./OrderFilters";
-import { SizeCategory, RangeType, OrderStatus, SpreadFilter } from "@/types/order-book-filters";
+import {
+  SizeCategory,
+  RangeType,
+  OrderStatus,
+  SpreadFilter,
+} from "@/types/order-book-filters";
 
 export interface ProcessedOrder
   extends Omit<Order, "amountForSale" | "requestedAmount"> {
@@ -67,7 +72,7 @@ export function TanStackOrderBook({
     if (!tradingPair) return [];
 
     try {
-      const targetCommittee = tradingPair.baseAsset.committee;
+      const targetCommittee = tradingPair.quoteAsset.committee;
 
       return orders
         .filter((order) => order && order.committee === targetCommittee)
@@ -124,7 +129,7 @@ export function TanStackOrderBook({
     if (!tradingPair) return [];
 
     try {
-      const targetCommittee = tradingPair.baseAsset.committee;
+      const targetCommittee = tradingPair.quoteAsset.committee;
 
       const allOrders = orders
         .filter((order) => order && order.committee === targetCommittee)
@@ -221,14 +226,14 @@ export function TanStackOrderBook({
 
       // Apply spread filter
       if (spreadFilter !== "all") {
-        const bestPrice = Math.min(...allOrders.map(o => o.price));
+        const bestPrice = Math.min(...allOrders.map((o) => o.price));
         const spreadMultiplier = {
           "1%": 1.01,
           "2%": 1.02,
           "5%": 1.05,
-          "10%": 1.10,
+          "10%": 1.1,
         }[spreadFilter];
-        
+
         if (spreadMultiplier) {
           const maxAllowedPrice = bestPrice * spreadMultiplier;
           filteredOrders = filteredOrders.filter((order) => {

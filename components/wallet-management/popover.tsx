@@ -11,7 +11,7 @@ import Image from "next/image";
 import { X, Wallet2, ChevronDown } from "lucide-react";
 import { useWallets } from "@/context/wallet";
 import React from "react";
-import { useAppKitAccount } from "@reown/appkit/react";
+import { useUnifiedWallet } from "@/hooks/useUnifiedWallet";
 import { ellipsizeAddress } from "@/utils/address";
 import { ChainType, WalletType } from "@/types/wallet";
 import CanopyWalletManagement from "./canopy-wallet-management";
@@ -35,15 +35,12 @@ const reownSupportedWallets: ConnectWallets[] = [
 ];
 
 export function WalletManagementPopover() {
-  const { connect, disconnect, wallets, selectedCanopyWallet } = useWallets();
-  const eip155Account = useAppKitAccount({ namespace: "eip155" });
+  const { connect, disconnect, selectedCanopyWallet } = useWallets();
+  const { wallet: externalWallet, isConnected: isExternalConnected, isConnecting, error: connectionError } = useUnifiedWallet();
   
-  // Check if any wallet is connected - first check external wallets, then fallback to Canopy
-  const isExternalWalletConnected = wallets.length > 0 && wallets[0].connected;
-  const connectedAddress = isExternalWalletConnected 
-    ? wallets[0].address 
-    : selectedCanopyWallet?.address || null;
-  const isConnected = !!connectedAddress;
+  // Check if any wallet is connected - external or Canopy
+  const connectedAddress = externalWallet?.address || selectedCanopyWallet?.address || null;
+  const isConnected = isExternalConnected || Boolean(selectedCanopyWallet);
 
   return (
     <Popover>
@@ -82,6 +79,7 @@ export function WalletManagementPopover() {
                 <Button
                   variant="ghost"
                   className="w-full h-20 flex justify-baseline"
+                  disabled={isConnecting}
                   onClick={() => connect("metamask", "ethereum")}
                 >
                   <div className="flex items-center gap-3">
@@ -92,12 +90,14 @@ export function WalletManagementPopover() {
                       height={24}
                       className="rounded-full bg-white border"
                     />
-                    <span className="font-semibold text-sm">{wallet.name}</span>
+                    <span className="font-semibold text-sm">
+                      {isConnecting ? 'Connecting...' : wallet.name}
+                    </span>
                   </div>
 
-                  {eip155Account.isConnected && eip155Account.address && (
+                  {externalWallet?.address && (
                     <div className="max-w-32 flex items-center gap-2 bg-green-100 text-green-900 rounded-xl px-3 py-1 font-medium ml-auto">
-                      <span>{ellipsizeAddress(eip155Account.address)}</span>
+                      <span>{ellipsizeAddress(externalWallet.address)}</span>
                       <span
                         className="h-6 w-6 p-0 flex items-center"
                         onClick={() =>
@@ -113,6 +113,15 @@ export function WalletManagementPopover() {
               </React.Fragment>
             ))}
           </div>
+          
+          {connectionError && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-700">
+                <strong>Connection Error:</strong> {connectionError.message}
+              </p>
+            </div>
+          )}
+          
           <Separator />
           <CanopyWalletManagement />
         </div>

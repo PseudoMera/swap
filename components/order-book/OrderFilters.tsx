@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { X, ChevronDown, ChevronUp, Filter } from "lucide-react";
 import RangeFilter from "./RangeFilter";
 import SizeCategoryFilter from "./SizeCategoryFilter";
 import OrderStatusFilter from "./OrderStatusFilter";
@@ -57,6 +57,7 @@ function OrderFilters({
   onClearSpreadFilter,
   onClearAllFilters,
 }: OrderFiltersProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
   const rangeMinMax = useMemo(() => {
     if (!allProcessedOrders || allProcessedOrders.length === 0) {
       return {
@@ -140,28 +141,53 @@ function OrderFilters({
     return Math.min(...prices);
   }, [allProcessedOrders]);
 
+  // Check if any filters are active
+  const hasActiveFilters = useMemo(() => {
+    return !!(
+      priceRange ||
+      amountRange ||
+      totalRange ||
+      sizeCategory !== "all" ||
+      orderStatus !== "all" ||
+      spreadFilter !== "all"
+    );
+  }, [priceRange, amountRange, totalRange, sizeCategory, orderStatus, spreadFilter]);
+
   if (!allProcessedOrders || allProcessedOrders.length === 0) {
     return null;
   }
 
   return (
     <Card className="mb-6 bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
-      <CardHeader className="pb-4">
+      <CardHeader className="pb-2">
         <CardTitle className="text-lg flex items-center justify-between">
-          <span>Order Filters</span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onClearAllFilters}
-            className="h-8 text-xs"
-          >
-            <X className="h-3 w-3 mr-1" />
-            Clear All Filters
-          </Button>
+          <span>Order Filters {hasActiveFilters && <span className="text-sm text-green-600 ml-1">(Active)</span>}</span>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="flex items-center gap-2"
+            >
+              <Filter className="h-4 w-4" />
+              {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </Button>
+            {isExpanded && hasActiveFilters && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onClearAllFilters}
+              >
+                <X className="h-4 w-4" />
+                Clear All
+              </Button>
+            )}
+          </div>
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      {isExpanded && (
+        <CardContent>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <RangeFilter
             title="Price Range"
             min={rangeMinMax.price.min}
@@ -224,8 +250,9 @@ function OrderFilters({
             bestPrice={bestPrice}
             tradingPairSymbol={tradingPair?.quoteAsset.symbol || "USDC"}
           />
-        </div>
-      </CardContent>
+          </div>
+        </CardContent>
+      )}
     </Card>
   );
 }
