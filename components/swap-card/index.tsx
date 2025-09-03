@@ -27,7 +27,6 @@ interface SwapCardProps {
   selectedOrders: ProcessedOrder[];
   onClearOrders?: () => void;
   tradingPair: TradingPair;
-  onTradingPairChange?: (pair: TradingPair) => void;
   isSwapped: boolean;
   handleSwapDirection: () => void;
 }
@@ -36,7 +35,6 @@ export function SwapCard({
   selectedOrders = [],
   onClearOrders,
   tradingPair,
-  onTradingPairChange,
   handleSwapDirection,
   isSwapped,
 }: SwapCardProps) {

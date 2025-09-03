@@ -21,7 +21,6 @@ interface TransactionSummaryModalProps {
   receiveAmount: string;
   payBalance: string;
   receiveBalance: string;
-  triggerLabel?: string;
   triggerClassName?: string;
   disabled?: boolean;
 }
@@ -36,21 +35,22 @@ export function TransactionSummaryModal({
   receiveAmount,
   payBalance,
   receiveBalance,
-  triggerLabel = "Connect Wallet",
   triggerClassName = "w-full bg-green-100 text-green-900 hover:bg-green-200 mt-2 h-12 text-lg font-medium rounded-xl",
   disabled = false,
 }: TransactionSummaryModalProps) {
   const { selectedCanopyWallet } = useWallets();
   const { isConnected: isExternalConnected } = useUnifiedWallet();
-  
+
   // Buy orders (!isSwapped) require external wallet for USDC payments
   // Sell orders (isSwapped) require Canopy wallet for base asset payments
-  const hasRequiredWallet = !isSwapped 
-    ? isExternalConnected  // Buy orders need external wallet
-    : Boolean(selectedCanopyWallet);  // Sell orders need Canopy wallet
-  
+  const hasRequiredWallet = !isSwapped
+    ? isExternalConnected // Buy orders need external wallet
+    : Boolean(selectedCanopyWallet); // Sell orders need Canopy wallet
+
   // Only show modal if there are selected orders AND required wallet is connected
-  const hasValidTransaction = !isSwapped ? selectedOrders.length > 0 && hasRequiredWallet : hasRequiredWallet;
+  const hasValidTransaction = !isSwapped
+    ? selectedOrders.length > 0 && hasRequiredWallet
+    : hasRequiredWallet;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -59,8 +59,8 @@ export function TransactionSummaryModal({
           className={triggerClassName}
           disabled={disabled || !hasValidTransaction}
         >
-          {!hasRequiredWallet 
-            ? "Connect Wallet" 
+          {!hasRequiredWallet
+            ? "Connect Wallet"
             : selectedOrders.length === 0 && !isSwapped
               ? "Select Orders"
               : "Review Transaction"}

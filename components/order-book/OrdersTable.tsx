@@ -117,6 +117,7 @@ export function OrdersTable({
     getSortedRowModel: getSortedRowModel(),
     onSortingChange: setSorting,
     autoResetPageIndex: false,
+    autoResetExpanded: false,
     state: {
       sorting,
     },

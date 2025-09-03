@@ -5,9 +5,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Search, Moon } from "lucide-react";
-import { Input } from "../ui/input";
+import { Moon } from "lucide-react";
 import { WalletManagementPopover } from "../wallet-management/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "../ui/select";
+import { TRADING_PAIRS_LIST } from "@/constants/trading-pairs";
+import { useState } from "react";
+import { TradingPair } from "@/types/trading-pair";
 
 const navLinks = [
   { name: "Swap", href: "/" },
@@ -18,9 +21,21 @@ const navLinks = [
 export function Header() {
   const pathname = usePathname();
 
+  const [selectedPair, setSelectedPair] = useState<TradingPair>(
+    TRADING_PAIRS_LIST[0],
+  );
+
+  const handlePairChange = (value: string) => {
+    const newPair = TRADING_PAIRS_LIST.find(
+      (pair) => pair.displayName === value,
+    );
+    if (newPair) {
+      setSelectedPair(newPair);
+    }
+  };
+
   return (
     <header className="w-full border-b bg-white flex items-center h-16 px-4 md:px-8">
-      {/* Logo and Brand */}
       <div className="flex items-center gap-2 min-w-[180px]">
         <Image
           src="/chains-icons/canopy-logo.svg"
@@ -33,7 +48,6 @@ export function Header() {
         <span className="font-bold text-lg tracking-tight">Canopy Swap</span>
       </div>
 
-      {/* Navigation */}
       <nav className="ml-8 flex gap-6">
         {navLinks.map((link) => {
           const isActive = pathname === link.href;
@@ -57,23 +71,38 @@ export function Header() {
         })}
       </nav>
 
-      {/* Spacer */}
       <div className="flex-1" />
 
-      {/* Search, Theme Toggle, Wallet */}
       <div className="flex items-center gap-3">
-        {/* Search Input */}
-        <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-            <Search size={18} />
-          </span>
-          <Input
-            type="text"
-            placeholder="Search pairs"
-            className="pl-9 pr-3 py-2 rounded-md bg-muted text-sm border-none focus:ring-2 focus:ring-green-200 transition w-[180px] placeholder:text-muted-foreground"
-          />
-        </div>
-        {/* Theme Toggle */}
+        <Select
+          value={selectedPair.displayName}
+          onValueChange={handlePairChange}
+        >
+          <SelectTrigger>
+            <Image
+              src={selectedPair.quoteAsset.assetIcon}
+              alt={selectedPair.displayName}
+              width={24}
+              height={24}
+              className="mr-2"
+            />
+            {selectedPair.displayName}
+          </SelectTrigger>
+          <SelectContent>
+            {TRADING_PAIRS_LIST.map((pair) => (
+              <SelectItem key={pair.id} value={pair.displayName}>
+                <Image
+                  src={pair.quoteAsset.assetIcon}
+                  alt={pair.displayName}
+                  width={24}
+                  height={24}
+                  className="mr-2"
+                />
+                {pair.displayName}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <Button
           variant="ghost"
           size="icon"

@@ -7,7 +7,6 @@ import { RefreshCw, X } from "lucide-react";
 import { usePollingData } from "@/context/polling-context";
 import { blockchainUValueToNumber } from "@/utils/blockchain";
 import { formatLastUpdated } from "@/utils/time";
-import { DepthTable } from "./DepthTable";
 import { OrdersTable } from "./OrdersTable";
 import { Order } from "@/types/order";
 import { TradingPair } from "@/types/trading-pair";
@@ -18,6 +17,7 @@ import {
   OrderStatus,
   SpreadFilter,
 } from "@/types/order-book-filters";
+import DepthTable from "./DepthTable";
 
 export interface ProcessedOrder
   extends Omit<Order, "amountForSale" | "requestedAmount"> {

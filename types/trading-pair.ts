@@ -6,4 +6,5 @@ export interface TradingPair {
   quoteAsset: Asset; // Asset being bought (quote/payment asset)
   displayName: string; // e.g., "USDC/CNPY"
   isActive: boolean;
+  committee: number;
 }

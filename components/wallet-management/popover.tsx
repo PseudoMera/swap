@@ -36,10 +36,15 @@ const reownSupportedWallets: ConnectWallets[] = [
 
 export function WalletManagementPopover() {
   const { connect, disconnect, selectedCanopyWallet } = useWallets();
-  const { wallet: externalWallet, isConnected: isExternalConnected, isConnecting, error: connectionError } = useUnifiedWallet();
-  
+  const {
+    wallet: externalWallet,
+    isConnected: isExternalConnected,
+    isConnecting,
+  } = useUnifiedWallet();
+
   // Check if any wallet is connected - external or Canopy
-  const connectedAddress = externalWallet?.address || selectedCanopyWallet?.address || null;
+  const connectedAddress =
+    externalWallet?.address || selectedCanopyWallet?.address || null;
   const isConnected = isExternalConnected || Boolean(selectedCanopyWallet);
 
   return (
@@ -91,7 +96,7 @@ export function WalletManagementPopover() {
                       className="rounded-full bg-white border"
                     />
                     <span className="font-semibold text-sm">
-                      {isConnecting ? 'Connecting...' : wallet.name}
+                      {isConnecting ? "Connecting..." : wallet.name}
                     </span>
                   </div>
 
@@ -113,15 +118,7 @@ export function WalletManagementPopover() {
               </React.Fragment>
             ))}
           </div>
-          
-          {connectionError && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm text-red-700">
-                <strong>Connection Error:</strong> {connectionError.message}
-              </p>
-            </div>
-          )}
-          
+
           <Separator />
           <CanopyWalletManagement />
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, ReactNode, useRef, useEffect } from "react";
+import { createContext, useContext, ReactNode, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchOrdersFromCommittee } from "@/services/orders";
 import { Order } from "@/types/order";
@@ -56,6 +56,7 @@ export function PollingProvider({
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
+    placeholderData: (prev) => prev,
   });
 
   const {
@@ -75,9 +76,8 @@ export function PollingProvider({
     refetchOnMount: true,
     refetchOnReconnect: false,
     retry: 1,
+    placeholderData: (prev) => prev,
   });
-
-  const ordersLastUpdated = ordersUpdatedAt ? new Date(ordersUpdatedAt) : undefined;
 
   const {
     data: userBalance,
@@ -89,28 +89,46 @@ export function PollingProvider({
     queryFn: () => fetchUserBalance(height || 0, ""),
     refetchInterval: balanceInterval,
     staleTime: 0,
+    placeholderData: (prev) => prev,
   });
 
+  const ctx = useMemo(
+    () => ({
+      orders,
+      ordersLoading,
+      ordersError: ordersError as Error | null,
+      refetchOrders,
+      ordersLastUpdated: ordersUpdatedAt
+        ? new Date(ordersUpdatedAt)
+        : undefined,
+      userBalance,
+      balanceLoading,
+      balanceError,
+      refetchBalance,
+      height,
+      heightLoading,
+      heightError: heightError as Error | null,
+      refetchHeight,
+    }),
+    [
+      orders,
+      ordersLoading,
+      ordersError,
+      refetchOrders,
+      userBalance,
+      balanceLoading,
+      balanceError,
+      refetchBalance,
+      height,
+      heightLoading,
+      heightError,
+      refetchHeight,
+      ordersUpdatedAt,
+    ],
+  );
+
   return (
-    <PollingContext.Provider
-      value={{
-        orders,
-        ordersLoading,
-        ordersError: ordersError as Error | null,
-        refetchOrders,
-        ordersLastUpdated,
-        userBalance,
-        balanceLoading,
-        balanceError,
-        refetchBalance,
-        height,
-        heightLoading,
-        heightError: heightError as Error | null,
-        refetchHeight,
-      }}
-    >
-      {children}
-    </PollingContext.Provider>
+    <PollingContext.Provider value={ctx}>{children}</PollingContext.Provider>
   );
 }
 

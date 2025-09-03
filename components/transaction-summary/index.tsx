@@ -17,15 +17,13 @@ import { useEffect, useState } from "react";
 import { TradingPair } from "@/types/trading-pair";
 import { CloseOrder, LockOrder } from "@/types/order";
 import { usePollingData } from "@/context/polling-context";
-import {
-  USDC_CONTRACT_SEPOLIA,
-  usdcTransferMethodID,
-} from "@/constants/tokens";
+import { TEST_ORACLE_CONTRACT, usdcTransferMethodID } from "@/constants/tokens";
 import { sendTransaction } from "wagmi/actions";
 import { wagmiConfig } from "@/config";
 import { useCapabilities, useSendCalls } from "wagmi";
 import ProgressToast from "../headless-toast/progress-toast";
 import { ProcessedOrder } from "../order-book/TanStackOrderBook";
+import { ellipsizeAddress, padAddress, sliceAddress } from "@/utils/address";
 //TODO: Metamask stores previous transactions, need to do a cleanup everytime this component opens :)
 //TODO: Only group locked orders together
 //TODO: NEVER group a locked order with an order thats not locked
@@ -57,38 +55,31 @@ export function TransactionSummary({
   const { wallet: externalWallet } = useUnifiedWallet();
   const { height } = usePollingData();
 
-  // Wagmi hooks for batch transactions
   const { data: capabilities } = useCapabilities();
   const { sendCalls } = useSendCalls();
 
   const [selectedDestination, setSelectedDestination] = useState<string>("");
 
-  // Get current pay and receive assets based on swap direction
   const payAsset = isSwapped ? tradingPair.baseAsset : tradingPair.quoteAsset;
   const receiveAsset = isSwapped
     ? tradingPair.quoteAsset
     : tradingPair.baseAsset;
 
-  // Determine order type and destination logic
-  // TODO: Only group locked orders together
-  // NEVER group a locked order with an order thats not locked
-  const isOrderLocked =
-    selectedOrders.length > 0 && selectedOrders[0].buyerReceiveAddress;
+  const areOrdersLocked =
+    selectedOrders.length > 0 &&
+    !selectedOrders.some((order) => !order.buyerReceiveAddress);
   const isBuyOrder = !isSwapped;
   const isSellOrder = isSwapped;
 
-  // Destination address logic
   const getDestinationAddress = () => {
     if (isBuyOrder) {
-      if (isOrderLocked) {
+      if (areOrdersLocked) {
         // Close order: use the buyer's receive address from the order
         return selectedOrders[0].sellerReceiveAddress || "";
       } else {
-        // Lock order: self-send to current wagmi wallet
         return selectedCanopyWallet?.address;
       }
     } else {
-      // Sell order: use selected destination from dropdown
       return selectedDestination || externalWallet?.address || "";
     }
   };
@@ -111,6 +102,14 @@ export function TransactionSummary({
       : 0;
 
   const handleSellOrder = async () => {
+    if (!finalDestinationAddress) {
+      toast("Error", {
+        description: "Destination address is required",
+        duration: 5000,
+      });
+      return;
+    }
+
     try {
       await createOrder({
         address: selectedCanopyWallet?.address || "",
@@ -119,9 +118,7 @@ export function TransactionSummary({
         amount: numberToBlockchainUValue(Number(receiveAmount)),
         receiveAmount: numberToBlockchainUValue(Number(payAmount)),
         // Use the calculated destination address
-        receiveAddress: externalWallet?.address.slice(2) || "",
-        // receiveAddress: "b75e5da448b5848196e7589d6f4666c98564a635",
-        // || finalDestinationAddress,
+        receiveAddress: sliceAddress(finalDestinationAddress),
         memo: "",
         fee: 0,
         submit: true,
@@ -136,7 +133,7 @@ export function TransactionSummary({
             duration={20000}
           />
         ),
-        duration: 20000, // Keep toast visible for 20 seconds
+        duration: 20000,
       });
 
       onClose();
@@ -146,7 +143,11 @@ export function TransactionSummary({
   };
 
   const handleBuyOrder = async () => {
-    if (!selectedCanopyWallet || !externalWallet) {
+    if (!selectedCanopyWallet || !externalWallet || !finalDestinationAddress) {
+      toast("Transaction failed", {
+        description: "Missing external wallet or destination address",
+        duration: 5000,
+      });
       return;
     }
 
@@ -158,17 +159,7 @@ export function TransactionSummary({
         selectedOrders.length > 1 &&
         (atomicStatus === "supported" || atomicStatus === "ready");
 
-      console.log(`Atomic batch status: ${atomicStatus}`);
-      console.log(`Can use batch: ${canBatch}`);
-
       if (canBatch) {
-        if (atomicStatus === "ready") {
-          console.log(
-            "🔄 Using sendCalls - will prompt user to upgrade to smart account",
-          );
-        } else {
-          console.log("🚀 Using sendCalls - smart account ready");
-        }
         await handleBatchTransactions();
       } else {
         console.log("📝 Using sequential transactions");
@@ -194,7 +185,13 @@ export function TransactionSummary({
   };
 
   const handleBatchTransactions = async () => {
-    if (!externalWallet) return;
+    if (!externalWallet || !finalDestinationAddress) {
+      toast("Transaction failed", {
+        description: "Missing external wallet or destination address",
+        duration: 5000,
+      });
+      return;
+    }
 
     try {
       // Prepare calls for batch transaction
@@ -213,13 +210,13 @@ export function TransactionSummary({
           buyerSendAddress: externalWallet.address,
         };
 
-        const orderAmount = isOrderLocked ? order.total : 0;
-        const amountInUnits = Math.floor(orderAmount * 1000000);
-        const paddedTo = externalWallet.address.slice(2).padStart(64, "0");
+        const orderAmount = areOrdersLocked ? order.total : 0;
+        const amountInUnits = Math.floor(numberToBlockchainUValue(orderAmount));
+        const paddedTo = sliceAddress(externalWallet.address).padStart(64, "0");
         const paddedAmount = amountInUnits.toString(16).padStart(64, "0");
 
         const orderToSendAsMemo = JSON.stringify(
-          isOrderLocked ? closeOrder : lockOrder,
+          areOrdersLocked ? closeOrder : lockOrder,
         );
 
         const memoJson = orderToSendAsMemo;
@@ -232,7 +229,7 @@ export function TransactionSummary({
           `0x${usdcTransferMethodID}${paddedTo}${paddedAmount}${memoHex}` as `0x${string}`;
 
         return {
-          to: USDC_CONTRACT_SEPOLIA as `0x${string}`,
+          to: TEST_ORACLE_CONTRACT as `0x${string}`,
           value: BigInt(0),
           data,
         };
@@ -243,14 +240,22 @@ export function TransactionSummary({
         calls,
       });
     } catch (error) {
-      // Fallback to sequential transactions
+      toast("Batch Transaction Failed", {
+        description: `Failed to execute batch transaction. Fallback to sequential transactions. ${error}`,
+        duration: 5000,
+      });
       await handleSequentialTransactions();
     }
   };
 
   const handleSequentialTransactions = async () => {
-    //TODO: Add proper validation and display error message
-    if (!externalWallet) return;
+    if (!externalWallet || !finalDestinationAddress) {
+      toast("Transaction failed", {
+        description: "Missing external wallet or destination address",
+        duration: 5000,
+      });
+      return;
+    }
 
     // Fallback to sequential transactions
     for (let i = 0; i < selectedOrders.length; i++) {
@@ -270,20 +275,15 @@ export function TransactionSummary({
         buyerSendAddress: externalWallet.address.slice(2),
       };
 
-      // TODO: USE 0 WHEN ITS A LOCK ORDER
-      // const orderAmount = order.total;
-      const orderAmount = isOrderLocked ? order.total : 0;
+      const orderAmount = areOrdersLocked ? order.total : 0;
       const amountInUnits = Math.floor(orderAmount * 1000000);
-      console.log("selected: ", selectedOrders);
-      console.log("finalDestinationAddress", finalDestinationAddress);
-      console.log("IS ORDER LOCKED", isOrderLocked);
-      const paddedTo = isOrderLocked
-        ? finalDestinationAddress.padStart(64, "0")
-        : externalWallet.address.slice(2).padStart(64, "0");
+      const paddedTo = areOrdersLocked
+        ? padAddress(order.sellerReceiveAddress)
+        : padAddress(sliceAddress(externalWallet.address));
       const paddedAmount = amountInUnits.toString(16).padStart(64, "0");
 
       const orderToSendAsMemo = JSON.stringify(
-        isOrderLocked ? closeOrder : lockOrder,
+        areOrdersLocked ? closeOrder : lockOrder,
       );
 
       const memoJson = orderToSendAsMemo;
@@ -296,7 +296,7 @@ export function TransactionSummary({
         `0x${usdcTransferMethodID}${paddedTo}${paddedAmount}${memoHex}` as `0x${string}`;
 
       await sendTransaction(wagmiConfig, {
-        to: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+        to: TEST_ORACLE_CONTRACT,
         value: BigInt(0),
         data,
       });
@@ -535,19 +535,19 @@ export function TransactionSummary({
               <div className="bg-white rounded-lg p-3 flex items-center gap-3">
                 <Image
                   src="/chains-icons/ethereum-logo.svg"
-                  alt={isOrderLocked ? "Order Address" : "Ethereum Wallet"}
+                  alt={areOrdersLocked ? "Order Address" : "Ethereum Wallet"}
                   width={20}
                   height={20}
                   className="rounded-full"
                 />
                 <span className="font-medium text-sm">
-                  {isOrderLocked
+                  {areOrdersLocked
                     ? "Order Destination"
                     : externalWallet?.connector?.name || "MetaMask"}
                 </span>
                 {finalDestinationAddress && (
                   <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-medium ml-auto">
-                    {`${finalDestinationAddress.slice(0, 6)}...${finalDestinationAddress.slice(-4)}`}
+                    {ellipsizeAddress(finalDestinationAddress)}
                   </span>
                 )}
               </div>

@@ -7,6 +7,7 @@ import {
   ColumnDef,
 } from "@tanstack/react-table";
 import { AggregatedOrder } from "./TanStackOrderBook";
+import { useMemo } from "react";
 
 interface DepthTableProps {
   data: AggregatedOrder[];
@@ -15,48 +16,56 @@ interface DepthTableProps {
   selectedPrice: number | null;
 }
 
-export function DepthTable({ data, loading, onPriceSelect, selectedPrice }: DepthTableProps) {
-  const columns: ColumnDef<AggregatedOrder>[] = [
-    {
-      accessorKey: "price",
-      header: "Price (USDC)",
-      cell: ({ getValue }) => {
-        const price = getValue() as number;
-        return (
-          <span className="font-mono font-semibold text-green-700 relative z-10">
-            {price.toFixed(4)}
-          </span>
-        );
+function DepthTable({
+  data,
+  loading,
+  onPriceSelect,
+  selectedPrice,
+}: DepthTableProps) {
+  const columns: ColumnDef<AggregatedOrder>[] = useMemo(
+    () => [
+      {
+        accessorKey: "price",
+        header: "Price (USDC)",
+        cell: ({ getValue }) => {
+          const price = getValue() as number;
+          return (
+            <span className="font-mono font-semibold text-green-700 relative z-10">
+              {price.toFixed(4)}
+            </span>
+          );
+        },
       },
-    },
-    {
-      accessorKey: "totalAmount",
-      header: "Amount (CNPY)",
-      cell: ({ getValue }) => {
-        const amount = getValue() as number;
-        return (
-          <span className="font-mono relative z-10">
-            {amount.toLocaleString()}
-          </span>
-        );
+      {
+        accessorKey: "totalAmount",
+        header: "Amount (CNPY)",
+        cell: ({ getValue }) => {
+          const amount = getValue() as number;
+          return (
+            <span className="font-mono relative z-10">
+              {amount.toLocaleString()}
+            </span>
+          );
+        },
       },
-    },
-    {
-      accessorKey: "totalValue",
-      header: "Total (USDC)",
-      cell: ({ getValue }) => {
-        const total = getValue() as number;
-        return (
-          <span className="font-mono relative z-10">{total.toFixed(2)}</span>
-        );
+      {
+        accessorKey: "totalValue",
+        header: "Total (USDC)",
+        cell: ({ getValue }) => {
+          const total = getValue() as number;
+          return (
+            <span className="font-mono relative z-10">{total.toFixed(2)}</span>
+          );
+        },
       },
-    },
-  ];
+    ],
+    [],
+  );
 
   const table = useReactTable({
     data,
     columns,
-    getRowId: (row) => row.price.toString(), // Use stable ID based on price
+    getRowId: (row) => row.price.toString(),
     getCoreRowModel: getCoreRowModel(),
     autoResetPageIndex: false,
   });
@@ -103,14 +112,15 @@ export function DepthTable({ data, loading, onPriceSelect, selectedPrice }: Dept
         </thead>
         <tbody>
           {table.getRowModel().rows.map((row) => {
-            const isSelected = selectedPrice !== null && 
+            const isSelected =
+              selectedPrice !== null &&
               row.original.price.toFixed(4) === selectedPrice.toFixed(4);
-            
+
             return (
               <tr
                 key={row.id}
                 className={`border-b last:border-b-0 hover:opacity-80 transition-all cursor-pointer relative ${
-                  isSelected ? 'ring-2 ring-green-600 ring-inset' : ''
+                  isSelected ? "ring-2 ring-green-600 ring-inset" : ""
                 }`}
                 style={{
                   background: `linear-gradient(to right, #76e698 0%, #76e698 ${row.original.volumePercentage}%, #F0FDF4 ${row.original.volumePercentage}%, #F0FDF4 100%)`,
@@ -130,3 +140,5 @@ export function DepthTable({ data, loading, onPriceSelect, selectedPrice }: Dept
     </div>
   );
 }
+
+export default DepthTable;

@@ -8,7 +8,12 @@ import RangeFilter from "./RangeFilter";
 import SizeCategoryFilter from "./SizeCategoryFilter";
 import OrderStatusFilter from "./OrderStatusFilter";
 import SpreadFilter from "./SpreadFilter";
-import { SizeCategory, RangeType, OrderStatus, SpreadFilter as SpreadFilterType } from "@/types/order-book-filters";
+import {
+  SizeCategory,
+  RangeType,
+  OrderStatus,
+  SpreadFilter as SpreadFilterType,
+} from "@/types/order-book-filters";
 import { ProcessedOrder } from "./TanStackOrderBook";
 import { TradingPair } from "@/types/trading-pair";
 
@@ -57,7 +62,7 @@ function OrderFilters({
   onClearSpreadFilter,
   onClearAllFilters,
 }: OrderFiltersProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
   const rangeMinMax = useMemo(() => {
     if (!allProcessedOrders || allProcessedOrders.length === 0) {
       return {
@@ -125,8 +130,12 @@ function OrderFilters({
       return { available: 0, locked: 0 };
     }
 
-    const available = allProcessedOrders.filter(order => !order.buyerSendAddress).length;
-    const locked = allProcessedOrders.filter(order => !!order.buyerSendAddress).length;
+    const available = allProcessedOrders.filter(
+      (order) => !order.buyerSendAddress,
+    ).length;
+    const locked = allProcessedOrders.filter(
+      (order) => !!order.buyerSendAddress,
+    ).length;
 
     return { available, locked };
   }, [allProcessedOrders]);
@@ -137,7 +146,7 @@ function OrderFilters({
       return null;
     }
 
-    const prices = allProcessedOrders.map(order => order.price);
+    const prices = allProcessedOrders.map((order) => order.price);
     return Math.min(...prices);
   }, [allProcessedOrders]);
 
@@ -151,7 +160,14 @@ function OrderFilters({
       orderStatus !== "all" ||
       spreadFilter !== "all"
     );
-  }, [priceRange, amountRange, totalRange, sizeCategory, orderStatus, spreadFilter]);
+  }, [
+    priceRange,
+    amountRange,
+    totalRange,
+    sizeCategory,
+    orderStatus,
+    spreadFilter,
+  ]);
 
   if (!allProcessedOrders || allProcessedOrders.length === 0) {
     return null;
@@ -161,7 +177,12 @@ function OrderFilters({
     <Card className="mb-6 bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
       <CardHeader className="pb-2">
         <CardTitle className="text-lg flex items-center justify-between">
-          <span>Order Filters {hasActiveFilters && <span className="text-sm text-green-600 ml-1">(Active)</span>}</span>
+          <span>
+            Order Filters{" "}
+            {hasActiveFilters && (
+              <span className="text-sm text-green-600 ml-1">(Active)</span>
+            )}
+          </span>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
@@ -170,14 +191,14 @@ function OrderFilters({
               className="flex items-center gap-2"
             >
               <Filter className="h-4 w-4" />
-              {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              {isExpanded ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
             </Button>
             {isExpanded && hasActiveFilters && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onClearAllFilters}
-              >
+              <Button variant="outline" size="sm" onClick={onClearAllFilters}>
                 <X className="h-4 w-4" />
                 Clear All
               </Button>
@@ -188,68 +209,68 @@ function OrderFilters({
       {isExpanded && (
         <CardContent>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <RangeFilter
-            title="Price Range"
-            min={rangeMinMax.price.min}
-            max={rangeMinMax.price.max}
-            value={priceRange}
-            onValueChange={(values) => onRangeChange("price", values)}
-            onClear={() => onClearRange("price")}
-            disabled={selectedPrice !== null}
-            step={0.0001}
-            unit={` ${tradingPair?.quoteAsset.symbol || "USDC"}`}
-            formatValue={(val) => val.toFixed(4)}
-          />
+            <RangeFilter
+              title="Price Range"
+              min={rangeMinMax.price.min}
+              max={rangeMinMax.price.max}
+              value={priceRange}
+              onValueChange={(values) => onRangeChange("price", values)}
+              onClear={() => onClearRange("price")}
+              disabled={selectedPrice !== null}
+              step={0.0001}
+              unit={` ${tradingPair?.quoteAsset.symbol || "USDC"}`}
+              formatValue={(val) => val.toFixed(4)}
+            />
 
-          <RangeFilter
-            title="Amount Range"
-            min={rangeMinMax.amount.min}
-            max={rangeMinMax.amount.max}
-            value={amountRange}
-            onValueChange={(values) => onRangeChange("amount", values)}
-            onClear={() => onClearRange("amount")}
-            step={1}
-            unit={` ${tradingPair?.baseAsset.symbol || "CNPY"}`}
-            formatValue={(val) => val.toLocaleString()}
-          />
+            <RangeFilter
+              title="Amount Range"
+              min={rangeMinMax.amount.min}
+              max={rangeMinMax.amount.max}
+              value={amountRange}
+              onValueChange={(values) => onRangeChange("amount", values)}
+              onClear={() => onClearRange("amount")}
+              step={1}
+              unit={` ${tradingPair?.baseAsset.symbol || "CNPY"}`}
+              formatValue={(val) => val.toLocaleString()}
+            />
 
-          <RangeFilter
-            title="Total Range"
-            min={rangeMinMax.total.min}
-            max={rangeMinMax.total.max}
-            value={totalRange}
-            onValueChange={(values) => onRangeChange("total", values)}
-            onClear={() => onClearRange("total")}
-            step={0.01}
-            unit={` ${tradingPair?.quoteAsset.symbol || "USDC"}`}
-            formatValue={(val) => val.toFixed(2)}
-          />
+            <RangeFilter
+              title="Total Range"
+              min={rangeMinMax.total.min}
+              max={rangeMinMax.total.max}
+              value={totalRange}
+              onValueChange={(values) => onRangeChange("total", values)}
+              onClear={() => onClearRange("total")}
+              step={0.01}
+              unit={` ${tradingPair?.quoteAsset.symbol || "USDC"}`}
+              formatValue={(val) => val.toFixed(2)}
+            />
 
-          <SizeCategoryFilter
-            title="Order Size"
-            value={sizeCategory}
-            onValueChange={onSizeCategoryChange}
-            onClear={onClearSizeCategory}
-            categories={sizeCategoryDefinitions}
-          />
+            <SizeCategoryFilter
+              title="Order Size"
+              value={sizeCategory}
+              onValueChange={onSizeCategoryChange}
+              onClear={onClearSizeCategory}
+              categories={sizeCategoryDefinitions}
+            />
 
-          <OrderStatusFilter
-            title="Order Status"
-            value={orderStatus}
-            onValueChange={onOrderStatusChange}
-            onClear={onClearOrderStatus}
-            availableCount={orderStatusCounts.available}
-            lockedCount={orderStatusCounts.locked}
-          />
+            <OrderStatusFilter
+              title="Order Status"
+              value={orderStatus}
+              onValueChange={onOrderStatusChange}
+              onClear={onClearOrderStatus}
+              availableCount={orderStatusCounts.available}
+              lockedCount={orderStatusCounts.locked}
+            />
 
-          <SpreadFilter
-            title="Price Spread"
-            value={spreadFilter}
-            onValueChange={onSpreadFilterChange}
-            onClear={onClearSpreadFilter}
-            bestPrice={bestPrice}
-            tradingPairSymbol={tradingPair?.quoteAsset.symbol || "USDC"}
-          />
+            <SpreadFilter
+              title="Price Spread"
+              value={spreadFilter}
+              onValueChange={onSpreadFilterChange}
+              onClear={onClearSpreadFilter}
+              bestPrice={bestPrice}
+              tradingPairSymbol={tradingPair?.quoteAsset.symbol || "USDC"}
+            />
           </div>
         </CardContent>
       )}
