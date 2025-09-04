@@ -24,3 +24,5 @@ export interface CanopyWalletAccount {
   keyfileId: string;
   filename: string;
 }
+
+export type ZeroXAddress = `0x${string}`;

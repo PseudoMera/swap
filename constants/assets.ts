@@ -25,4 +25,4 @@ export const ASSETS: Record<string, Asset> = {
     chainIcon: "/chains-icons/ethereum-logo.svg",
     assetIcon: "/chains-icons/usdc-logo.svg",
   },
-};
+} as const;

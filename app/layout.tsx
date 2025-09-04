@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Header } from "@/components/header";
-import { Footer } from "@/components/footer";
 
 import { headers } from "next/headers";
 import AppkitProvider from "@/context/appkit";
@@ -11,6 +9,9 @@ import { PollingProvider } from "@/context/polling-context";
 import { POLLING_INTERVALS } from "@/constants/api";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryProvider } from "@/providers/QueryClientProvider";
+import { TradePairContextProvider } from "@/context/trade-pair-context";
+import Footer from "@/components/footer/Footer";
+import Header from "@/components/header/Header";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -43,18 +44,20 @@ export default async function RootLayout({
         <QueryProvider>
           <AppkitProvider cookies={cookies}>
             <WalletProvider>
-              <PollingProvider
-                ordersInterval={POLLING_INTERVALS.ORDERS}
-                balanceInterval={POLLING_INTERVALS.BALANCE}
-                heightInterval={POLLING_INTERVALS.HEIGHT}
-              >
-                <Header />
-                <main className="w-full max-w-screen-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
-                  {children}
-                </main>
-                <Footer />
-                <Toaster />
-              </PollingProvider>
+              <TradePairContextProvider>
+                <PollingProvider
+                  ordersInterval={POLLING_INTERVALS.ORDERS}
+                  balanceInterval={POLLING_INTERVALS.BALANCE}
+                  heightInterval={POLLING_INTERVALS.HEIGHT}
+                >
+                  <Header />
+                  <main className="w-full max-w-screen-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
+                    {children}
+                  </main>
+                  <Footer />
+                  <Toaster />
+                </PollingProvider>
+              </TradePairContextProvider>
             </WalletProvider>
           </AppkitProvider>
         </QueryProvider>

@@ -1,5 +1,7 @@
+export type AssetId = "usdc" | "cnpy";
+
 export interface Asset {
-  id: string;
+  id: AssetId;
   name: string;
   symbol: string;
   decimals: number;

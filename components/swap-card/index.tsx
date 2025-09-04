@@ -9,16 +9,19 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import Image from "next/image";
-import { ArrowDown, Settings } from "lucide-react";
+import { ArrowDown } from "lucide-react";
 import { useMemo, useState } from "react";
 import { usePollingData } from "@/context/polling-context";
 import { TransactionSummaryModal } from "@/components/transaction-summary/modal";
 import { getAllChains } from "@/utils/chains";
 import { getBuyableAssets, getSellableAssets } from "@/utils/assets";
 import { ProcessedOrder } from "../order-book/TanStackOrderBook";
-import { TradingPair } from "@/types/trading-pair";
+import { useUnifiedWallet } from "@/hooks/useUnifiedWallet";
+import { useBalance } from "wagmi";
+import { ZeroXAddress } from "@/types/wallet";
+import { formatNumber, formatTokenBalance } from "@/utils/number";
+import { useTradePairContext } from "@/context/trade-pair-context";
 
-// Get available chains and assets outside component
 const chains = getAllChains();
 const buyableAssets = getBuyableAssets();
 const sellableAssets = getSellableAssets();
@@ -26,7 +29,6 @@ const sellableAssets = getSellableAssets();
 interface SwapCardProps {
   selectedOrders: ProcessedOrder[];
   onClearOrders?: () => void;
-  tradingPair: TradingPair;
   isSwapped: boolean;
   handleSwapDirection: () => void;
 }
@@ -34,21 +36,30 @@ interface SwapCardProps {
 export function SwapCard({
   selectedOrders = [],
   onClearOrders,
-  tradingPair,
   handleSwapDirection,
   isSwapped,
 }: SwapCardProps) {
-  const { userBalance: canopyBalance } = usePollingData();
+  const { tradePair } = useTradePairContext();
+  const { canopyBalance } = usePollingData();
+  const { wallet } = useUnifiedWallet();
+  const { data } = useBalance({
+    address: wallet?.address as ZeroXAddress,
+  });
+
   const [baseAmount, setBaseAmount] = useState(0);
   const [quoteAmount, setQuoteAmount] = useState(0);
   const [isTransactionSummaryModalOpen, setIsTransactionSummaryModalOpen] =
     useState(false);
 
   // Get current pay and receive assets based on swap direction
-  const payAsset = isSwapped ? tradingPair.baseAsset : tradingPair.quoteAsset;
-  const receiveAsset = isSwapped
-    ? tradingPair.quoteAsset
-    : tradingPair.baseAsset;
+  const payBalance = isSwapped
+    ? formatNumber(canopyBalance)
+    : formatTokenBalance(data);
+  const receiveBalance = isSwapped
+    ? formatTokenBalance(data)
+    : formatNumber(canopyBalance);
+  const payAsset = isSwapped ? tradePair.baseAsset : tradePair.quoteAsset;
+  const receiveAsset = isSwapped ? tradePair.quoteAsset : tradePair.baseAsset;
   const payChains = isSwapped
     ? chains.filter((chain) =>
         sellableAssets.some((asset) => asset.chainId === chain.id),
@@ -67,7 +78,7 @@ export function SwapCard({
   const receiveAssets = isSwapped ? buyableAssets : sellableAssets;
   // Calculate totals from selected orders
   const orderTotals = useMemo(() => {
-    if (selectedOrders.length === 0 || !tradingPair) {
+    if (selectedOrders.length === 0 || !tradePair) {
       return {
         totalQuote: 0,
         totalBase: 0,
@@ -92,7 +103,7 @@ export function SwapCard({
       averageRate,
       orderCount: selectedOrders.length,
     };
-  }, [selectedOrders, tradingPair]);
+  }, [selectedOrders, tradePair]);
 
   const handleBaseAmountChange = (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -111,19 +122,11 @@ export function SwapCard({
       <CardHeader className="pb-2 flex flex-row items-center justify-between">
         <CardTitle className="text-xl font-bold">
           {isSwapped
-            ? `Sell ${tradingPair.baseAsset.symbol}`
+            ? `Sell ${tradePair.baseAsset.symbol}`
             : `Select chain & Tokens`}
         </CardTitle>
-        {/* Avatar and settings icon can go here */}
-        <div className="flex items-center gap-2">
-          <Button size="icon" variant="ghost">
-            <span className="sr-only">Settings</span>
-            <Settings />
-          </Button>
-        </div>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
-        {/* Pay Section */}
         <div className="rounded-xl bg-background p-4 flex flex-col gap-2">
           <div className="grid grid-cols-[60px_1fr_120px] gap-2">
             <div className="flex flex-col gap-2">
@@ -189,10 +192,9 @@ export function SwapCard({
             </div>
           </div>
           <div className="text-xs text-muted-foreground text-right">
-            Balance: 1,245.00
+            Balance: {payBalance?.toLocaleString() || "N/A"}
           </div>
         </div>
-        {/* Arrow Down */}
         <div className="flex justify-center">
           <Button
             variant="ghost"
@@ -203,7 +205,6 @@ export function SwapCard({
             <ArrowDown className="text-muted-foreground" />
           </Button>
         </div>
-        {/* Receive Section */}
         <div className="rounded-xl bg-[#F8F9FA] p-4 flex flex-col gap-2">
           <div className="grid grid-cols-[60px_1fr_120px] gap-2">
             <div className="flex flex-col gap-2">
@@ -267,10 +268,10 @@ export function SwapCard({
             </div>
           </div>
           <div className="text-xs text-muted-foreground text-right">
-            Balance: 1,245.00
+            Balance: {receiveBalance || "0"}
           </div>
         </div>
-        {/* Orders */}
+
         <div className="rounded-xl bg-[#F8F9FA] p-4">
           <div className="flex items-center justify-between text-muted-foreground text-base mb-2">
             <span>Orders</span>
@@ -306,7 +307,7 @@ export function SwapCard({
                       <span className="font-mono">
                         {order.amountForSale.toLocaleString()}
                       </span>
-                      <span>{tradingPair?.baseAsset.symbol || "BASE"}</span>
+                      <span>{tradePair?.baseAsset.symbol || "BASE"}</span>
                       <span>@</span>
                       <span className="font-mono">
                         {order.price.toFixed(4)}
@@ -314,43 +315,42 @@ export function SwapCard({
                     </div>
                     <div className="font-mono text-muted-foreground">
                       {order.total.toFixed(2)}{" "}
-                      {tradingPair?.quoteAsset.symbol || "QUOTE"}
+                      {tradePair?.quoteAsset.symbol || "QUOTE"}
                     </div>
                   </div>
                 ))}
               </div>
 
-              {/* Totals Section */}
               <div className="border-t pt-2 space-y-1">
                 <div className="flex justify-between text-muted-foreground font-medium">
                   <span>Total:</span>
                   <span className="font-mono">
                     {orderTotals.totalBase.toLocaleString()}{" "}
-                    {tradingPair?.baseAsset.symbol || "BASE"}
+                    {tradePair?.baseAsset.symbol || "BASE"}
                   </span>
                 </div>
                 <div className="flex justify-between text-muted-foreground">
                   <span>Avg Price:</span>
                   <span className="font-mono">
                     {orderTotals.averageRate.toFixed(4)}{" "}
-                    {tradingPair?.quoteAsset.symbol || "QUOTE"}
+                    {tradePair?.quoteAsset.symbol || "QUOTE"}
                   </span>
                 </div>
               </div>
             </div>
           )}
         </div>
-        {/* Rate, Fee, Time */}
+
         <div className="rounded-xl bg-[#F8F9FA] p-4 flex flex-col gap-1 text-sm">
           <div className="flex justify-between">
             <span className="text-muted-foreground">
               {orderTotals.orderCount > 0 ? "Average Rate" : "Last Rate"}
             </span>
             <span className="text-black">
-              {orderTotals.orderCount > 0 && tradingPair
-                ? `1 ${tradingPair.quoteAsset.symbol} = ${orderTotals.averageRate.toFixed(4)} ${tradingPair.baseAsset.symbol}`
-                : tradingPair
-                  ? `1 ${tradingPair.quoteAsset.symbol} = 2.45 ${tradingPair.baseAsset.symbol}`
+              {orderTotals.orderCount > 0 && tradePair
+                ? `1 ${tradePair.quoteAsset.symbol} = ${orderTotals.averageRate.toFixed(4)} ${tradePair.baseAsset.symbol}`
+                : tradePair
+                  ? `1 ${tradePair.quoteAsset.symbol} = 2.45 ${tradePair.baseAsset.symbol}`
                   : "Loading..."}
             </span>
           </div>
@@ -368,7 +368,6 @@ export function SwapCard({
           open={isTransactionSummaryModalOpen}
           onOpenChange={setIsTransactionSummaryModalOpen}
           selectedOrders={selectedOrders}
-          tradingPair={tradingPair}
           isSwapped={isSwapped}
           payAmount={
             isSwapped
@@ -384,8 +383,8 @@ export function SwapCard({
                 ? orderTotals.totalBase.toLocaleString()
                 : "0"
           }
-          payBalance="1,245.00"
-          receiveBalance="1,245.00"
+          payBalance={payBalance?.toString() || "N/A"}
+          receiveBalance={receiveBalance?.toString() || "N/A"}
         />
       </CardContent>
     </Card>

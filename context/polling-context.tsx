@@ -1,12 +1,13 @@
 "use client";
 
 import { createContext, useContext, ReactNode, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { fetchOrdersFromCommittee } from "@/services/orders";
 import { Order } from "@/types/order";
 import { fetchHeight } from "@/services/height";
 import { QUERY_KEYS, POLLING_INTERVALS } from "@/constants/api";
 import { fetchUserBalance } from "@/services/balance";
+import { useWallets } from "./wallet";
 
 interface PollingContextValue {
   orders: Order[] | undefined;
@@ -15,10 +16,10 @@ interface PollingContextValue {
   refetchOrders: () => void;
   ordersLastUpdated: Date | undefined;
 
-  userBalance: number | undefined;
-  balanceLoading: boolean;
-  balanceError: Error | null;
-  refetchBalance: () => void;
+  canopyBalance: number | undefined;
+  canopyBalanceLoading: boolean;
+  canopyBalanceError: Error | null;
+  refetchCanopyBalance: () => void;
 
   height: number | undefined;
   heightLoading: boolean;
@@ -43,6 +44,8 @@ export function PollingProvider({
   balanceInterval = POLLING_INTERVALS.BALANCE,
   heightInterval = POLLING_INTERVALS.HEIGHT,
 }: PollingProviderProps) {
+  const { selectedCanopyWallet } = useWallets();
+
   const {
     data: height,
     isLoading: heightLoading,
@@ -56,7 +59,7 @@ export function PollingProvider({
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
-    placeholderData: (prev) => prev,
+    placeholderData: keepPreviousData,
   });
 
   const {
@@ -66,7 +69,7 @@ export function PollingProvider({
     refetch: refetchOrders,
     dataUpdatedAt: ordersUpdatedAt,
   } = useQuery({
-    queryKey: ["orders", height],
+    queryKey: [QUERY_KEYS.ORDERS, height],
     queryFn: () => fetchOrdersFromCommittee(height || 0, 0),
     refetchInterval: height ? ordersInterval : false, // Only poll if we have height
     enabled: Boolean(height && height > 0),
@@ -76,7 +79,7 @@ export function PollingProvider({
     refetchOnMount: true,
     refetchOnReconnect: false,
     retry: 1,
-    placeholderData: (prev) => prev,
+    placeholderData: keepPreviousData,
   });
 
   const {
@@ -86,10 +89,11 @@ export function PollingProvider({
     refetch: refetchBalance,
   } = useQuery({
     queryKey: QUERY_KEYS.USER_BALANCE,
-    queryFn: () => fetchUserBalance(height || 0, ""),
+    queryFn: () =>
+      fetchUserBalance(height || 0, selectedCanopyWallet?.address ?? ""),
     refetchInterval: balanceInterval,
     staleTime: 0,
-    placeholderData: (prev) => prev,
+    placeholderData: keepPreviousData,
   });
 
   const ctx = useMemo(
@@ -101,10 +105,10 @@ export function PollingProvider({
       ordersLastUpdated: ordersUpdatedAt
         ? new Date(ordersUpdatedAt)
         : undefined,
-      userBalance,
-      balanceLoading,
-      balanceError,
-      refetchBalance,
+      canopyBalance: userBalance,
+      canopyBalanceLoading: balanceLoading,
+      canopyBalanceError: balanceError,
+      refetchCanopyBalance: refetchBalance,
       height,
       heightLoading,
       heightError: heightError as Error | null,

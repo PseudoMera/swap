@@ -9,7 +9,6 @@ import { blockchainUValueToNumber } from "@/utils/blockchain";
 import { formatLastUpdated } from "@/utils/time";
 import { OrdersTable } from "./OrdersTable";
 import { Order } from "@/types/order";
-import { TradingPair } from "@/types/trading-pair";
 import OrderFilters from "./OrderFilters";
 import {
   SizeCategory,
@@ -18,6 +17,7 @@ import {
   SpreadFilter,
 } from "@/types/order-book-filters";
 import DepthTable from "./DepthTable";
+import { useTradePairContext } from "@/context/trade-pair-context";
 
 export interface ProcessedOrder
   extends Omit<Order, "amountForSale" | "requestedAmount"> {
@@ -39,7 +39,6 @@ interface TanStackOrderBookProps {
   onOrderSelect: (order: ProcessedOrder) => void;
   onOrderRemove: (order: ProcessedOrder) => void;
   selectedOrders: ProcessedOrder[];
-  tradingPair?: TradingPair;
   isSwapped: boolean;
 }
 
@@ -47,9 +46,10 @@ export function TanStackOrderBook({
   onOrderSelect,
   onOrderRemove,
   selectedOrders,
-  tradingPair,
   isSwapped,
 }: TanStackOrderBookProps) {
+  const { tradePair } = useTradePairContext();
+
   const [selectedPrice, setSelectedPrice] = useState<number | null>(null);
   const [priceRange, setPriceRange] = useState<[number, number] | null>(null);
   const [amountRange, setAmountRange] = useState<[number, number] | null>(null);
@@ -69,10 +69,10 @@ export function TanStackOrderBook({
   // Get all orders without price filter for aggregation and threshold calculation
   const allProcessedOrders = useMemo(() => {
     if (!orders || !Array.isArray(orders)) return [];
-    if (!tradingPair) return [];
+    if (!tradePair) return [];
 
     try {
-      const targetCommittee = tradingPair.quoteAsset.committee;
+      const targetCommittee = tradePair.quoteAsset.committee;
 
       return orders
         .filter((order) => order && order.committee === targetCommittee)
@@ -99,7 +99,7 @@ export function TanStackOrderBook({
       console.error("Error processing all orders:", error);
       return [];
     }
-  }, [orders, tradingPair]);
+  }, [orders, tradePair]);
 
   // Calculate size category thresholds based on amount for sale - MOVED UP
   const sizeCategoryThresholds = useMemo(() => {
@@ -126,10 +126,10 @@ export function TanStackOrderBook({
   // Process orders: filter by trading pair and convert values
   const processedOrders = useMemo(() => {
     if (!orders || !Array.isArray(orders)) return [];
-    if (!tradingPair) return [];
+    if (!tradePair) return [];
 
     try {
-      const targetCommittee = tradingPair.quoteAsset.committee;
+      const targetCommittee = tradePair.quoteAsset.committee;
 
       const allOrders = orders
         .filter((order) => order && order.committee === targetCommittee)
@@ -249,7 +249,7 @@ export function TanStackOrderBook({
     }
   }, [
     orders,
-    tradingPair,
+    tradePair,
     selectedPrice,
     priceRange,
     amountRange,
@@ -397,7 +397,7 @@ export function TanStackOrderBook({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            Order Book ({tradingPair?.displayName || "Loading..."})
+            Order Book ({tradePair?.displayName || "Loading..."})
             <Button variant="outline" size="sm" onClick={() => refetchOrders()}>
               <RefreshCw className="h-4 w-4" />
               Retry
@@ -417,7 +417,7 @@ export function TanStackOrderBook({
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          Order Book ({tradingPair?.displayName || "Loading..."})
+          Order Book ({tradePair?.displayName || "Loading..."})
           <div className="flex items-center gap-3">
             <Button
               variant="outline"
@@ -455,7 +455,7 @@ export function TanStackOrderBook({
           {/* Filter Controls */}
           <OrderFilters
             allProcessedOrders={allProcessedOrders}
-            tradingPair={tradingPair}
+            tradingPair={tradePair}
             priceRange={priceRange}
             amountRange={amountRange}
             totalRange={totalRange}
@@ -481,7 +481,7 @@ export function TanStackOrderBook({
                 <span className="text-sm font-medium">Filtered by price:</span>
                 <span className="font-mono text-green-600 font-semibold">
                   {selectedPrice.toFixed(4)}{" "}
-                  {tradingPair?.quoteAsset.symbol || "USDC"}
+                  {tradePair?.quoteAsset.symbol || "USDC"}
                 </span>
                 <span className="text-sm text-muted-foreground">
                   ({processedOrders.length} orders)

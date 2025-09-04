@@ -7,7 +7,6 @@ import {
 } from "@/components/ui/dialog";
 import { TransactionSummary } from "./index";
 import { ProcessedOrder } from "../order-book/TanStackOrderBook";
-import { TradingPair } from "@/types/trading-pair";
 import { useWallets } from "@/context/wallet";
 import { useUnifiedWallet } from "@/hooks/useUnifiedWallet";
 
@@ -15,7 +14,6 @@ interface TransactionSummaryModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   selectedOrders: ProcessedOrder[];
-  tradingPair: TradingPair;
   isSwapped: boolean;
   payAmount: string;
   receiveAmount: string;
@@ -29,7 +27,6 @@ export function TransactionSummaryModal({
   open,
   onOpenChange,
   selectedOrders,
-  tradingPair,
   isSwapped,
   payAmount,
   receiveAmount,
@@ -73,7 +70,6 @@ export function TransactionSummaryModal({
         <DialogTitle className="sr-only">Transaction Summary</DialogTitle>
         <TransactionSummary
           selectedOrders={selectedOrders}
-          tradingPair={tradingPair}
           isSwapped={isSwapped}
           payAmount={payAmount}
           receiveAmount={receiveAmount}

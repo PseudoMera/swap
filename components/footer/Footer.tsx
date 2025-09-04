@@ -2,32 +2,32 @@ import { SiDiscord, SiGithub, SiX } from "@icons-pack/react-simple-icons";
 import Image from "next/image";
 
 const footerLinks = [
-  { name: "About", href: "#" },
-  { name: "Help", href: "#" },
-  { name: "Developers", href: "#" },
-  { name: "Privacy", href: "#" },
-  { name: "Terms", href: "#" },
+  { name: "About", href: "https://www.canopynetwork.org/faq" },
+  { name: "Help", href: "mailto:hello@canopynetwork.org" },
+  { name: "Developers", href: "https://www.canopynetwork.org/developers" },
+  { name: "Privacy", href: "https://www.canopynetwork.org/privacy-policy" },
+  { name: "Terms", href: "https://www.canopynetwork.org/terms-of-service" },
 ];
 
 const socialLinks = [
   {
     name: "Twitter",
-    href: "#",
+    href: "https://x.com/CNPYNetwork",
     icon: <SiX size={18} />,
   },
   {
     name: "Discord",
-    href: "#",
+    href: "https://discord.com/invite/WdeBG8jcuB",
     icon: <SiDiscord size={18} />,
   },
   {
     name: "GitHub",
-    href: "#",
+    href: "https://github.com/canopy-network",
     icon: <SiGithub size={18} />,
   },
 ];
 
-export function Footer() {
+function Footer() {
   return (
     <footer className="w-full border-t bg-white px-4 md:px-8 py-4">
       <div className="flex flex-col md:flex-row items-center justify-between gap-4 max-w-screen-2xl mx-auto">
@@ -75,8 +75,10 @@ export function Footer() {
       </div>
       {/* Bottom: Copyright */}
       <div className="text-xs text-muted-foreground text-center mt-2">
-        © 2025 Canopy Protocol. All rights reserved.
+        © {new Date().getFullYear()} Canopy Protocol. All rights reserved.
       </div>
     </footer>
   );
 }
+
+export default Footer;

@@ -7,9 +7,6 @@ import {
   ProcessedOrder,
   TanStackOrderBook,
 } from "@/components/order-book/TanStackOrderBook";
-import { getDefaultTradingPair } from "@/utils/trading-pairs";
-
-const defaultTradingPair = getDefaultTradingPair();
 
 export default function Home() {
   const [selectedOrders, setSelectedOrders] = useState<ProcessedOrder[]>([]);
@@ -43,7 +40,6 @@ export default function Home() {
         <SwapCard
           selectedOrders={selectedOrders}
           onClearOrders={handleClearOrders}
-          tradingPair={defaultTradingPair}
           handleSwapDirection={handleSwapDirection}
           isSwapped={isSwapped}
         />
@@ -54,7 +50,6 @@ export default function Home() {
           onOrderSelect={handleOrderSelect}
           onOrderRemove={handleOrderRemove}
           selectedOrders={selectedOrders}
-          tradingPair={defaultTradingPair}
           isSwapped={isSwapped}
         />
       </div>

@@ -14,7 +14,6 @@ import { useUnifiedWallet } from "@/hooks/useUnifiedWallet";
 import { numberToBlockchainUValue } from "@/utils/blockchain";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
-import { TradingPair } from "@/types/trading-pair";
 import { CloseOrder, LockOrder } from "@/types/order";
 import { usePollingData } from "@/context/polling-context";
 import { TEST_ORACLE_CONTRACT, usdcTransferMethodID } from "@/constants/tokens";
@@ -24,13 +23,11 @@ import { useCapabilities, useSendCalls } from "wagmi";
 import ProgressToast from "../headless-toast/progress-toast";
 import { ProcessedOrder } from "../order-book/TanStackOrderBook";
 import { ellipsizeAddress, padAddress, sliceAddress } from "@/utils/address";
-//TODO: Metamask stores previous transactions, need to do a cleanup everytime this component opens :)
-//TODO: Only group locked orders together
-//TODO: NEVER group a locked order with an order thats not locked
+import { useTradePairContext } from "@/context/trade-pair-context";
+import { assetToAddress } from "@/utils/tokens";
 
 interface TransactionSummaryProps {
   selectedOrders: ProcessedOrder[];
-  tradingPair: TradingPair;
   isSwapped: boolean;
   payAmount: string;
   receiveAmount: string;
@@ -42,7 +39,6 @@ interface TransactionSummaryProps {
 
 export function TransactionSummary({
   selectedOrders,
-  tradingPair,
   isSwapped,
   payAmount,
   receiveAmount,
@@ -51,6 +47,7 @@ export function TransactionSummary({
   onClose,
   estimatedTime = "~120 seconds",
 }: TransactionSummaryProps) {
+  const { tradePair } = useTradePairContext();
   const { selectedCanopyWallet } = useWallets();
   const { wallet: externalWallet } = useUnifiedWallet();
   const { height } = usePollingData();
@@ -60,10 +57,8 @@ export function TransactionSummary({
 
   const [selectedDestination, setSelectedDestination] = useState<string>("");
 
-  const payAsset = isSwapped ? tradingPair.baseAsset : tradingPair.quoteAsset;
-  const receiveAsset = isSwapped
-    ? tradingPair.quoteAsset
-    : tradingPair.baseAsset;
+  const payAsset = isSwapped ? tradePair.baseAsset : tradePair.quoteAsset;
+  const receiveAsset = isSwapped ? tradePair.quoteAsset : tradePair.baseAsset;
 
   const areOrdersLocked =
     selectedOrders.length > 0 &&
@@ -113,8 +108,8 @@ export function TransactionSummary({
     try {
       await createOrder({
         address: selectedCanopyWallet?.address || "",
-        committees: "1",
-        data: "5FbDB2315678afecb367f032d93F642f64180aa3",
+        committees: tradePair.committee.toString(),
+        data: assetToAddress(tradePair.quoteAsset.id),
         amount: numberToBlockchainUValue(Number(receiveAmount)),
         receiveAmount: numberToBlockchainUValue(Number(payAmount)),
         // Use the calculated destination address
@@ -138,7 +133,11 @@ export function TransactionSummary({
 
       onClose();
     } catch (error) {
-      console.error("Error creating order:", error);
+      toast("Error", {
+        description: `Failed to create order: ${error}`,
+        duration: 5000,
+        richColors: true,
+      });
     }
   };
 
@@ -162,7 +161,6 @@ export function TransactionSummary({
       if (canBatch) {
         await handleBatchTransactions();
       } else {
-        console.log("📝 Using sequential transactions");
         await handleSequentialTransactions();
       }
 
@@ -180,7 +178,11 @@ export function TransactionSummary({
 
       onClose();
     } catch (error) {
-      console.error("❌ Transaction failed:", error);
+      toast("Error", {
+        description: `Failed to create order: ${error}`,
+        duration: 5000,
+        richColors: true,
+      });
     }
   };
 
@@ -446,10 +448,10 @@ export function TransactionSummary({
                 >
                   <span className="text-muted-foreground">
                     {order.amountForSale.toFixed(2)}{" "}
-                    {tradingPair.baseAsset.symbol} @ {order.price.toFixed(3)}
+                    {tradePair.baseAsset.symbol} @ {order.price.toFixed(3)}
                   </span>
                   <span className="font-medium">
-                    {order.total.toFixed(2)} {tradingPair.quoteAsset.symbol}
+                    {order.total.toFixed(2)} {tradePair.quoteAsset.symbol}
                   </span>
                 </div>
               ))}
@@ -460,11 +462,11 @@ export function TransactionSummary({
               <div className="flex justify-between font-medium">
                 <span>
                   Total: {orderSummary.totalAmount.toFixed(2)}{" "}
-                  {tradingPair.baseAsset.symbol}
+                  {tradePair.baseAsset.symbol}
                 </span>
                 <span>
                   Avg. Price: {averagePrice.toFixed(4)}{" "}
-                  {tradingPair.quoteAsset.symbol}
+                  {tradePair.quoteAsset.symbol}
                 </span>
               </div>
             </div>
@@ -499,7 +501,7 @@ export function TransactionSummary({
                     </span>
                     {selectedDestination && (
                       <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-medium ml-auto">
-                        {`${selectedDestination.slice(0, 6)}...${selectedDestination.slice(-4)}`}
+                        {ellipsizeAddress(selectedDestination)}
                       </span>
                     )}
                   </div>
@@ -523,7 +525,7 @@ export function TransactionSummary({
                           {externalWallet.connector?.name || "MetaMask"}
                         </span>
                         <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-medium ml-auto">
-                          {`${externalWallet.address.slice(0, 6)}...${externalWallet.address.slice(-4)}`}
+                          {ellipsizeAddress(externalWallet.address)}
                         </span>
                       </div>
                     </SelectItem>

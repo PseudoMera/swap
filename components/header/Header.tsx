@@ -9,8 +9,7 @@ import { Moon } from "lucide-react";
 import { WalletManagementPopover } from "../wallet-management/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "../ui/select";
 import { TRADING_PAIRS_LIST } from "@/constants/trading-pairs";
-import { useState } from "react";
-import { TradingPair } from "@/types/trading-pair";
+import { useTradePairContext } from "@/context/trade-pair-context";
 
 const navLinks = [
   { name: "Swap", href: "/" },
@@ -18,19 +17,16 @@ const navLinks = [
   { name: "Testing", href: "/testing" },
 ];
 
-export function Header() {
+function Header() {
   const pathname = usePathname();
-
-  const [selectedPair, setSelectedPair] = useState<TradingPair>(
-    TRADING_PAIRS_LIST[0],
-  );
+  const { tradePair, updateSelectedPair } = useTradePairContext();
 
   const handlePairChange = (value: string) => {
     const newPair = TRADING_PAIRS_LIST.find(
       (pair) => pair.displayName === value,
     );
     if (newPair) {
-      setSelectedPair(newPair);
+      updateSelectedPair(newPair);
     }
   };
 
@@ -74,19 +70,16 @@ export function Header() {
       <div className="flex-1" />
 
       <div className="flex items-center gap-3">
-        <Select
-          value={selectedPair.displayName}
-          onValueChange={handlePairChange}
-        >
+        <Select value={tradePair.displayName} onValueChange={handlePairChange}>
           <SelectTrigger>
             <Image
-              src={selectedPair.quoteAsset.assetIcon}
-              alt={selectedPair.displayName}
+              src={tradePair.quoteAsset.assetIcon}
+              alt={tradePair.displayName}
               width={24}
               height={24}
               className="mr-2"
             />
-            {selectedPair.displayName}
+            {tradePair.displayName}
           </SelectTrigger>
           <SelectContent>
             {TRADING_PAIRS_LIST.map((pair) => (

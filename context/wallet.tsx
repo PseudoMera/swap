@@ -113,7 +113,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     };
 
     initializeStorage();
-  }, []);
+  }, [refreshStoredKeyfiles]);
 
   // Memoize context value to prevent unnecessary re-renders
   const contextValue = useMemo(
