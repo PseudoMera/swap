@@ -28,7 +28,7 @@ const sellableAssets = getSellableAssets();
 
 interface SwapCardProps {
   selectedOrders: ProcessedOrder[];
-  onClearOrders?: () => void;
+  onClearOrders: () => void;
   isSwapped: boolean;
   handleSwapDirection: () => void;
 }
@@ -115,6 +115,12 @@ export function SwapCard({
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     setQuoteAmount(Number(event.target.value));
+  };
+
+  const handleOrdersCleared = () => {
+    onClearOrders();
+    setBaseAmount(0);
+    setQuoteAmount(0);
   };
 
   return (
@@ -385,6 +391,7 @@ export function SwapCard({
           }
           payBalance={payBalance?.toString() || "N/A"}
           receiveBalance={receiveBalance?.toString() || "N/A"}
+          onOrdersCleared={handleOrdersCleared}
         />
       </CardContent>
     </Card>

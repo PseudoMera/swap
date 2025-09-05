@@ -16,10 +16,14 @@ import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { CloseOrder, LockOrder } from "@/types/order";
 import { usePollingData } from "@/context/polling-context";
-import { TEST_ORACLE_CONTRACT, usdcTransferMethodID } from "@/constants/tokens";
+import {
+  TEST_ORACLE_CONTRACT,
+  USDC_CONTRACT_SEPOLIA,
+  usdcTransferMethodID,
+} from "@/constants/tokens";
 import { sendTransaction } from "wagmi/actions";
 import { wagmiConfig } from "@/config";
-import { useCapabilities, useSendCalls } from "wagmi";
+import { useCapabilities, useSendCalls, useAccount } from "wagmi";
 import ProgressToast from "../headless-toast/progress-toast";
 import { ProcessedOrder } from "../order-book/TanStackOrderBook";
 import { ellipsizeAddress, padAddress, sliceAddress } from "@/utils/address";
@@ -34,6 +38,7 @@ interface TransactionSummaryProps {
   payBalance: string;
   receiveBalance: string;
   onClose: () => void;
+  onOrdersCleared: () => void;
   estimatedTime?: string;
 }
 
@@ -45,6 +50,7 @@ export function TransactionSummary({
   payBalance,
   receiveBalance,
   onClose,
+  onOrdersCleared,
   estimatedTime = "~120 seconds",
 }: TransactionSummaryProps) {
   const { tradePair } = useTradePairContext();
@@ -53,9 +59,15 @@ export function TransactionSummary({
   const { height } = usePollingData();
 
   const { data: capabilities } = useCapabilities();
-  const { sendCalls } = useSendCalls();
+  const { sendCallsAsync } = useSendCalls();
+  const { chainId: currentChainId } = useAccount();
 
   const [selectedDestination, setSelectedDestination] = useState<string>("");
+  const [transactionProgress, setTransactionProgress] = useState<{
+    current: number;
+    total: number;
+    isProcessing: boolean;
+  }>({ current: 0, total: 0, isProcessing: false });
 
   const payAsset = isSwapped ? tradePair.baseAsset : tradePair.quoteAsset;
   const receiveAsset = isSwapped ? tradePair.quoteAsset : tradePair.baseAsset;
@@ -109,7 +121,7 @@ export function TransactionSummary({
       await createOrder({
         address: selectedCanopyWallet?.address || "",
         committees: tradePair.committee.toString(),
-        data: assetToAddress(tradePair.quoteAsset.id),
+        data: sliceAddress(assetToAddress(tradePair.quoteAsset.id)),
         amount: numberToBlockchainUValue(Number(receiveAmount)),
         receiveAmount: numberToBlockchainUValue(Number(payAmount)),
         // Use the calculated destination address
@@ -151,12 +163,45 @@ export function TransactionSummary({
     }
 
     try {
-      // Check if batch transactions are supported via Wagmi capabilities
-      const chainId = 11155111; // Sepolia
+      const chainId = currentChainId || 1;
       const atomicStatus = capabilities?.[chainId]?.atomic?.status;
+
+      // Known chains that support batch transactions (based on MetaMask docs)
+      // https://docs.metamask.io/wallet/how-to/send-transactions/send-batch-transactions
+      // const KNOWN_BATCH_SUPPORTED_CHAINS = [
+      //   // Ethereum
+      //   1, // Ethereum Mainnet
+      //   11155111, // Sepolia
+      //   // Gnosis
+      //   100, // Gnosis Mainnet
+      //   10200, // Chiado
+      //   // BNB Smart Chain
+      //   56, // BNB Smart Chain Mainnet
+      //   97, // BNB Smart Chain Testnet
+      //   // OP Stack
+      //   10, // OP Mainnet
+      //   11155420, // OP Sepolia
+      //   8453, // Base Mainnet
+      //   84532, // Base Sepolia
+      //   // Polygon
+      //   137, // Polygon Mainnet
+      //   80002, // Polygon Amoy
+      //   // Arbitrum
+      //   42161, // Arbitrum One
+      //   42170, // Arbitrum Nova
+      //   421614, // Arbitrum Sepolia
+      //   // Other
+      //   1301, // Unichain Mainnet
+      //   1300, // Unichain Sepolia
+      //   80084, // Berachain Mainnet
+      //   80085, // Berachain Bepolia
+      // ];
+
       const canBatch =
         selectedOrders.length > 1 &&
         (atomicStatus === "supported" || atomicStatus === "ready");
+      // ||
+      // KNOWN_BATCH_SUPPORTED_CHAINS.includes(chainId)
 
       if (canBatch) {
         await handleBatchTransactions();
@@ -164,22 +209,12 @@ export function TransactionSummary({
         await handleSequentialTransactions();
       }
 
-      // Show progress toast after transactions
-      toast("Transaction Status", {
-        description: (
-          <ProgressToast
-            payAssetSymbol={payAsset.symbol}
-            receiveAssetSymbol={receiveAsset.symbol}
-            duration={20000}
-          />
-        ),
-        duration: 20000,
-      });
-
+      // Clear selected orders after successful buy
+      onOrdersCleared();
       onClose();
     } catch (error) {
       toast("Error", {
-        description: `Failed to create order: ${error}`,
+        description: `Failed to buy order: ${error}`,
         duration: 5000,
         richColors: true,
       });
@@ -231,21 +266,33 @@ export function TransactionSummary({
           `0x${usdcTransferMethodID}${paddedTo}${paddedAmount}${memoHex}` as `0x${string}`;
 
         return {
-          to: TEST_ORACLE_CONTRACT as `0x${string}`,
+          to: USDC_CONTRACT_SEPOLIA || (TEST_ORACLE_CONTRACT as `0x${string}`),
           value: BigInt(0),
           data,
         };
       });
 
-      // Execute batch transaction using sendCalls
-      sendCalls({
+      await sendCallsAsync({
         calls,
+      });
+
+      toast("Transaction Status", {
+        description: (
+          <ProgressToast
+            payAssetSymbol={payAsset.symbol}
+            receiveAssetSymbol={receiveAsset.symbol}
+            duration={20000}
+          />
+        ),
+        duration: 20000,
       });
     } catch (error) {
       toast("Batch Transaction Failed", {
-        description: `Failed to execute batch transaction. Fallback to sequential transactions. ${error}`,
+        description:
+          "Failed to execute batch transaction. Falling back to sequential transactions.",
         duration: 5000,
       });
+
       await handleSequentialTransactions();
     }
   };
@@ -259,53 +306,81 @@ export function TransactionSummary({
       return;
     }
 
-    // Fallback to sequential transactions
-    for (let i = 0; i < selectedOrders.length; i++) {
-      const order = selectedOrders[i];
+    // Initialize progress tracking
+    setTransactionProgress({
+      current: 0,
+      total: selectedOrders.length,
+      isProcessing: true,
+    });
 
-      const closeOrder: CloseOrder = {
-        chain_id: order.committee,
-        closeOrder: true,
-        orderId: order.id,
-      };
+    try {
+      // Fallback to sequential transactions
+      for (let i = 0; i < selectedOrders.length; i++) {
+        // Update progress
+        setTransactionProgress({
+          current: i + 1,
+          total: selectedOrders.length,
+          isProcessing: true,
+        });
+        const order = selectedOrders[i];
 
-      const lockOrder: LockOrder = {
-        chain_id: order.committee,
-        orderId: order.id,
-        buyerChainDeadline: height ? height + 10 : 4,
-        buyerReceiveAddress: finalDestinationAddress,
-        buyerSendAddress: externalWallet.address.slice(2),
-      };
+        const closeOrder: CloseOrder = {
+          chain_id: order.committee,
+          closeOrder: true,
+          orderId: order.id,
+        };
 
-      const orderAmount = areOrdersLocked ? order.total : 0;
-      const amountInUnits = Math.floor(orderAmount * 1000000);
-      const paddedTo = areOrdersLocked
-        ? padAddress(order.sellerReceiveAddress)
-        : padAddress(sliceAddress(externalWallet.address));
-      const paddedAmount = amountInUnits.toString(16).padStart(64, "0");
+        const lockOrder: LockOrder = {
+          chain_id: order.committee,
+          orderId: order.id,
+          buyerChainDeadline: height ? height + 10 : 4,
+          buyerReceiveAddress: finalDestinationAddress,
+          buyerSendAddress: externalWallet.address.slice(2),
+        };
 
-      const orderToSendAsMemo = JSON.stringify(
-        areOrdersLocked ? closeOrder : lockOrder,
-      );
+        const orderAmount = areOrdersLocked ? order.total : 0;
+        const amountInUnits = Math.floor(orderAmount * 1000000);
+        const paddedTo = areOrdersLocked
+          ? padAddress(order.sellerReceiveAddress)
+          : padAddress(sliceAddress(externalWallet.address));
+        const paddedAmount = amountInUnits.toString(16).padStart(64, "0");
 
-      const memoJson = orderToSendAsMemo;
-      const memoBytes = new TextEncoder().encode(memoJson);
-      const memoHex = Array.from(memoBytes)
-        .map((b) => b.toString(16).padStart(2, "0"))
-        .join("");
+        const orderToSendAsMemo = JSON.stringify(
+          areOrdersLocked ? closeOrder : lockOrder,
+        );
 
-      const data =
-        `0x${usdcTransferMethodID}${paddedTo}${paddedAmount}${memoHex}` as `0x${string}`;
+        const memoJson = orderToSendAsMemo;
+        const memoBytes = new TextEncoder().encode(memoJson);
+        const memoHex = Array.from(memoBytes)
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("");
 
-      await sendTransaction(wagmiConfig, {
-        to: TEST_ORACLE_CONTRACT,
-        value: BigInt(0),
-        data,
-      });
+        const data =
+          `0x${usdcTransferMethodID}${paddedTo}${paddedAmount}${memoHex}` as `0x${string}`;
 
-      if (i < selectedOrders.length - 1) {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await sendTransaction(wagmiConfig, {
+          to: USDC_CONTRACT_SEPOLIA || TEST_ORACLE_CONTRACT,
+          value: BigInt(0),
+          data,
+        });
+
+        if (i < selectedOrders.length - 1) {
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        }
       }
+    } catch (error) {
+      toast("Sequential Transaction Failed", {
+        description: "One or more transactions failed. Please try again.",
+        duration: 5000,
+        richColors: true,
+      });
+    } finally {
+      // Reset progress tracking
+      setTransactionProgress({
+        current: 0,
+        total: 0,
+        isProcessing: false,
+      });
     }
   };
 
@@ -563,10 +638,36 @@ export function TransactionSummary({
           <span className="font-medium">{estimatedTime}</span>
         </div>
 
+        {/* Transaction Progress Indicator */}
+        {transactionProgress.isProcessing && (
+          <div className="rounded-lg bg-[#F8F9FA] p-4 border-l-4 border-[#76E698]">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-gray-900">
+                Processing Transactions
+              </span>
+              <span className="text-sm text-muted-foreground">
+                {transactionProgress.current} of {transactionProgress.total}
+              </span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+              <div
+                className="bg-[#76E698] h-2 rounded-full transition-all duration-300"
+                style={{
+                  width: `${(transactionProgress.current / transactionProgress.total) * 100}%`,
+                }}
+              ></div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Please confirm each transaction in your wallet when prompted
+            </p>
+          </div>
+        )}
+
         {/* Confirm Button */}
         <Button
           onClick={isSwapped ? handleSellOrder : handleBuyOrder}
-          className="w-full h-12 text-lg font-medium rounded-xl mt-auto text-white bg-[#76E698]"
+          disabled={transactionProgress.isProcessing}
+          className="w-full h-12 text-lg font-medium rounded-xl mt-auto text-white bg-[#76E698] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Confirm
         </Button>

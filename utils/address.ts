@@ -7,8 +7,8 @@ export function ellipsizeAddress(address: string, chars = 4) {
 
 export function sliceAddress(
   address: string,
-  start: number = 0,
-  end: number = 2,
+  start: number = 2,
+  end: number = address.length,
 ) {
   if (!address) return "";
   return address.slice(start, end);

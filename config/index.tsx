@@ -1,6 +1,11 @@
 import { cookieStorage, createStorage } from "@wagmi/core";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
-import { mainnet, sepolia } from "@reown/appkit/networks";
+import {
+  mainnet,
+  sepolia,
+  polygon,
+  megaethTestnet,
+} from "@reown/appkit/networks";
 import { getChainByCommittee, getChainById } from "@/utils/chains";
 import { validatedConfig } from "./validation";
 
@@ -28,7 +33,13 @@ const canopyNetwork = {
   },
 };
 
-export const networks = [mainnet, sepolia, canopyNetwork];
+export const networks = [
+  mainnet,
+  sepolia,
+  polygon,
+  canopyNetwork,
+  megaethTestnet,
+];
 
 //Set up the Wagmi Adapter (Config)
 export const wagmiAdapter = new WagmiAdapter({

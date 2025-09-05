@@ -21,6 +21,7 @@ interface TransactionSummaryModalProps {
   receiveBalance: string;
   triggerClassName?: string;
   disabled?: boolean;
+  onOrdersCleared: () => void;
 }
 
 export function TransactionSummaryModal({
@@ -34,6 +35,7 @@ export function TransactionSummaryModal({
   receiveBalance,
   triggerClassName = "w-full bg-green-100 text-green-900 hover:bg-green-200 mt-2 h-12 text-lg font-medium rounded-xl",
   disabled = false,
+  onOrdersCleared,
 }: TransactionSummaryModalProps) {
   const { selectedCanopyWallet } = useWallets();
   const { isConnected: isExternalConnected } = useUnifiedWallet();
@@ -77,6 +79,7 @@ export function TransactionSummaryModal({
           receiveBalance={receiveBalance}
           onClose={() => onOpenChange(false)}
           estimatedTime="~120 seconds"
+          onOrdersCleared={onOrdersCleared}
         />
       </DialogContent>
     </Dialog>
