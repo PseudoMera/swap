@@ -14,7 +14,6 @@ import { useTradePairContext } from "@/context/trade-pair-context";
 const navLinks = [
   { name: "Swap", href: "/" },
   { name: "History", href: "/transaction-history" },
-  { name: "Testing", href: "/testing" },
 ];
 
 function Header() {

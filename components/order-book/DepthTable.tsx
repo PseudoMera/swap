@@ -8,6 +8,7 @@ import {
 } from "@tanstack/react-table";
 import { AggregatedOrder } from "./TanStackOrderBook";
 import { useMemo } from "react";
+import { cn } from "@/lib/utils";
 
 interface DepthTableProps {
   data: AggregatedOrder[];
@@ -90,7 +91,7 @@ function DepthTable({
 
   return (
     <div className="border rounded-md">
-      <table className="w-full">
+      <table className="w-full border-0">
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id} className="bg-muted/50 border-b">
@@ -119,16 +120,25 @@ function DepthTable({
             return (
               <tr
                 key={row.id}
-                className={`border-b last:border-b-0 hover:opacity-80 transition-all cursor-pointer relative ${
-                  isSelected ? "ring-2 ring-green-600 ring-inset" : ""
+                className={`border-b border-transparent last:border-b-0 hover:opacity-80 transition-all cursor-pointer relative  bg-[#F0FDF4] ${
+                  isSelected
+                    ? "ring-2 ring-green-600 ring-inset rounded-lg"
+                    : ""
                 }`}
-                style={{
-                  background: `linear-gradient(to right, #76e698 0%, #76e698 ${row.original.volumePercentage}%, #F0FDF4 ${row.original.volumePercentage}%, #F0FDF4 100%)`,
-                }}
                 onClick={() => onPriceSelect(row.original.price)}
               >
-                {row.getVisibleCells().map((cell) => (
+                {row.getVisibleCells().map((cell, cellIdx) => (
                   <td key={cell.id} className="p-3">
+                    {cellIdx === 0 && (
+                      <div
+                        className="absolute top-0 left-0 h-full rounded-2xl"
+                        style={{
+                          width: `${row.original.volumePercentage}%`,
+                          background: "#76e698",
+                          zIndex: 0,
+                        }}
+                      />
+                    )}
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 ))}

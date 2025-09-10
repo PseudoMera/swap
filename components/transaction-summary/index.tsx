@@ -208,10 +208,6 @@ export function TransactionSummary({
       } else {
         await handleSequentialTransactions();
       }
-
-      // Clear selected orders after successful buy
-      onOrdersCleared();
-      onClose();
     } catch (error) {
       toast("Error", {
         description: `Failed to buy order: ${error}`,
@@ -286,6 +282,10 @@ export function TransactionSummary({
         ),
         duration: 20000,
       });
+
+      // Clear selected orders after successful buy
+      onOrdersCleared();
+      onClose();
     } catch (error) {
       toast("Batch Transaction Failed", {
         description:
@@ -368,6 +368,10 @@ export function TransactionSummary({
           await new Promise((resolve) => setTimeout(resolve, 1000));
         }
       }
+
+      // Clear selected orders after successful buy
+      onOrdersCleared();
+      onClose();
     } catch (error) {
       toast("Sequential Transaction Failed", {
         description: "One or more transactions failed. Please try again.",
