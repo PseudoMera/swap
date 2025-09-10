@@ -58,7 +58,7 @@ export function StatsCards({ stats, loading = false }: StatsCardsProps) {
                 <p className="text-sm font-medium text-muted-foreground">
                   {item.title}
                 </p>
-                <p className="text-2xl font-bold text-[#111827]">
+                <p className="text-2xl font-bold text-foreground">
                   {item.value}
                 </p>
               </div>

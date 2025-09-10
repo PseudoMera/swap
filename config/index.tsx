@@ -5,6 +5,7 @@ import {
   sepolia,
   polygon,
   megaethTestnet,
+  AppKitNetwork,
 } from "@reown/appkit/networks";
 import { getChainByCommittee, getChainById } from "@/utils/chains";
 import { validatedConfig } from "./validation";
@@ -15,7 +16,7 @@ export const ENV_CONFIG = validatedConfig;
 // Get projectId from validated config
 export const projectId = ENV_CONFIG.PROJECT_ID;
 
-const canopyNetwork = {
+const canopyNetwork: AppKitNetwork = {
   id: 10042,
   name: "Canopy Network",
   nativeCurrency: {
@@ -27,9 +28,6 @@ const canopyNetwork = {
     default: {
       http: ["https://anvil.neochiba.net"],
     },
-    public: {
-      http: ["https://anvil.neochiba.net"],
-    },
   },
 };
 
@@ -39,7 +37,7 @@ export const networks = [
   polygon,
   canopyNetwork,
   megaethTestnet,
-];
+] as [AppKitNetwork, ...AppKitNetwork[]];
 
 //Set up the Wagmi Adapter (Config)
 export const wagmiAdapter = new WagmiAdapter({

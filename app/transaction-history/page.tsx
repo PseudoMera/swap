@@ -61,10 +61,10 @@ function TransactionHistoryPage() {
     return (
       <div className="flex flex-col gap-6">
         <div>
-          <h1 className="text-3xl font-bold text-[#111827]">
+          <h1 className="text-3xl font-bold text-foreground">
             Transaction History
           </h1>
-          <h2 className="text-base text-[#4B5563] mt-2">
+          <h2 className="text-base text-muted-foreground mt-2">
             View all your swap transactions and their details
           </h2>
         </div>
@@ -84,10 +84,10 @@ function TransactionHistoryPage() {
     return (
       <div className="flex flex-col gap-6">
         <div>
-          <h1 className="text-3xl font-bold text-[#111827]">
+          <h1 className="text-3xl font-bold text-foreground">
             Transaction History
           </h1>
-          <h2 className="text-base text-[#4B5563] mt-2">
+          <h2 className="text-base text-muted-foreground mt-2">
             View all your swap transactions and their details
           </h2>
         </div>
@@ -110,10 +110,10 @@ function TransactionHistoryPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-3xl font-bold text-[#111827]">
+        <h1 className="text-3xl font-bold text-foreground">
           Transaction History
         </h1>
-        <h2 className="text-base text-[#4B5563] mt-2">
+        <h2 className="text-base text-muted-foreground mt-2">
           View all your swap transactions and their details
         </h2>
       </div>

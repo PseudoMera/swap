@@ -12,6 +12,7 @@ import { QueryProvider } from "@/providers/QueryClientProvider";
 import { TradePairContextProvider } from "@/context/trade-pair-context";
 import Footer from "@/components/footer/Footer";
 import Header from "@/components/header/Header";
+import { ThemeProvider } from "next-themes";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -42,24 +43,31 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
         <QueryProvider>
-          <AppkitProvider cookies={cookies}>
-            <WalletProvider>
-              <TradePairContextProvider>
-                <PollingProvider
-                  ordersInterval={POLLING_INTERVALS.ORDERS}
-                  balanceInterval={POLLING_INTERVALS.BALANCE}
-                  heightInterval={POLLING_INTERVALS.HEIGHT}
-                >
-                  <Header />
-                  <main className="w-full max-w-screen-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
-                    {children}
-                  </main>
-                  <Footer />
-                  <Toaster />
-                </PollingProvider>
-              </TradePairContextProvider>
-            </WalletProvider>
-          </AppkitProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="light"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <AppkitProvider cookies={cookies}>
+              <WalletProvider>
+                <TradePairContextProvider>
+                  <PollingProvider
+                    ordersInterval={POLLING_INTERVALS.ORDERS}
+                    balanceInterval={POLLING_INTERVALS.BALANCE}
+                    heightInterval={POLLING_INTERVALS.HEIGHT}
+                  >
+                    <Header />
+                    <main className="w-full max-w-screen-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
+                      {children}
+                    </main>
+                    <Footer />
+                    <Toaster />
+                  </PollingProvider>
+                </TradePairContextProvider>
+              </WalletProvider>
+            </AppkitProvider>
+          </ThemeProvider>
         </QueryProvider>
       </body>
     </html>

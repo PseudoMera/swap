@@ -4,9 +4,8 @@ import Link from "next/link";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "../ui/select";
 import Image from "next/image";
 import { TRADING_PAIRS_LIST } from "@/constants/trading-pairs";
-import { Button } from "../ui/button";
-import { Moon } from "lucide-react";
 import { WalletManagementPopover } from "../wallet-management/popover";
+import { ThemeToggle } from "../theme-toggle";
 import { usePathname } from "next/navigation";
 import { useTradePairContext } from "@/context/trade-pair-context";
 
@@ -36,13 +35,13 @@ function DesktopHeader() {
               className={cn(
                 "relative text-base font-medium transition-colors",
                 isActive
-                  ? "text-black"
-                  : "text-muted-foreground hover:text-black",
+                  ? "text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               {link.name}
               {isActive && (
-                <span className="absolute left-0 -bottom-1 w-full h-[2px] bg-green-800 rounded" />
+                <span className="absolute left-0 -bottom-1 w-full h-[2px] bg-primary rounded" />
               )}
             </Link>
           );
@@ -76,14 +75,7 @@ function DesktopHeader() {
             ))}
           </SelectContent>
         </Select>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="bg-muted hover:bg-muted/80 text-muted-foreground"
-          aria-label="Toggle theme"
-        >
-          <Moon size={18} />
-        </Button>
+        <ThemeToggle />
 
         <WalletManagementPopover />
       </div>

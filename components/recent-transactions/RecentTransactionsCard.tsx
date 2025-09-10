@@ -44,14 +44,14 @@ export function RecentTransactionsCard() {
           <div key={i} className="flex items-center py-4 first:pt-0 last:pb-0">
             {/* Left: Icon */}
             <div className="flex-shrink-0">
-              <div className="rounded-full bg-[#F8F9FA] w-9 h-9 flex items-center justify-center mr-4">
+              <div className="rounded-full bg-muted/50 w-9 h-9 flex items-center justify-center mr-4">
                 <ArrowRight className="text-green-500 w-5 h-5" />
               </div>
             </div>
             {/* Middle: Details */}
             <div className="flex flex-col flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <span className="font-medium text-base text-black truncate">
+                <span className="font-medium text-base text-foreground truncate">
                   {tx.from}{" "}
                   <span className="mx-1 text-muted-foreground">→</span> {tx.to}
                 </span>
@@ -60,7 +60,7 @@ export function RecentTransactionsCard() {
             </div>
             {/* Right: Amount and Rate */}
             <div className="flex flex-col items-end min-w-[80px]">
-              <span className="font-medium text-base text-black">
+              <span className="font-medium text-base text-foreground">
                 {tx.amount}
               </span>
               <span className="text-xs text-muted-foreground">

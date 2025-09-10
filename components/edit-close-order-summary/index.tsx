@@ -115,7 +115,7 @@ function EditCloseOrderSummary({
   };
 
   return (
-    <div className="h-full w-full flex flex-col bg-white p-6">
+    <div className="h-full w-full flex flex-col bg-background p-6">
       <div className="pb-2 flex flex-row items-center justify-between">
         <h2 className="text-xl font-bold">Transaction Summary</h2>
         <Button size="icon" variant="ghost" onClick={onClose}>
@@ -124,7 +124,7 @@ function EditCloseOrderSummary({
       </div>
 
       <div className="flex flex-col gap-4">
-        <div className="rounded-xl bg-[#F8F9FA] p-4 flex flex-col gap-2">
+        <div className="rounded-xl bg-muted/50 p-4 flex flex-col gap-2">
           <div className="grid grid-cols-3 gap-2">
             <div className="flex flex-col gap-2">
               <span className="text-muted-foreground text-sm">Chain</span>
@@ -176,12 +176,12 @@ function EditCloseOrderSummary({
         </div>
 
         <div className="flex justify-center">
-          <div className="rounded-full bg-[#F8F9FA] w-10 h-10 flex items-center justify-center">
+          <div className="rounded-full bg-muted/50 w-10 h-10 flex items-center justify-center">
             <ArrowDown className="h-4 w-4 text-muted-foreground" />
           </div>
         </div>
 
-        <div className="rounded-xl bg-[#F8F9FA] p-4 flex flex-col gap-2">
+        <div className="rounded-xl bg-muted/50 p-4 flex flex-col gap-2">
           <div className="grid grid-cols-3 gap-2">
             <div className="flex flex-col gap-2">
               <span className="text-muted-foreground text-sm">Chain</span>
@@ -235,14 +235,14 @@ function EditCloseOrderSummary({
         <div className="flex flex-col gap-2 my-2">
           <Button
             variant="ghost"
-            className="w-full h-12 text-lg font-medium rounded-xl mt-auto text-black bg-[#76E698]"
+            className="w-full h-12 text-lg font-medium rounded-xl mt-auto bg-primary text-primary-foreground"
             onClick={handleEditAskOrder}
           >
             Edit Ask Order
           </Button>
           <Button
             variant="secondary"
-            className="w-full h-12 text-lg font-medium rounded-xl mt-auto text-[#801515] bg-[#FCDCDC]"
+            className="w-full h-12 text-lg font-medium rounded-xl mt-auto text-error-foreground bg-error"
             onClick={handleDeleteAskOrder}
           >
             Cancel Ask Order

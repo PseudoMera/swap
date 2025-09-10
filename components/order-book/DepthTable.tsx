@@ -8,7 +8,6 @@ import {
 } from "@tanstack/react-table";
 import { AggregatedOrder } from "./TanStackOrderBook";
 import { useMemo } from "react";
-import { cn } from "@/lib/utils";
 
 interface DepthTableProps {
   data: AggregatedOrder[];
@@ -31,7 +30,7 @@ function DepthTable({
         cell: ({ getValue }) => {
           const price = getValue() as number;
           return (
-            <span className="font-mono font-semibold text-green-700 relative z-10">
+            <span className="font-mono font-semibold text-green-700 dark:text-green-400 relative z-10">
               {price.toFixed(4)}
             </span>
           );
@@ -98,7 +97,7 @@ function DepthTable({
               {headerGroup.headers.map((header) => (
                 <th
                   key={header.id}
-                  className="p-3 text-left text-sm font-bold text-black"
+                  className="p-3 text-left text-sm font-bold text-foreground"
                 >
                   {header.isPlaceholder
                     ? null
@@ -120,10 +119,8 @@ function DepthTable({
             return (
               <tr
                 key={row.id}
-                className={`border-b border-transparent last:border-b-0 hover:opacity-80 transition-all cursor-pointer relative  bg-[#F0FDF4] ${
-                  isSelected
-                    ? "ring-2 ring-green-600 ring-inset rounded-lg"
-                    : ""
+                className={`border-b border-transparent last:border-b-0 hover:opacity-80 transition-all cursor-pointer relative bg-success-light ${
+                  isSelected ? "ring-2 ring-primary ring-inset rounded-lg" : ""
                 }`}
                 onClick={() => onPriceSelect(row.original.price)}
               >
@@ -131,10 +128,9 @@ function DepthTable({
                   <td key={cell.id} className="p-3">
                     {cellIdx === 0 && (
                       <div
-                        className="absolute top-0 left-0 h-full rounded-2xl"
+                        className="absolute top-0 left-0 h-full rounded-2xl bg-primary dark:bg-primary/60"
                         style={{
                           width: `${row.original.volumePercentage}%`,
-                          background: "#76e698",
                           zIndex: 0,
                         }}
                       />

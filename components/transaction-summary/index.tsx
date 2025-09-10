@@ -287,6 +287,7 @@ export function TransactionSummary({
       onOrdersCleared();
       onClose();
     } catch (error) {
+      console.error(error);
       toast("Batch Transaction Failed", {
         description:
           "Failed to execute batch transaction. Falling back to sequential transactions.",
@@ -373,6 +374,7 @@ export function TransactionSummary({
       onOrdersCleared();
       onClose();
     } catch (error) {
+      console.error(error);
       toast("Sequential Transaction Failed", {
         description: "One or more transactions failed. Please try again.",
         duration: 5000,
@@ -396,7 +398,7 @@ export function TransactionSummary({
   }, [isSellOrder, externalWallet, selectedDestination]);
 
   return (
-    <div className="h-full w-full flex flex-col bg-white">
+    <div className="h-full w-full flex flex-col bg-background">
       {/* Header */}
       <div className="p-6 pb-2 flex flex-row items-center justify-between">
         <h2 className="text-xl font-bold">Transaction Summary</h2>
@@ -408,7 +410,7 @@ export function TransactionSummary({
       {/* Content */}
       <div className="flex-1 p-6 flex flex-col gap-4 overflow-y-auto">
         {/* Pay Section */}
-        <div className="rounded-xl bg-[#F8F9FA] p-4 flex flex-col gap-2">
+        <Card className="p-4">
           <div className="grid grid-cols-3 gap-2">
             <div className="flex flex-col gap-2">
               <span className="text-muted-foreground text-sm">Chain</span>
@@ -452,17 +454,17 @@ export function TransactionSummary({
           <div className="text-xs text-muted-foreground text-right">
             Balance: {payBalance}
           </div>
-        </div>
+        </Card>
 
         {/* Arrow Down */}
         <div className="flex justify-center">
-          <div className="rounded-full bg-[#F8F9FA] w-10 h-10 flex items-center justify-center">
+          <div className="rounded-full bg-muted/50 w-10 h-10 flex items-center justify-center">
             <ArrowDown className="h-4 w-4 text-muted-foreground" />
           </div>
         </div>
 
         {/* Receive Section */}
-        <div className="rounded-xl bg-[#F8F9FA] p-4 flex flex-col gap-2">
+        <Card className="p-4">
           <div className="grid grid-cols-3 gap-2">
             <div className="flex flex-col gap-2">
               <span className="text-muted-foreground text-sm">Chain</span>
@@ -506,7 +508,7 @@ export function TransactionSummary({
           <div className="text-xs text-muted-foreground text-right">
             Balance: {receiveBalance}
           </div>
-        </div>
+        </Card>
 
         {/* Transaction Summary */}
         {!isSwapped && (
@@ -553,7 +555,7 @@ export function TransactionSummary({
         )}
 
         {/* Destination Address */}
-        <Card className="bg-[#F8F9FA]">
+        <Card className="bg-muted/50">
           <CardHeader>
             <CardTitle className="text-muted-foreground text-sm">
               Destination Address
@@ -566,7 +568,7 @@ export function TransactionSummary({
                 value={selectedDestination}
                 onValueChange={setSelectedDestination}
               >
-                <SelectTrigger className="w-full border-0 bg-white rounded-lg p-3">
+                <SelectTrigger className="w-full border-0 bg-card rounded-lg p-3">
                   <div className="flex items-center gap-3 w-full">
                     <Image
                       src="/chains-icons/ethereum-logo.svg"
@@ -579,18 +581,18 @@ export function TransactionSummary({
                       {externalWallet?.connector?.name || "MetaMask"}
                     </span>
                     {selectedDestination && (
-                      <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-medium ml-auto">
+                      <span className="bg-primary/10 text-primary px-2 py-1 rounded text-xs font-medium ml-auto">
                         {ellipsizeAddress(selectedDestination)}
                       </span>
                     )}
                   </div>
                 </SelectTrigger>
-                <SelectContent className="bg-white border shadow-lg">
+                <SelectContent className="bg-popover border shadow-lg">
                   {externalWallet && (
                     <SelectItem
                       key={externalWallet.address}
                       value={externalWallet.address}
-                      className="bg-white hover:bg-gray-50 cursor-pointer focus:bg-gray-50"
+                      className="bg-popover hover:bg-muted cursor-pointer focus:bg-muted"
                     >
                       <div className="flex items-center gap-3 py-2 w-full">
                         <Image
@@ -603,7 +605,7 @@ export function TransactionSummary({
                         <span className="text-sm font-medium">
                           {externalWallet.connector?.name || "MetaMask"}
                         </span>
-                        <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-medium ml-auto">
+                        <span className="bg-primary/10 text-primary px-2 py-1 rounded text-xs font-medium ml-auto">
                           {ellipsizeAddress(externalWallet.address)}
                         </span>
                       </div>
@@ -613,7 +615,7 @@ export function TransactionSummary({
               </Select>
             ) : (
               // Buy Order: Show fixed destination based on order type
-              <div className="bg-white rounded-lg p-3 flex items-center gap-3">
+              <div className="bg-card rounded-lg p-3 flex items-center gap-3">
                 <Image
                   src="/chains-icons/ethereum-logo.svg"
                   alt={areOrdersLocked ? "Order Address" : "Ethereum Wallet"}
@@ -627,7 +629,7 @@ export function TransactionSummary({
                     : externalWallet?.connector?.name || "MetaMask"}
                 </span>
                 {finalDestinationAddress && (
-                  <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-medium ml-auto">
+                  <span className="bg-primary/10 text-primary px-2 py-1 rounded text-xs font-medium ml-auto">
                     {ellipsizeAddress(finalDestinationAddress)}
                   </span>
                 )}
@@ -644,7 +646,7 @@ export function TransactionSummary({
 
         {/* Transaction Progress Indicator */}
         {transactionProgress.isProcessing && (
-          <div className="rounded-lg bg-[#F8F9FA] p-4 border-l-4 border-[#76E698]">
+          <div className="rounded-lg bg-muted/50 p-4 border-l-4 border-primary">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium text-gray-900">
                 Processing Transactions
@@ -655,7 +657,7 @@ export function TransactionSummary({
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
               <div
-                className="bg-[#76E698] h-2 rounded-full transition-all duration-300"
+                className="bg-primary h-2 rounded-full transition-all duration-300"
                 style={{
                   width: `${(transactionProgress.current / transactionProgress.total) * 100}%`,
                 }}
@@ -671,7 +673,7 @@ export function TransactionSummary({
         <Button
           onClick={isSwapped ? handleSellOrder : handleBuyOrder}
           disabled={transactionProgress.isProcessing}
-          className="w-full h-12 text-lg font-medium rounded-xl mt-auto text-white bg-[#76E698] disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full h-12 text-lg font-medium rounded-xl mt-auto bg-primary text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Confirm
         </Button>

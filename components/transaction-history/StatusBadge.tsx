@@ -9,7 +9,7 @@ interface StatusBadgeProps {
 function getStatusStyles(status: TransactionStatus) {
   switch (status) {
     case "Open":
-      return "bg-green-500 text-white border-green-500";
+      return "bg-primary text-primary-foreground border-primary";
     case "Pending":
       return "bg-orange-500 text-white border-orange-500";
     case "Completed":

@@ -52,7 +52,7 @@ export function WalletManagementPopover() {
       <PopoverTrigger asChild>
         <Button
           variant="secondary"
-          className="bg-green-100 text-green-900 hover:bg-green-200 flex items-center gap-2 font-medium px-4"
+          className="bg-green-100 text-green-900 hover:bg-green-200 dark:bg-green-800 dark:text-green-100 dark:hover:bg-green-700 flex items-center gap-2 font-medium px-4"
         >
           {isConnected ? (
             <>
@@ -78,12 +78,12 @@ export function WalletManagementPopover() {
         </div>
         <div className="p-6 pt-0 flex flex-col gap-0">
           {/* Wallet options */}
-          <div className="rounded-lg  bg-[#F8F9FA]">
+          <div className="rounded-lg  bg-muted/50">
             {reownSupportedWallets.map((wallet, idx) => (
               <React.Fragment key={wallet.name}>
                 <Button
                   variant="ghost"
-                  className="w-full h-20 flex justify-baseline"
+                  className="w-full h-20 flex justify-baseline hover:bg-muted/30"
                   disabled={isConnecting}
                   onClick={() => connect("metamask", "ethereum")}
                 >
@@ -101,7 +101,7 @@ export function WalletManagementPopover() {
                   </div>
 
                   {externalWallet?.address && (
-                    <div className="max-w-32 flex items-center gap-2 bg-green-100 text-green-900 rounded-xl px-3 py-1 font-medium ml-auto">
+                    <div className="max-w-32 flex items-center gap-2 bg-green-100 text-green-700 rounded-xl px-3 py-1 font-medium ml-auto">
                       <span>{ellipsizeAddress(externalWallet.address)}</span>
                       <span
                         className="h-6 w-6 p-0 flex items-center"

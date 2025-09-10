@@ -23,7 +23,7 @@ function OrderStatusFilter({
   lockedCount,
 }: OrderStatusFilterProps) {
   return (
-    <div className="p-3 bg-white/60 border border-green-100 rounded-lg">
+    <div className="p-3 bg-card border border-primary/20 rounded-lg">
       <div className="flex items-center justify-between mb-3">
         <span className="text-sm font-medium">{title}</span>
         {value !== 'all' && (

@@ -29,7 +29,7 @@ const socialLinks = [
 
 function Footer() {
   return (
-    <footer className="w-full border-t bg-white px-4 md:px-8 py-4">
+    <footer className="w-full border-t bg-background px-4 md:px-8 py-4">
       <div className="flex flex-col md:flex-row items-center justify-between gap-4 max-w-screen-2xl mx-auto">
         {/* Left: Logo and Brand */}
         <div className="flex items-center gap-2 min-w-[180px]">
@@ -41,7 +41,7 @@ function Footer() {
             className="rounded-full"
             priority
           />
-          <span className="font-semibold text-base tracking-tight text-gray-900">
+          <span className="font-semibold text-base tracking-tight text-foreground">
             Canopy Swap
           </span>
         </div>
@@ -51,7 +51,7 @@ function Footer() {
             <a
               key={link.name}
               href={link.href}
-              className="hover:text-black transition-colors"
+              className="hover:text-foreground transition-colors"
             >
               {link.name}
             </a>
@@ -64,7 +64,7 @@ function Footer() {
               key={social.name}
               href={social.href}
               aria-label={social.name}
-              className="text-muted-foreground hover:text-black transition-colors"
+              className="text-muted-foreground hover:text-foreground transition-colors"
               target="_blank"
               rel="noopener noreferrer"
             >

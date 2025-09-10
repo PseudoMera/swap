@@ -30,7 +30,7 @@ function RangeFilter({
   formatValue = (val) => val.toFixed(4),
 }: RangeFilterProps) {
   return (
-    <div className="p-3 bg-white/60 border border-green-100 rounded-lg">
+    <div className="p-3 bg-card border border-primary/20 rounded-lg">
       <div className="flex items-center justify-between mb-3">
         <span className="text-sm font-medium">{title}</span>
         {value && (
@@ -52,7 +52,7 @@ function RangeFilter({
           min={min}
           max={max}
           step={step}
-          className="w-full [&_[data-slot=slider-range]]:bg-green-600"
+          className="w-full [&_[data-slot=slider-range]]:bg-primary"
           disabled={disabled}
         />
         <div className="flex items-center justify-between text-xs text-muted-foreground">

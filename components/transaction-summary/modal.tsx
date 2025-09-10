@@ -33,7 +33,7 @@ export function TransactionSummaryModal({
   receiveAmount,
   payBalance,
   receiveBalance,
-  triggerClassName = "w-full bg-green-100 text-green-900 hover:bg-green-200 mt-2 h-12 text-lg font-medium rounded-xl",
+  triggerClassName = "w-full bg-primary hover:bg-primary/90 text-primary-foreground mt-2 h-12 text-lg font-medium rounded-xl",
   disabled = false,
   onOrdersCleared,
 }: TransactionSummaryModalProps) {

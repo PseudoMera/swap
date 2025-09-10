@@ -42,7 +42,7 @@ export function OrdersTable({
         cell: ({ getValue }) => {
           const price = getValue() as number;
           return (
-            <span className="font-mono text-green-600 font-medium">
+            <span className="font-mono text-green-700 dark:text-green-400 font-medium">
               {price.toFixed(4)}
             </span>
           );
@@ -92,8 +92,8 @@ export function OrdersTable({
             <Button
               className={cn(
                 isSelected
-                  ? "bg-order-remove hover:bg-order-remove/80 text-black px-4 py-1"
-                  : "bg-green-400 hover:bg-green-600 text-white px-4 py-1",
+                  ? "bg-warning hover:bg-warning/80 text-black px-4 py-1"
+                  : "bg-primary hover:bg-primary/80 text-primary-foreground px-4 py-1",
                 "w-20",
               )}
               onClick={handleClick}
@@ -158,7 +158,7 @@ export function OrdersTable({
                   className="p-3 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:bg-muted/70"
                   onClick={header.column.getToggleSortingHandler()}
                 >
-                  <div className="flex items-center font-bold text-black">
+                  <div className="flex items-center font-bold text-foreground">
                     {header.isPlaceholder
                       ? null
                       : flexRender(

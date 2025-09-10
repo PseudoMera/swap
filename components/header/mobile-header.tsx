@@ -15,8 +15,8 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "../ui/select";
-import { Moon } from "lucide-react";
 import { WalletManagementPopover } from "../wallet-management/popover";
+import { ThemeToggle } from "../theme-toggle";
 
 function MobileHeader() {
   const pathname = usePathname();
@@ -53,13 +53,13 @@ function MobileHeader() {
                   className={cn(
                     "relative py-2 text-base font-medium transition-colors",
                     isActive
-                      ? "text-black"
-                      : "text-muted-foreground hover:text-black",
+                      ? "text-foreground"
+                      : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   {link.name}
                   {isActive && (
-                    <span className="absolute left-0 -bottom-1 w-full h-[2px] bg-green-800 rounded" />
+                    <span className="absolute left-0 -bottom-1 w-full h-[2px] bg-primary rounded" />
                   )}
                 </Link>
               );
@@ -96,14 +96,7 @@ function MobileHeader() {
                   ))}
                 </SelectContent>
               </Select>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="bg-muted hover:bg-muted/80 text-muted-foreground"
-                aria-label="Toggle theme"
-              >
-                <Moon size={18} />
-              </Button>
+              <ThemeToggle />
             </div>
             <WalletManagementPopover />
           </div>

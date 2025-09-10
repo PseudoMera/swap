@@ -479,7 +479,7 @@ export function TanStackOrderBook({
             <div className="flex items-center justify-between mb-3 p-3 bg-muted/50 rounded-md">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium">Filtered by price:</span>
-                <span className="font-mono text-green-600 font-semibold">
+                <span className="font-mono text-foreground font-semibold">
                   {selectedPrice.toFixed(4)}{" "}
                   {tradePair?.quoteAsset.symbol || "USDC"}
                 </span>

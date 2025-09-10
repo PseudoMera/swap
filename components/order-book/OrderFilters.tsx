@@ -174,13 +174,13 @@ function OrderFilters({
   }
 
   return (
-    <Card className="mb-6 bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+    <Card className="mb-6 bg-card border-border">
       <CardHeader className="pb-2">
         <CardTitle className="text-lg flex items-center justify-between">
           <span>
             Order Filters{" "}
             {hasActiveFilters && (
-              <span className="text-sm text-green-600 ml-1">(Active)</span>
+              <span className="text-sm text-primary ml-1">(Active)</span>
             )}
           </span>
           <div className="flex items-center gap-2">

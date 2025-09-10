@@ -26,7 +26,7 @@ const metadata = {
 createAppKit({
   adapters: [wagmiAdapter],
   projectId,
-  networks: networks,
+  networks,
   defaultNetwork: networks[1], // sepolia for development/testing
   metadata: metadata,
   features: {

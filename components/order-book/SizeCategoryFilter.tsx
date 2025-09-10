@@ -1,9 +1,18 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  SizeCategory,
+  SizeCategoryDefinition,
+} from "@/types/order-book-filters";
 import { X } from "lucide-react";
-import { SizeCategory, SizeCategoryDefinition } from "@/types/filters";
 
 interface SizeCategoryFilterProps {
   title: string;
@@ -21,10 +30,10 @@ function SizeCategoryFilter({
   categories,
 }: SizeCategoryFilterProps) {
   return (
-    <div className="p-3 bg-white/60 border border-green-100 rounded-lg">
+    <div className="p-3 bg-card border border-primary/20 rounded-lg">
       <div className="flex items-center justify-between mb-3">
         <span className="text-sm font-medium">{title}</span>
-        {value !== 'all' && (
+        {value !== "all" && (
           <Button
             variant="outline"
             size="sm"
@@ -46,19 +55,25 @@ function SizeCategoryFilter({
             <SelectItem value="small">
               <div className="flex flex-col">
                 <span>{categories.small.label}</span>
-                <span className="text-xs text-muted-foreground">{categories.small.range}</span>
+                <span className="text-xs text-muted-foreground">
+                  {categories.small.range}
+                </span>
               </div>
             </SelectItem>
             <SelectItem value="medium">
               <div className="flex flex-col">
                 <span>{categories.medium.label}</span>
-                <span className="text-xs text-muted-foreground">{categories.medium.range}</span>
+                <span className="text-xs text-muted-foreground">
+                  {categories.medium.range}
+                </span>
               </div>
             </SelectItem>
             <SelectItem value="large">
               <div className="flex flex-col">
                 <span>{categories.large.label}</span>
-                <span className="text-xs text-muted-foreground">{categories.large.range}</span>
+                <span className="text-xs text-muted-foreground">
+                  {categories.large.range}
+                </span>
               </div>
             </SelectItem>
           </SelectContent>

@@ -111,7 +111,7 @@ export function TransactionHistoryTable({
       cell: ({ getValue }) => {
         const price = getValue() as number;
         return (
-          <span className="font-mono text-green-600 font-medium">
+          <span className="font-mono text-green-700 dark:text-green-400 font-medium">
             {formatAmount(price, 4)}
           </span>
         );
@@ -254,7 +254,7 @@ export function TransactionHistoryTable({
                         className="p-3 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:bg-muted/70"
                         onClick={header.column.getToggleSortingHandler()}
                       >
-                        <div className="flex items-center font-bold text-black">
+                        <div className="flex items-center font-bold text-foreground">
                           {header.isPlaceholder
                             ? null
                             : flexRender(

@@ -133,7 +133,7 @@ function CanopyWalletManagement() {
   };
 
   return (
-    <div className="w-full p-4 flex flex-col gap-4 justify-baseline rounded-lg  bg-[#F8F9FA]">
+    <div className="w-full p-4 flex flex-col gap-4 justify-baseline rounded-lg  bg-muted/50">
       <div className="flex items-center gap-3">
         <Image
           src={canopyWallet.icon}
@@ -145,7 +145,7 @@ function CanopyWalletManagement() {
         <span className="font-semibold text-sm">{canopyWallet.name}</span>
         
         {selectedCanopyWallet?.address && (
-          <div className="max-w-32 flex items-center gap-2 bg-green-100 text-green-900 rounded-xl px-3 py-1 font-medium ml-auto">
+          <div className="max-w-32 flex items-center gap-2 bg-green-100 text-green-700 rounded-xl px-3 py-1 font-medium ml-auto">
             <span className="text-sm">{ellipsizeAddress(selectedCanopyWallet.address)}</span>
             <span
               className="h-6 w-6 p-0 flex items-center"
@@ -202,7 +202,7 @@ function CanopyWalletManagement() {
               onValueChange={handleAccountSelect}
             >
               <SelectTrigger className="w-full">
-                <span className="bg-green-100 px-2 py-1 rounded">
+                <span className="bg-green-100 px-2 py-1 rounded text-green-700">
                   <SelectValue placeholder="Choose an account..." />
                 </span>
               </SelectTrigger>
@@ -223,13 +223,13 @@ function CanopyWalletManagement() {
               {storedKeyfiles.map((keyfile) => (
                 <div
                   key={keyfile.id}
-                  className="flex items-center justify-between p-2 bg-white border rounded-lg"
+                  className="flex items-center justify-between p-2 bg-card border border-border rounded-lg"
                 >
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-gray-900 truncate">
+                    <div className="text-sm font-medium text-foreground truncate">
                       {keyfile.filename}
                     </div>
-                    <div className="text-xs text-gray-500">
+                    <div className="text-xs text-muted-foreground">
                       {keyfile.accountAddresses.length} account{keyfile.accountAddresses.length !== 1 ? 's' : ''}
                     </div>
                   </div>

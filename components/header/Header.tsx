@@ -9,7 +9,7 @@ function Header() {
   const isMobile = useIsMobile();
 
   return (
-    <header className="w-full border-b bg-white flex items-center h-16 px-4 md:px-8">
+    <header className="w-full border-b bg-background flex items-center h-16 px-4 md:px-8">
       <div className="flex items-center gap-2 min-w-[180px]">
         <Image
           src="/chains-icons/canopy-logo.svg"

@@ -133,7 +133,7 @@ export function SwapCard({
         </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
-        <div className="rounded-xl bg-background p-4 flex flex-col gap-2">
+        <div className="rounded-xl bg-muted/50 p-4 flex flex-col gap-2">
           <div className="grid grid-cols-[60px_1fr_120px] gap-2">
             <div className="flex flex-col gap-2">
               <span className="text-muted-foreground text-sm">Chain</span>
@@ -206,12 +206,12 @@ export function SwapCard({
             variant="ghost"
             size="icon"
             onClick={handleSwapDirection}
-            className="rounded-full bg-[#F8F9FA] w-10 h-10 flex items-center justify-center hover:bg-[#E5E7EB] transition-colors"
+            className="rounded-full bg-muted/50 w-10 h-10 flex items-center justify-center hover:bg-muted transition-colors"
           >
             <ArrowDown className="text-muted-foreground" />
           </Button>
         </div>
-        <div className="rounded-xl bg-[#F8F9FA] p-4 flex flex-col gap-2">
+        <div className="rounded-xl bg-muted/50 p-4 flex flex-col gap-2">
           <div className="grid grid-cols-[60px_1fr_120px] gap-2">
             <div className="flex flex-col gap-2">
               <span className="text-muted-foreground text-sm">Chain</span>
@@ -278,11 +278,11 @@ export function SwapCard({
           </div>
         </div>
 
-        <div className="rounded-xl bg-[#F8F9FA] p-4">
+        <div className="rounded-xl bg-muted/50 p-4">
           <div className="flex items-center justify-between text-muted-foreground text-base mb-2">
             <span>Orders</span>
             <div className="flex items-center gap-2">
-              <span className="text-black font-medium">
+              <span className="text-foreground font-medium">
                 {orderTotals.orderCount === 0
                   ? "None Selected"
                   : `${orderTotals.orderCount} Selected`}
@@ -347,12 +347,12 @@ export function SwapCard({
           )}
         </div>
 
-        <div className="rounded-xl bg-[#F8F9FA] p-4 flex flex-col gap-1 text-sm">
+        <div className="rounded-xl bg-muted/50 p-4 flex flex-col gap-1 text-sm">
           <div className="flex justify-between">
             <span className="text-muted-foreground">
               {orderTotals.orderCount > 0 ? "Average Rate" : "Last Rate"}
             </span>
-            <span className="text-black">
+            <span className="text-foreground">
               {orderTotals.orderCount > 0 && tradePair
                 ? `1 ${tradePair.quoteAsset.symbol} = ${orderTotals.averageRate.toFixed(4)} ${tradePair.baseAsset.symbol}`
                 : tradePair
@@ -362,11 +362,11 @@ export function SwapCard({
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Network Fee</span>
-            <span className="text-black">0.0001 ETH</span>
+            <span className="text-foreground">0.0001 ETH</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Estimated Time</span>
-            <span className="text-black">~120 seconds</span>
+            <span className="text-foreground">~120 seconds</span>
           </div>
         </div>
         {/* Transaction Summary Modal */}

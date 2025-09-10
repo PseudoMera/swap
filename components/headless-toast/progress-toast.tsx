@@ -41,13 +41,13 @@ function ProgressToast({
   }, [duration]);
 
   return (
-    <div className="w-full min-w-[320px] text-black">
+    <div className="w-full min-w-[320px] text-foreground">
       <div className="w-full flex flex-col gap-3">
         <div className="flex items-center gap-3">
-          <RefreshCcw className="animate-spin text-black" size={20} />
+          <RefreshCcw className="animate-spin text-foreground" size={20} />
           <div className="flex flex-col">
-            <span className="text-black font-medium">{title}</span>
-            <span className="flex gap-2 items-center text-black">
+            <span className="text-foreground font-medium">{title}</span>
+            <span className="flex gap-2 items-center text-foreground">
               {payAssetSymbol} <ArrowRight size={16} /> {receiveAssetSymbol}
             </span>
           </div>
@@ -58,7 +58,7 @@ function ProgressToast({
       </div>
       <Progress
         value={progress}
-        className="w-full mt-3 h-2 bg-gray-200 [&>[data-slot=progress-indicator]]:bg-[#76E698]"
+        className="w-full mt-3 h-2 bg-gray-200 [&>[data-slot=progress-indicator]]:bg-primary"
       />
     </div>
   );
