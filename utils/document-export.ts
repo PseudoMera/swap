@@ -9,6 +9,15 @@ interface PDFExportOptions {
   walletAddress?: string;
 }
 
+interface CSVExportOptions {
+  includeHeaders?: boolean;
+}
+
+interface JSONExportOptions {
+  prettyPrint?: boolean;
+  walletAddress?: string;
+}
+
 export const exportTransactionsToPDF = (
   transactions: ProcessedTransaction[],
   options: PDFExportOptions = {},
@@ -149,6 +158,142 @@ export const exportTransactionsToPDF = (
   const filename = `transaction-history-${timestamp}.pdf`;
 
   doc.save(filename);
+
+  return filename;
+};
+
+export const exportTransactionsToCSV = (
+  transactions: ProcessedTransaction[],
+  options: CSVExportOptions = {},
+) => {
+  const { includeHeaders = true } = options;
+
+  const headers = [
+    "Date",
+    "Time",
+    "Transaction Hash",
+    "Pair",
+    "Type",
+    "Amount",
+    "Base Asset",
+    "Price",
+    "Total",
+    "Quote Asset",
+    "Fee",
+    "Status",
+  ];
+
+  const rows = transactions.map((tx) => [
+    tx.dateTime.toLocaleDateString(),
+    tx.dateTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+    tx.txHash,
+    tx.pair,
+    tx.type,
+    formatAmount(tx.amount),
+    tx.tradingPairInfo.baseAsset.symbol,
+    formatAmount(tx.price, 4),
+    formatAmount(tx.total, 2),
+    tx.tradingPairInfo.quoteAsset.symbol,
+    formatAmount(tx.fee, 2),
+    tx.status,
+  ]);
+
+  const escapeCSVField = (field: string | number): string => {
+    const stringField = String(field);
+    if (
+      stringField.includes(",") ||
+      stringField.includes("\n") ||
+      stringField.includes('"')
+    ) {
+      return `"${stringField.replace(/"/g, '""')}"`;
+    }
+    return stringField;
+  };
+
+  let csvContent = "";
+
+  if (includeHeaders) {
+    csvContent += headers.map(escapeCSVField).join(",") + "\n";
+  }
+
+  rows.forEach((row) => {
+    csvContent += row.map(escapeCSVField).join(",") + "\n";
+  });
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+
+  const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, "-");
+  const filename = `transaction-history-${timestamp}.csv`;
+
+  if (link.download !== undefined) {
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", filename);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
+  return filename;
+};
+
+export const exportTransactionsToJSON = (
+  transactions: ProcessedTransaction[],
+  options: JSONExportOptions = {},
+) => {
+  const { prettyPrint = true, walletAddress } = options;
+
+  const exportData = {
+    metadata: {
+      exportDate: new Date().toISOString(),
+      totalTransactions: transactions.length,
+      ...(walletAddress && { walletAddress }),
+    },
+    transactions: transactions.map((tx) => ({
+      id: tx.id,
+      dateTime: tx.dateTime.toISOString(),
+      txHash: tx.txHash,
+      pair: tx.pair,
+      type: tx.type,
+      amount: tx.amount,
+      price: tx.price,
+      total: tx.total,
+      fee: tx.fee,
+      status: tx.status,
+      tradingPairInfo: {
+        displayName: tx.tradingPairInfo.displayName,
+        baseAsset: tx.tradingPairInfo.baseAsset,
+        quoteAsset: tx.tradingPairInfo.quoteAsset,
+      },
+      rawData: tx.rawData,
+    })),
+  };
+
+  const jsonContent = prettyPrint
+    ? JSON.stringify(exportData, null, 2)
+    : JSON.stringify(exportData);
+
+  const blob = new Blob([jsonContent], {
+    type: "application/json;charset=utf-8;",
+  });
+  const link = document.createElement("a");
+
+  const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, "-");
+  const filename = `transaction-history-${timestamp}.json`;
+
+  if (link.download !== undefined) {
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", filename);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
 
   return filename;
 };

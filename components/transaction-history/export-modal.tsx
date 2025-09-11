@@ -19,10 +19,14 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Download } from "lucide-react";
 import { ProcessedTransaction } from "@/types/transactions";
-import { exportTransactionsToPDF } from "@/utils/pdf-export";
+import {
+  exportTransactionsToPDF,
+  exportTransactionsToCSV,
+  exportTransactionsToJSON,
+} from "@/utils/document-export";
 import { useWallets } from "@/context/wallet";
 
-type ExportFormat = "excel" | "csv" | "pdf";
+type ExportFormat = "json" | "csv" | "pdf";
 
 interface ExportModalProps {
   open: boolean;
@@ -43,17 +47,16 @@ function ExportModal({ open, onOpenChange, data }: ExportModalProps) {
             includeStats: true,
           });
           break;
-        case "excel":
-          // TODO: Implement Excel export
-          console.log("Excel export not implemented yet");
+        case "json":
+          exportTransactionsToJSON(data, {
+            walletAddress: selectedCanopyWallet?.address,
+          });
           break;
         case "csv":
-          // TODO: Implement CSV export
-          console.log("CSV export not implemented yet");
+          exportTransactionsToCSV(data);
           break;
       }
 
-      // Reset and close modal
       setSelectedFormat("");
       onOpenChange(false);
     }
@@ -82,7 +85,7 @@ function ExportModal({ open, onOpenChange, data }: ExportModalProps) {
                 <SelectValue placeholder="Select export format" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="excel">Excel (.xlsx)</SelectItem>
+                <SelectItem value="json">JSON (.json)</SelectItem>
                 <SelectItem value="csv">CSV (.csv)</SelectItem>
                 <SelectItem value="pdf">PDF (.pdf)</SelectItem>
               </SelectContent>
