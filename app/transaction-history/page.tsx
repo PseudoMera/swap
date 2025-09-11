@@ -129,10 +129,6 @@ function TransactionHistoryPage() {
         data={filteredTransactions}
         loading={isLoading}
         onRefresh={() => refetch()}
-        onExport={() => {
-          // TODO: Implement export functionality
-          console.log("Export transactions:", filteredTransactions);
-        }}
       />
     </div>
   );

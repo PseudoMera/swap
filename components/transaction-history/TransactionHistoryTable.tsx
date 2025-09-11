@@ -18,6 +18,7 @@ import StatusBadge from "./StatusBadge";
 import TransactionTypeBadge from "./TransactionTypeBadge";
 import { ProcessedTransaction } from "@/types/transactions";
 import EditCloseOrderSummaryModal from "../edit-close-order-summary/modal";
+import ExportModal from "./export-modal";
 import { getDefaultTradingPair } from "@/utils/trading-pairs";
 
 const defaultTradingPair = getDefaultTradingPair();
@@ -26,19 +27,18 @@ interface TransactionHistoryTableProps {
   data: ProcessedTransaction[];
   loading: boolean;
   onRefresh: () => void;
-  onExport: () => void;
 }
 
 export function TransactionHistoryTable({
   data,
   loading,
   onRefresh,
-  onExport,
 }: TransactionHistoryTableProps) {
   const [isEditCloseModalOpen, setIsEditCloseModalOpen] =
     useState<boolean>(false);
   const [selectedTransaction, setSelectedTransaction] =
     useState<ProcessedTransaction | null>(null);
+  const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
 
   const [sorting, setSorting] = useState<SortingState>([]);
 
@@ -214,7 +214,7 @@ export function TransactionHistoryTable({
             <Button
               variant="outline"
               size="sm"
-              onClick={onExport}
+              onClick={() => setIsExportModalOpen(true)}
               className="flex items-center gap-2"
             >
               <Download className="h-4 w-4" />
@@ -367,6 +367,12 @@ export function TransactionHistoryTable({
           }
           receiveBalance={"1,200"}
           transaction={selectedTransaction!}
+        />
+
+        <ExportModal
+          open={isExportModalOpen}
+          onOpenChange={setIsExportModalOpen}
+          data={data}
         />
       </CardContent>
     </Card>
