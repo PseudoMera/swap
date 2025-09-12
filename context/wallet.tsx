@@ -17,6 +17,7 @@ import {
   type CanopyWalletAccount,
 } from "@/types/wallet";
 import { secureStorage, type KeyfileMetadata } from "@/lib/secure-storage";
+import { hasStoredPassword } from "@/utils/keyfile-session";
 
 interface WalletContextType {
   // External wallet connection functions
@@ -44,24 +45,24 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       const keyfiles = await secureStorage.listKeyfiles();
       setStoredKeyfiles(keyfiles);
 
-      // Auto-select first keyfile if none selected
-      if (keyfiles.length > 0 && !selectedCanopyWallet) {
-        const firstKeyfile = keyfiles[0];
-        if (firstKeyfile.accountAddresses.length > 0) {
-          setSelectedCanopyWallet({
-            address: firstKeyfile.accountAddresses[0],
-            keyfileId: firstKeyfile.id,
-            filename: firstKeyfile.filename,
-          });
+      // Clear selection if selected keyfile no longer exists or has no password
+      if (selectedCanopyWallet) {
+        const keyfile = keyfiles.find((kf) => kf.id === selectedCanopyWallet.keyfileId);
+        if (!keyfile || !hasStoredPassword(keyfile.filename)) {
+          setSelectedCanopyWallet(null);
         }
       }
 
-      // Clear selection if selected keyfile no longer exists
-      if (
-        selectedCanopyWallet &&
-        !keyfiles.find((kf) => kf.id === selectedCanopyWallet.keyfileId)
-      ) {
-        setSelectedCanopyWallet(null);
+      // Auto-select first keyfile with stored password if none selected
+      if (!selectedCanopyWallet && keyfiles.length > 0) {
+        const keyfileWithPassword = keyfiles.find((kf) => hasStoredPassword(kf.filename));
+        if (keyfileWithPassword && keyfileWithPassword.accountAddresses.length > 0) {
+          setSelectedCanopyWallet({
+            address: keyfileWithPassword.accountAddresses[0],
+            keyfileId: keyfileWithPassword.id,
+            filename: keyfileWithPassword.filename,
+          });
+        }
       }
     } catch (error) {
       console.error("Failed to refresh stored keyfiles:", error);
