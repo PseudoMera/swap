@@ -11,6 +11,7 @@ import { useWallets } from "@/context/wallet";
 import { ellipsizeAddress } from "@/utils/address";
 import { TransactionFilters } from "@/types/transactions";
 import { getAllTradingPairs } from "@/utils/trading-pairs";
+import { Search } from "lucide-react";
 
 interface FilterBarProps {
   filters: TransactionFilters;
@@ -28,7 +29,6 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
     ...tradingPairs.map((pair) => pair.displayName),
   ];
 
-  // Get all connected addresses
   const connectedAddresses = [];
   if (selectedCanopyWallet?.address) {
     connectedAddresses.push({
@@ -37,7 +37,6 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
     });
   }
 
-  // Add other keyfile addresses if available
   storedKeyfiles.forEach((keyfile) => {
     keyfile.accountAddresses.forEach((addr) => {
       if (addr !== selectedCanopyWallet?.address) {
@@ -58,14 +57,15 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
 
   return (
     <Card>
-      <CardContent className="p-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="w-48">
+      <CardContent>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+          {/* Left group - Filter dropdowns */}
+          <div className="flex flex-col sm:flex-row gap-4">
             <Select
               value={filters.pair}
               onValueChange={(value) => handleFilterChange("pair", value)}
             >
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-48 bg-muted">
                 <SelectValue placeholder="Select pair" />
               </SelectTrigger>
               <SelectContent>
@@ -76,14 +76,12 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
                 ))}
               </SelectContent>
             </Select>
-          </div>
 
-          <div className="w-48">
             <Select
               value={filters.status}
               onValueChange={(value) => handleFilterChange("status", value)}
             >
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-48 bg-muted">
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
               <SelectContent>
@@ -94,14 +92,12 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
                 ))}
               </SelectContent>
             </Select>
-          </div>
 
-          <div className="w-48">
             <Select
               value={filters.timeRange}
               onValueChange={(value) => handleFilterChange("timeRange", value)}
             >
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-48 bg-muted">
                 <SelectValue placeholder="Select time range" />
               </SelectTrigger>
               <SelectContent>
@@ -112,14 +108,12 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
                 ))}
               </SelectContent>
             </Select>
-          </div>
 
-          <div className="w-64">
             <Select
               value={filters.address}
               onValueChange={(value) => handleFilterChange("address", value)}
             >
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-64 bg-muted">
                 <SelectValue placeholder="Select address" />
               </SelectTrigger>
               <SelectContent>
@@ -133,13 +127,15 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
             </Select>
           </div>
 
-          <div className="flex-1 ml-auto">
+          {/* Right group - Search bar */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
               type="text"
               placeholder="Search by transaction hash..."
               value={filters.search}
               onChange={(e) => handleFilterChange("search", e.target.value)}
-              className="w-full"
+              className="w-80 pl-10"
             />
           </div>
         </div>

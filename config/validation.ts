@@ -10,6 +10,7 @@ interface ValidatedConfig {
   RPC_URL: string;
   ADMIN_RPC_URL: string;
   KEYFILE_SECRET: string;
+  EXPLORER_URL: string;
 }
 
 function isValidUrl(url: string): boolean {
@@ -89,6 +90,14 @@ export function validateEnvironment(): ValidatedConfig {
     );
   }
 
+  // Validate Explorer URL
+  const EXPLORER_URL = process.env.NEXT_PUBLIC_EXPLORER_URL;
+  if (!EXPLORER_URL) {
+    errors.push("NEXT_PUBLIC_EXPLORER_URL is required for transaction links");
+  } else if (!isValidUrl(EXPLORER_URL)) {
+    errors.push("NEXT_PUBLIC_EXPLORER_URL must be a valid HTTP/HTTPS URL");
+  }
+
   // In production, ensure no localhost URLs
   if (!isDevelopment) {
     if (RPC_URL?.includes("localhost") || RPC_URL?.includes("127.0.0.1")) {
@@ -115,6 +124,7 @@ export function validateEnvironment(): ValidatedConfig {
     RPC_URL: RPC_URL || "http://localhost:50002",
     ADMIN_RPC_URL: ADMIN_RPC_URL || "http://localhost:50003",
     KEYFILE_SECRET: KEYFILE_SECRET!,
+    EXPLORER_URL: EXPLORER_URL!,
   };
 }
 

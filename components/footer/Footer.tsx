@@ -29,7 +29,7 @@ const socialLinks = [
 
 function Footer() {
   return (
-    <footer className="w-full border-t bg-background px-4 md:px-8 py-4">
+    <footer className="w-full border-t bg-header px-4 md:px-8 py-4">
       <div className="flex flex-col md:flex-row items-center justify-between gap-4 max-w-screen-2xl mx-auto">
         {/* Left: Logo and Brand */}
         <div className="flex items-center gap-2 min-w-[180px]">

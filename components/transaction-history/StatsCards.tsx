@@ -1,6 +1,12 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { TransactionStats } from "@/types/transactions";
 import { formatAmount, formatCurrency } from "@/utils/transactions";
+import {
+  ArrowRightLeft,
+  ChartLine,
+  CircleCheck,
+  HandCoins,
+} from "lucide-react";
 
 interface StatsCardsProps {
   stats: TransactionStats;
@@ -12,22 +18,38 @@ export function StatsCards({ stats, loading = false }: StatsCardsProps) {
     {
       title: "Total Transactions",
       value: stats.totalTransactions.toLocaleString(),
-      icon: "📋",
+      icon: (
+        <span className="rounded-full p-4 bg-[#90E0B2]/20 text-2xl">
+          <ArrowRightLeft />
+        </span>
+      ),
     },
     {
       title: "Total Volume",
       value: `$${formatAmount(stats.totalVolume, 2)}`,
-      icon: "💰",
+      icon: (
+        <span className="rounded-full p-4 bg-[#7EB7C7]/20 text-2xl">
+          <ChartLine />
+        </span>
+      ),
     },
     {
       title: "Success Rate",
       value: `${formatAmount(stats.successRate, 1)}%`,
-      icon: "✅",
+      icon: (
+        <span className="rounded-full p-4 bg-[#DCFCE7]/60 text-2xl">
+          <CircleCheck />
+        </span>
+      ),
     },
     {
       title: "Avg. Fee",
       value: formatCurrency(stats.avgFee),
-      icon: "💸",
+      icon: (
+        <span className="rounded-full p-4 bg-[#FCF0B4]/40 text-2xl">
+          <HandCoins />
+        </span>
+      ),
     },
   ];
 
@@ -52,7 +74,7 @@ export function StatsCards({ stats, loading = false }: StatsCardsProps) {
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
       {statItems.map((item, index) => (
         <Card key={index}>
-          <CardContent className="p-6">
+          <CardContent className="px-4 py-2">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
@@ -62,7 +84,7 @@ export function StatsCards({ stats, loading = false }: StatsCardsProps) {
                   {item.value}
                 </p>
               </div>
-              <span className="text-2xl">{item.icon}</span>
+              {item.icon}
             </div>
           </CardContent>
         </Card>

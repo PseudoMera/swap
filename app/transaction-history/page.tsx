@@ -26,7 +26,6 @@ function TransactionHistoryPage() {
 
   const address = selectedCanopyWallet?.address;
 
-  // Fetch transaction history using TanStack Query
   const {
     data: enrichedData,
     isLoading,
@@ -41,18 +40,15 @@ function TransactionHistoryPage() {
     retry: 1,
   });
 
-  // Process transaction data
   const transactions = useMemo(() => {
     if (!enrichedData?.results) return [];
     return enrichedData.results.map(processTransactionData);
   }, [enrichedData]);
 
-  // Filter transactions based on current filters
   const filteredTransactions = useMemo(() => {
     return applyTransactionFilters(transactions, filters);
   }, [transactions, filters]);
 
-  // Calculate stats from filtered transactions
   const stats = useMemo(() => {
     return calculateTransactionStats(filteredTransactions);
   }, [filteredTransactions]);
@@ -118,13 +114,10 @@ function TransactionHistoryPage() {
         </h2>
       </div>
 
-      {/* Filter Bar - Right below subtitle */}
       <FilterBar filters={filters} onFiltersChange={setFilters} />
 
-      {/* Stats Cards */}
       <StatsCards stats={stats} loading={isLoading} />
 
-      {/* Transaction Table */}
       <TransactionHistoryTable
         data={filteredTransactions}
         loading={isLoading}

@@ -20,6 +20,7 @@ import { ProcessedTransaction } from "@/types/transactions";
 import EditCloseOrderSummaryModal from "../edit-close-order-summary/modal";
 import ExportModal from "./export-modal";
 import { getDefaultTradingPair } from "@/utils/trading-pairs";
+import { ENV_CONFIG } from "@/config";
 
 const defaultTradingPair = getDefaultTradingPair();
 
@@ -65,13 +66,17 @@ export function TransactionHistoryTable({
       header: "Transaction Hash",
       cell: ({ getValue }) => {
         const hash = getValue() as string;
+
         return (
-          <span
-            className="font-mono text-blue-600 cursor-pointer hover:underline"
+          <a
+            href={`${ENV_CONFIG.EXPLORER_URL}/tx/${hash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-mono text-blue-600 hover:underline"
             title={hash}
           >
             {truncateHash(hash)}
-          </span>
+          </a>
         );
       },
       enableSorting: false,
@@ -157,8 +162,9 @@ export function TransactionHistoryTable({
       cell: ({ row }) => {
         const transaction = row.original;
         const isOpen = transaction.status === "Open";
+        const hasOrderInfo = transaction.rawData.order !== null;
 
-        return isOpen ? (
+        return isOpen && hasOrderInfo ? (
           <Button
             size="sm"
             variant="outline"
@@ -175,12 +181,15 @@ export function TransactionHistoryTable({
             size="sm"
             variant="ghost"
             className="h-8 px-3 text-xs text-muted-foreground"
-            onClick={() => {
-              // TODO: Implement view functionality
-              console.log("View transaction:", transaction.id);
-            }}
+            asChild
           >
-            View
+            <a
+              href={`${ENV_CONFIG.EXPLORER_URL}/tx/${transaction.txHash}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              View
+            </a>
           </Button>
         );
       },
@@ -206,10 +215,12 @@ export function TransactionHistoryTable({
   });
 
   return (
-    <Card>
+    <Card className="pb-0">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          <span>Transaction History</span>
+          <h2 className="text-2xl font-bold text-foreground">
+            Transaction History
+          </h2>
           <div className="flex gap-2">
             <Button
               variant="outline"
@@ -243,8 +254,8 @@ export function TransactionHistoryTable({
             ))}
           </div>
         ) : (
-          <div className="border rounded-md">
-            <table className="w-full">
+          <div className="border">
+            <table className="w-full rounded-none">
               <thead>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <tr key={headerGroup.id} className="bg-muted/50 border-b">
