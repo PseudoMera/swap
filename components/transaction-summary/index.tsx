@@ -6,7 +6,6 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AssetCard } from "../asset-card";
 import Image from "next/image";
 import { ArrowDown, X } from "lucide-react";
 import { createOrder } from "@/services/orders";
@@ -26,11 +25,12 @@ import { sendTransaction } from "wagmi/actions";
 import { wagmiConfig } from "@/config";
 import { useCapabilities, useSendCalls, useAccount } from "wagmi";
 import ProgressToast from "../headless-toast/progress-toast";
-import { ProcessedOrder } from "../order-book/TanStackOrderBook";
+import { ProcessedOrder } from "../order-book/tanstack-order-book";
 import { ellipsizeAddress, padAddress, sliceAddress } from "@/utils/address";
 import { useTradePairContext } from "@/context/trade-pair-context";
 import { assetToAddress } from "@/utils/tokens";
 import { getKeyfilePassword } from "@/utils/keyfile-session";
+import AssetCard from "../asset-card";
 
 interface TransactionSummaryProps {
   selectedOrders: ProcessedOrder[];
@@ -44,7 +44,7 @@ interface TransactionSummaryProps {
   estimatedTime?: string;
 }
 
-export function TransactionSummary({
+function TransactionSummary({
   selectedOrders,
   isSwapped,
   payAmount,

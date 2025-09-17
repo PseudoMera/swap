@@ -4,10 +4,10 @@ import Link from "next/link";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "../ui/select";
 import Image from "next/image";
 import { TRADING_PAIRS_LIST } from "@/constants/trading-pairs";
-import { WalletManagementPopover } from "../wallet-management/popover";
-import { ThemeToggle } from "../theme-toggle";
 import { usePathname } from "next/navigation";
 import { useTradePairContext } from "@/context/trade-pair-context";
+import ThemeToggle from "../theme-toggle";
+import WalletManagementPopover from "../wallet-management/popover";
 
 function DesktopHeader() {
   const pathname = usePathname();

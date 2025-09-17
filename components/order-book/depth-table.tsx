@@ -6,8 +6,8 @@ import {
   flexRender,
   ColumnDef,
 } from "@tanstack/react-table";
-import { AggregatedOrder } from "./TanStackOrderBook";
 import { useMemo } from "react";
+import { AggregatedOrder } from "./tanstack-order-book";
 
 interface DepthTableProps {
   data: AggregatedOrder[];

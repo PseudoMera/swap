@@ -15,8 +15,8 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "../ui/select";
-import { WalletManagementPopover } from "../wallet-management/popover";
-import { ThemeToggle } from "../theme-toggle";
+import WalletManagementPopover from "../wallet-management/popover";
+import ThemeToggle from "../theme-toggle";
 
 function MobileHeader() {
   const pathname = usePathname();

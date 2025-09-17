@@ -13,7 +13,7 @@ interface StatsCardsProps {
   loading?: boolean;
 }
 
-export function StatsCards({ stats, loading = false }: StatsCardsProps) {
+function StatsCards({ stats, loading = false }: StatsCardsProps) {
   const statItems = [
     {
       title: "Total Transactions",

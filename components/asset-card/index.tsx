@@ -20,7 +20,7 @@ interface AssetCardProps {
   onAmountChange?: (value: string) => void;
 }
 
-export function AssetCard({
+function AssetCard({
   asset,
   label,
   amount,
@@ -75,9 +75,7 @@ export function AssetCard({
               step="any"
             />
           ) : (
-            <div className="text-right font-semibold text-lg">
-              {amount}
-            </div>
+            <div className="text-right font-semibold text-lg">{amount}</div>
           )}
         </div>
       </div>
@@ -87,3 +85,5 @@ export function AssetCard({
     </Card>
   );
 }
+
+export default AssetCard;

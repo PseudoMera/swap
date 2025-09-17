@@ -1,19 +1,17 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import RecentTransactionsCard from "@/components/recent-transactions/RecentTransactionsCard";
 import SwapCard from "@/components/swap-card";
-import {
+import RecentTransactionsCard from "@/components/recent-transactions";
+import TanStackOrderBook, {
   ProcessedOrder,
-  TanStackOrderBook,
-} from "@/components/order-book/TanStackOrderBook";
+} from "@/components/order-book/tanstack-order-book";
 
-export default function Home() {
+function Home() {
   const [selectedOrders, setSelectedOrders] = useState<ProcessedOrder[]>([]);
   const [isSwapped, setIsSwapped] = useState<boolean>(false);
 
   const handleOrderSelect = useCallback((order: ProcessedOrder) => {
-    // Add to selected orders if not already selected
     setSelectedOrders((prev) => {
       if (!prev.find((o) => o.id === order.id)) {
         return [...prev, order];
@@ -56,3 +54,5 @@ export default function Home() {
     </div>
   );
 }
+
+export default Home;

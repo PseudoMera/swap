@@ -5,10 +5,10 @@ import {
   DialogTrigger,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { TransactionSummary } from "./index";
-import { ProcessedOrder } from "../order-book/TanStackOrderBook";
+import { ProcessedOrder } from "../order-book/tanstack-order-book";
 import { useWallets } from "@/context/wallet";
 import { useUnifiedWallet } from "@/hooks/useUnifiedWallet";
+import TransactionSummary from ".";
 
 interface TransactionSummaryModalProps {
   open: boolean;

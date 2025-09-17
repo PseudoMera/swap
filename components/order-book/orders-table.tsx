@@ -12,8 +12,8 @@ import {
 } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { ProcessedOrder } from "./TanStackOrderBook";
 import { cn } from "@/lib/utils";
+import { ProcessedOrder } from "./tanstack-order-book";
 
 interface OrdersTableProps {
   data: ProcessedOrder[];
@@ -24,7 +24,7 @@ interface OrdersTableProps {
   isSwapped: boolean;
 }
 
-export function OrdersTable({
+function OrdersTable({
   data,
   loading,
   onOrderSelect,
@@ -234,3 +234,5 @@ export function OrdersTable({
     </div>
   );
 }
+
+export default OrdersTable;

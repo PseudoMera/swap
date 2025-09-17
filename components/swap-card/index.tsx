@@ -15,7 +15,7 @@ import { usePollingData } from "@/context/polling-context";
 import { TransactionSummaryModal } from "@/components/transaction-summary/modal";
 import { getAllChains } from "@/utils/chains";
 import { getBuyableAssets, getSellableAssets } from "@/utils/assets";
-import { ProcessedOrder } from "../order-book/TanStackOrderBook";
+import { ProcessedOrder } from "../order-book/tanstack-order-book";
 import { useUnifiedWallet } from "@/hooks/useUnifiedWallet";
 import { useBalance } from "wagmi";
 import { ZeroXAddress } from "@/types/wallet";
@@ -33,7 +33,7 @@ interface SwapCardProps {
   handleSwapDirection: () => void;
 }
 
-export function SwapCard({
+function SwapCard({
   selectedOrders = [],
   onClearOrders,
   handleSwapDirection,

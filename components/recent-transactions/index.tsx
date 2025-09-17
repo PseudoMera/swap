@@ -33,7 +33,7 @@ const transactions: Transaction[] = [
   },
 ];
 
-export function RecentTransactionsCard() {
+function RecentTransactionsCard() {
   return (
     <Card className="max-w-md w-full mx-auto">
       <CardHeader className="pb-2">

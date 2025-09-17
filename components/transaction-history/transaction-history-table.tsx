@@ -14,13 +14,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ChevronLeft, ChevronRight, Download, RefreshCw } from "lucide-react";
 import { truncateHash, formatAmount } from "@/utils/transactions";
-import StatusBadge from "./StatusBadge";
-import TransactionTypeBadge from "./TransactionTypeBadge";
+import StatusBadge from "./status-badge";
 import { ProcessedTransaction } from "@/types/transactions";
 import EditCloseOrderSummaryModal from "../edit-close-order-summary/modal";
 import ExportModal from "./export-modal";
 import { getDefaultTradingPair } from "@/utils/trading-pairs";
 import { ENV_CONFIG } from "@/config";
+import TransactionTypeBadge from "./transaction-type-badge";
 
 const defaultTradingPair = getDefaultTradingPair();
 
@@ -30,7 +30,7 @@ interface TransactionHistoryTableProps {
   onRefresh: () => void;
 }
 
-export function TransactionHistoryTable({
+function TransactionHistoryTable({
   data,
   loading,
   onRefresh,

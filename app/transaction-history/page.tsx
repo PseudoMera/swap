@@ -9,9 +9,9 @@ import {
   calculateTransactionStats,
   applyTransactionFilters,
 } from "@/utils/transactions";
-import StatsCards from "@/components/transaction-history/StatsCards";
-import FilterBar from "@/components/transaction-history/FilterBar";
-import TransactionHistoryTable from "@/components/transaction-history/TransactionHistoryTable";
+import StatsCards from "@/components/transaction-history/stats-card";
+import FilterBar from "@/components/transaction-history/filter-bar";
+import TransactionHistoryTable from "@/components/transaction-history/transaction-history-table";
 import { TransactionFilters } from "@/types/transactions";
 
 function TransactionHistoryPage() {

@@ -1,7 +1,13 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { X } from "lucide-react";
 import { OrderStatus } from "@/types/order-book-filters";
 
@@ -26,7 +32,7 @@ function OrderStatusFilter({
     <div className="p-3 bg-card border border-primary/20 rounded-lg">
       <div className="flex items-center justify-between mb-3">
         <span className="text-sm font-medium">{title}</span>
-        {value !== 'all' && (
+        {value !== "all" && (
           <Button
             variant="outline"
             size="sm"
@@ -48,13 +54,17 @@ function OrderStatusFilter({
             <SelectItem value="available">
               <div className="flex flex-col">
                 <span>Available Orders</span>
-                <span className="text-xs text-muted-foreground">{availableCount} orders</span>
+                <span className="text-xs text-muted-foreground">
+                  {availableCount} orders
+                </span>
               </div>
             </SelectItem>
             <SelectItem value="locked">
               <div className="flex flex-col">
                 <span>Locked Orders</span>
-                <span className="text-xs text-muted-foreground">{lockedCount} orders</span>
+                <span className="text-xs text-muted-foreground">
+                  {lockedCount} orders
+                </span>
               </div>
             </SelectItem>
           </SelectContent>

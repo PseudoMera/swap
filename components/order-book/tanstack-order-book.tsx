@@ -7,17 +7,17 @@ import { RefreshCw, X } from "lucide-react";
 import { usePollingData } from "@/context/polling-context";
 import { blockchainUValueToNumber } from "@/utils/blockchain";
 import { formatLastUpdated } from "@/utils/time";
-import { OrdersTable } from "./OrdersTable";
 import { Order } from "@/types/order";
-import OrderFilters from "./OrderFilters";
+import OrderFilters from "./orders-filter";
 import {
   SizeCategory,
   RangeType,
   OrderStatus,
   SpreadFilter,
 } from "@/types/order-book-filters";
-import DepthTable from "./DepthTable";
+import DepthTable from "./depth-table";
 import { useTradePairContext } from "@/context/trade-pair-context";
+import OrdersTable from "./orders-table";
 
 export interface ProcessedOrder
   extends Omit<Order, "amountForSale" | "requestedAmount"> {
@@ -42,7 +42,7 @@ interface TanStackOrderBookProps {
   isSwapped: boolean;
 }
 
-export function TanStackOrderBook({
+function TanStackOrderBook({
   onOrderSelect,
   onOrderRemove,
   selectedOrders,
@@ -511,3 +511,5 @@ export function TanStackOrderBook({
     </Card>
   );
 }
+
+export default TanStackOrderBook;

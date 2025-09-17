@@ -4,18 +4,18 @@ import { useMemo, useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { X, ChevronDown, ChevronUp, Filter } from "lucide-react";
-import RangeFilter from "./RangeFilter";
-import SizeCategoryFilter from "./SizeCategoryFilter";
-import OrderStatusFilter from "./OrderStatusFilter";
-import SpreadFilter from "./SpreadFilter";
 import {
   SizeCategory,
   RangeType,
   OrderStatus,
   SpreadFilter as SpreadFilterType,
 } from "@/types/order-book-filters";
-import { ProcessedOrder } from "./TanStackOrderBook";
 import { TradingPair } from "@/types/trading-pair";
+import { ProcessedOrder } from "./tanstack-order-book";
+import RangeFilter from "./range-filter";
+import SizeCategoryFilter from "./size-category-filter";
+import OrderStatusFilter from "./order-status-filter";
+import SpreadFilter from "./spread-filter";
 
 interface OrderFiltersProps {
   allProcessedOrders: ProcessedOrder[];

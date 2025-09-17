@@ -34,7 +34,7 @@ const reownSupportedWallets: ConnectWallets[] = [
   },
 ];
 
-export function WalletManagementPopover() {
+function WalletManagementPopover() {
   const { connect, disconnect, selectedCanopyWallet } = useWallets();
   const {
     wallet: externalWallet,
@@ -126,3 +126,5 @@ export function WalletManagementPopover() {
     </Popover>
   );
 }
+
+export default WalletManagementPopover;

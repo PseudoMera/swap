@@ -56,8 +56,14 @@ function RangeFilter({
           disabled={disabled}
         />
         <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>Min: {formatValue(min)}{unit}</span>
-          <span>Max: {formatValue(max)}{unit}</span>
+          <span>
+            Min: {formatValue(min)}
+            {unit}
+          </span>
+          <span>
+            Max: {formatValue(max)}
+            {unit}
+          </span>
         </div>
       </div>
     </div>

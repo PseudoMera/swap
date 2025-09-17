@@ -21,7 +21,7 @@ interface FilterBarProps {
 const STATUS_OPTIONS = ["All Status", "Open", "Pending", "Completed"];
 const TIME_RANGE_OPTIONS = ["All Time", "24h", "7d", "30d", "90d"];
 
-export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
+function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
   const { selectedCanopyWallet, storedKeyfiles } = useWallets();
   const tradingPairs = getAllTradingPairs();
   const pairOptions = [

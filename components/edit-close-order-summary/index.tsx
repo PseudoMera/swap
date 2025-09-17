@@ -1,6 +1,5 @@
 import { ArrowDown, X } from "lucide-react";
 import { Button } from "../ui/button";
-import { AssetCard } from "../asset-card";
 import { TradingPair } from "@/types/trading-pair";
 import { deleteOrder, editOrder } from "@/services/orders";
 import { numberToBlockchainUValue } from "@/utils/blockchain";
@@ -9,6 +8,7 @@ import { useState } from "react";
 import { useWallets } from "@/context/wallet";
 import { toast } from "sonner";
 import ProgressToast from "../headless-toast/progress-toast";
+import AssetCard from "../asset-card";
 
 interface EditCloseOrderSummaryProps {
   tradingPair: TradingPair;

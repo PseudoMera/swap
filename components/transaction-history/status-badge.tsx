@@ -19,7 +19,7 @@ function getStatusStyles(status: TransactionStatus) {
   }
 }
 
-export function StatusBadge({ status, className }: StatusBadgeProps) {
+function StatusBadge({ status, className }: StatusBadgeProps) {
   return (
     <span
       className={cn(
