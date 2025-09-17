@@ -1,8 +1,6 @@
 import { ArrowDown, X } from "lucide-react";
 import { Button } from "../ui/button";
-import { Select, SelectTrigger } from "../ui/select";
-import { Input } from "../ui/input";
-import Image from "next/image";
+import { AssetCard } from "../asset-card";
 import { TradingPair } from "@/types/trading-pair";
 import { deleteOrder, editOrder } from "@/services/orders";
 import { numberToBlockchainUValue } from "@/utils/blockchain";
@@ -124,113 +122,29 @@ function EditCloseOrderSummary({
       </div>
 
       <div className="flex flex-col gap-4">
-        <div className="rounded-xl bg-muted/50 p-4 flex flex-col gap-2">
-          <div className="grid grid-cols-3 gap-2">
-            <div className="flex flex-col gap-2">
-              <span className="text-muted-foreground text-sm">Chain</span>
-              <Select value={payAsset.chainId} disabled>
-                <SelectTrigger className="w-full">
-                  <Image
-                    src={payAsset.chainIcon}
-                    alt={payAsset.chainId}
-                    width={20}
-                    height={20}
-                    className="mr-2"
-                  />
-                  <span className="text-sm">{payAsset.chainId}</span>
-                </SelectTrigger>
-              </Select>
-            </div>
-            <div className="flex flex-col gap-2">
-              <span className="text-muted-foreground text-sm">Asset</span>
-              <Select value={payAsset.id} disabled>
-                <SelectTrigger className="w-full">
-                  <Image
-                    src={payAsset.assetIcon}
-                    alt={payAsset.symbol}
-                    width={20}
-                    height={20}
-                    className="mr-2"
-                  />
-                  <span className="text-sm">{payAsset.symbol}</span>
-                </SelectTrigger>
-              </Select>
-            </div>
-            <div className="flex flex-col gap-2">
-              <span className="text-muted-foreground text-sm text-right">
-                You pay
-              </span>
-              <Input
-                type="number"
-                className="text-right font-semibold text-lg bg-transparent border-b-2 border-gray-300 focus:border-blue-500 transition-colors"
-                value={payInput}
-                onChange={(e) => setPayInput(e.target.value)}
-                min="0"
-                step="any"
-              />
-            </div>
-          </div>
-          <div className="text-xs text-muted-foreground text-right">
-            Balance: {payBalance}
-          </div>
-        </div>
+        <AssetCard
+          asset={payAsset}
+          label="You pay"
+          amount={payInput}
+          balance={payBalance}
+          editable={true}
+          onAmountChange={setPayInput}
+        />
 
         <div className="flex justify-center">
-          <div className="rounded-full bg-muted/50 w-10 h-10 flex items-center justify-center">
+          <div className="rounded-full w-10 h-10 flex items-center justify-center">
             <ArrowDown className="h-4 w-4 text-muted-foreground" />
           </div>
         </div>
 
-        <div className="rounded-xl bg-muted/50 p-4 flex flex-col gap-2">
-          <div className="grid grid-cols-3 gap-2">
-            <div className="flex flex-col gap-2">
-              <span className="text-muted-foreground text-sm">Chain</span>
-              <Select value={receiveAsset.chainId} disabled>
-                <SelectTrigger className="w-full">
-                  <Image
-                    src={receiveAsset.chainIcon}
-                    alt={receiveAsset.chainId}
-                    width={20}
-                    height={20}
-                    className="mr-2"
-                  />
-                  <span className="text-sm">{receiveAsset.chainId}</span>
-                </SelectTrigger>
-              </Select>
-            </div>
-            <div className="flex flex-col gap-2">
-              <span className="text-muted-foreground text-sm">Asset</span>
-              <Select value={receiveAsset.id} disabled>
-                <SelectTrigger className="w-full">
-                  <Image
-                    src={receiveAsset.assetIcon}
-                    alt={receiveAsset.symbol}
-                    width={20}
-                    height={20}
-                    className="mr-2"
-                  />
-                  <span className="text-sm">{receiveAsset.symbol}</span>
-                </SelectTrigger>
-              </Select>
-            </div>
-            <div className="flex flex-col gap-2">
-              <span className="text-muted-foreground text-sm text-right">
-                You receive
-              </span>
-              <Input
-                type="number"
-                className="text-right font-semibold text-lg bg-transparent border-b-2 border-gray-300 focus:border-blue-500 transition-colors"
-                value={receiveInput}
-                onChange={(e) => setReceiveInput(e.target.value)}
-                min="0"
-                step="any"
-              />
-            </div>
-          </div>
-          <div className="text-xs text-muted-foreground text-right">
-            Balance: {receiveBalance}
-          </div>
-        </div>
+        <AssetCard
+          asset={receiveAsset}
+          label="You receive"
+          amount={receiveInput}
+          balance={receiveBalance}
+          editable={true}
+          onAmountChange={setReceiveInput}
+        />
 
         <div className="flex flex-col gap-2 my-2">
           <Button

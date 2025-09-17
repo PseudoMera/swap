@@ -6,6 +6,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AssetCard } from "../asset-card";
 import Image from "next/image";
 import { ArrowDown, X } from "lucide-react";
 import { createOrder } from "@/services/orders";
@@ -29,6 +30,7 @@ import { ProcessedOrder } from "../order-book/TanStackOrderBook";
 import { ellipsizeAddress, padAddress, sliceAddress } from "@/utils/address";
 import { useTradePairContext } from "@/context/trade-pair-context";
 import { assetToAddress } from "@/utils/tokens";
+import { getKeyfilePassword } from "@/utils/keyfile-session";
 
 interface TransactionSummaryProps {
   selectedOrders: ProcessedOrder[];
@@ -117,6 +119,24 @@ export function TransactionSummary({
       return;
     }
 
+    if (!selectedCanopyWallet?.filename) {
+      toast("Error", {
+        description: "No Canopy wallet selected",
+        duration: 5000,
+      });
+      return;
+    }
+
+    const password = getKeyfilePassword(selectedCanopyWallet.filename);
+    if (!password) {
+      toast("Error", {
+        description:
+          "Keyfile password not found. Please re-authenticate your keyfile.",
+        duration: 5000,
+      });
+      return;
+    }
+
     try {
       await createOrder({
         address: selectedCanopyWallet?.address || "",
@@ -129,7 +149,7 @@ export function TransactionSummary({
         memo: "",
         fee: 0,
         submit: true,
-        password: "test",
+        password: password,
       });
 
       toast("Transaction Status", {
@@ -410,51 +430,12 @@ export function TransactionSummary({
       {/* Content */}
       <div className="flex-1 p-6 flex flex-col gap-4 overflow-y-auto">
         {/* Pay Section */}
-        <Card className="p-4">
-          <div className="grid grid-cols-3 gap-2">
-            <div className="flex flex-col gap-2">
-              <span className="text-muted-foreground text-sm">Chain</span>
-              <Select value={payAsset.chainId} disabled>
-                <SelectTrigger className="w-full">
-                  <Image
-                    src={payAsset.chainIcon}
-                    alt={payAsset.chainId}
-                    width={20}
-                    height={20}
-                    className="mr-2"
-                  />
-                  <span className="text-sm">{payAsset.chainId}</span>
-                </SelectTrigger>
-              </Select>
-            </div>
-            <div className="flex flex-col gap-2">
-              <span className="text-muted-foreground text-sm">Asset</span>
-              <Select value={payAsset.id} disabled>
-                <SelectTrigger className="w-full">
-                  <Image
-                    src={payAsset.assetIcon}
-                    alt={payAsset.symbol}
-                    width={20}
-                    height={20}
-                    className="mr-2"
-                  />
-                  <span className="text-sm">{payAsset.symbol}</span>
-                </SelectTrigger>
-              </Select>
-            </div>
-            <div className="flex flex-col gap-2">
-              <span className="text-muted-foreground text-sm text-right">
-                You pay
-              </span>
-              <div className="text-right font-semibold text-lg">
-                {payAmount}
-              </div>
-            </div>
-          </div>
-          <div className="text-xs text-muted-foreground text-right">
-            Balance: {payBalance}
-          </div>
-        </Card>
+        <AssetCard
+          asset={payAsset}
+          label="You pay"
+          amount={payAmount}
+          balance={payBalance}
+        />
 
         {/* Arrow Down */}
         <div className="flex justify-center">
@@ -464,51 +445,12 @@ export function TransactionSummary({
         </div>
 
         {/* Receive Section */}
-        <Card className="p-4">
-          <div className="grid grid-cols-3 gap-2">
-            <div className="flex flex-col gap-2">
-              <span className="text-muted-foreground text-sm">Chain</span>
-              <Select value={receiveAsset.chainId} disabled>
-                <SelectTrigger className="w-full">
-                  <Image
-                    src={receiveAsset.chainIcon}
-                    alt={receiveAsset.chainId}
-                    width={20}
-                    height={20}
-                    className="mr-2"
-                  />
-                  <span className="text-sm">{receiveAsset.chainId}</span>
-                </SelectTrigger>
-              </Select>
-            </div>
-            <div className="flex flex-col gap-2">
-              <span className="text-muted-foreground text-sm">Asset</span>
-              <Select value={receiveAsset.id} disabled>
-                <SelectTrigger className="w-full">
-                  <Image
-                    src={receiveAsset.assetIcon}
-                    alt={receiveAsset.symbol}
-                    width={20}
-                    height={20}
-                    className="mr-2"
-                  />
-                  <span className="text-sm">{receiveAsset.symbol}</span>
-                </SelectTrigger>
-              </Select>
-            </div>
-            <div className="flex flex-col gap-2">
-              <span className="text-muted-foreground text-sm text-right">
-                You receive
-              </span>
-              <div className="text-right font-semibold text-lg">
-                {receiveAmount}
-              </div>
-            </div>
-          </div>
-          <div className="text-xs text-muted-foreground text-right">
-            Balance: {receiveBalance}
-          </div>
-        </Card>
+        <AssetCard
+          asset={receiveAsset}
+          label="You receive"
+          amount={receiveAmount}
+          balance={receiveBalance}
+        />
 
         {/* Transaction Summary */}
         {!isSwapped && (
@@ -555,7 +497,7 @@ export function TransactionSummary({
         )}
 
         {/* Destination Address */}
-        <Card className="bg-muted/50">
+        <Card>
           <CardHeader>
             <CardTitle className="text-muted-foreground text-sm">
               Destination Address
@@ -568,7 +510,7 @@ export function TransactionSummary({
                 value={selectedDestination}
                 onValueChange={setSelectedDestination}
               >
-                <SelectTrigger className="w-full border-0 bg-card rounded-lg p-3">
+                <SelectTrigger className="w-full border rounded-lg p-3">
                   <div className="flex items-center gap-3 w-full">
                     <Image
                       src="/chains-icons/ethereum-logo.svg"
@@ -615,7 +557,7 @@ export function TransactionSummary({
               </Select>
             ) : (
               // Buy Order: Show fixed destination based on order type
-              <div className="bg-card rounded-lg p-3 flex items-center gap-3">
+              <div className="bg-card rounded-lg p-3 flex items-center gap-3 border">
                 <Image
                   src="/chains-icons/ethereum-logo.svg"
                   alt={areOrdersLocked ? "Order Address" : "Ethereum Wallet"}
@@ -629,7 +571,7 @@ export function TransactionSummary({
                     : externalWallet?.connector?.name || "MetaMask"}
                 </span>
                 {finalDestinationAddress && (
-                  <span className="bg-primary/10 text-primary px-2 py-1 rounded text-xs font-medium ml-auto">
+                  <span className="bg-primary/30 text-primary px-2 py-1 rounded text-xs font-medium ml-auto">
                     {ellipsizeAddress(finalDestinationAddress)}
                   </span>
                 )}

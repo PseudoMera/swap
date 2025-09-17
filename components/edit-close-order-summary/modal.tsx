@@ -6,7 +6,6 @@ import { ProcessedTransaction } from "@/types/transactions";
 interface EditCloseOrderSummaryModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  disabled: boolean;
   tradingPair: TradingPair;
   isBuySide: boolean;
   payAmount: string;
@@ -19,7 +18,6 @@ interface EditCloseOrderSummaryModalProps {
 function EditCloseOrderSummaryModal({
   onOpenChange,
   open,
-  disabled = false,
   isBuySide,
   payAmount,
   receiveAmount,

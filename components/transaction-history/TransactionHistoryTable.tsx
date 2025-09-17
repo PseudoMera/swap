@@ -367,7 +367,6 @@ export function TransactionHistoryTable({
           tradingPair={
             defaultTradingPair ?? selectedTransaction?.tradingPairInfo
           }
-          disabled={false}
           isBuySide={true}
           payAmount={
             selectedTransaction ? String(selectedTransaction.amount) : ""
