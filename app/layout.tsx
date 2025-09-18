@@ -11,8 +11,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { QueryProvider } from "@/providers/QueryClientProvider";
 import { TradePairContextProvider } from "@/context/trade-pair-context";
 import Footer from "@/components/footer/Footer";
-import Header from "@/components/header/Header";
 import { ThemeProvider } from "next-themes";
+import Header from "@/components/header/header";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

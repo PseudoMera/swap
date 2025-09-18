@@ -26,6 +26,7 @@ export async function fetchOrdersFromCommittee(
     throw new Error(`Failed to fetch orders from committee: ${committee}`);
 
   const data: Orders[] = await response.json();
+  if (!data) return [];
 
   // Flatten the orders from all chains into a single array
   return data.flatMap((chainData) => chainData.orders);

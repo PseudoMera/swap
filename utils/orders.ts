@@ -3,6 +3,8 @@ import { blockchainUValueToNumber } from "./blockchain";
 import { COMMITTEES_ID_NAME_MAP } from "@/constants/orders";
 
 export const flattenOrder = (orders: Orders[]): FlattenOrder[] => {
+  if (!orders) return [];
+
   return orders.flatMap((chain) =>
     chain.orders.map((order) => ({
       id: order.id,

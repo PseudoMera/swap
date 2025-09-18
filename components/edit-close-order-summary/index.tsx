@@ -7,6 +7,7 @@ import { ProcessedTransaction } from "@/types/transactions";
 import { useState } from "react";
 import { useWallets } from "@/context/wallet";
 import { toast } from "sonner";
+import { getKeyfilePassword } from "@/utils/keyfile-session";
 import ProgressToast from "../headless-toast/progress-toast";
 import AssetCard from "../asset-card";
 
@@ -44,6 +45,16 @@ function EditCloseOrderSummary({
   const handleEditAskOrder = async () => {
     try {
       if (transaction.rawData.order && selectedCanopyWallet) {
+        const password = getKeyfilePassword(selectedCanopyWallet.filename);
+        if (!password) {
+          toast("Error", {
+            description:
+              "Keyfile password not found. Please re-authenticate your keyfile.",
+            duration: 5000,
+          });
+          return;
+        }
+
         await editOrder({
           address: selectedCanopyWallet.address,
           amount: numberToBlockchainUValue(Number(payInput)),
@@ -51,7 +62,7 @@ function EditCloseOrderSummary({
           data: "",
           memo: "",
           orderId: transaction.rawData.order.id,
-          password: "test",
+          password: password,
           receiveAddress: transaction.rawData.order.sellerReceiveAddress,
           receiveAmount: numberToBlockchainUValue(Number(receiveInput)),
           submit: true,
@@ -80,6 +91,16 @@ function EditCloseOrderSummary({
   const handleDeleteAskOrder = async () => {
     try {
       if (transaction.rawData.order && selectedCanopyWallet) {
+        const password = getKeyfilePassword(selectedCanopyWallet.filename);
+        if (!password) {
+          toast("Error", {
+            description:
+              "Keyfile password not found. Please re-authenticate your keyfile.",
+            duration: 5000,
+          });
+          return;
+        }
+
         // Prepare delete order payload
         const payload = {
           address: selectedCanopyWallet.address,
@@ -88,7 +109,7 @@ function EditCloseOrderSummary({
           fee: 0,
           memo: "",
           submit: true,
-          password: "test",
+          password: password,
         };
         // Dynamically import deleteOrder to avoid circular deps if any
         await deleteOrder(payload);
