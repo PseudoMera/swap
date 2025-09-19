@@ -8,6 +8,7 @@ import { usePathname } from "next/navigation";
 import { useTradePairContext } from "@/context/trade-pair-context";
 import ThemeToggle from "../theme-toggle";
 import WalletManagementPopover from "../wallet-management/popover";
+import { NotificationBell } from "../notifications/notification-bell";
 
 function DesktopHeader() {
   const pathname = usePathname();
@@ -75,6 +76,7 @@ function DesktopHeader() {
             ))}
           </SelectContent>
         </Select>
+        <NotificationBell />
         <ThemeToggle />
 
         <WalletManagementPopover />

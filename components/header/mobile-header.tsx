@@ -17,6 +17,7 @@ import Image from "next/image";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "../ui/select";
 import WalletManagementPopover from "../wallet-management/popover";
 import ThemeToggle from "../theme-toggle";
+import { NotificationBell } from "../notifications/notification-bell";
 
 function MobileHeader() {
   const pathname = usePathname();
@@ -96,7 +97,10 @@ function MobileHeader() {
                   ))}
                 </SelectContent>
               </Select>
-              <ThemeToggle />
+              <div className="flex items-center gap-2">
+                <NotificationBell />
+                <ThemeToggle />
+              </div>
             </div>
             <WalletManagementPopover />
           </div>

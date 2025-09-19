@@ -356,11 +356,12 @@ function TransactionSummary({
           orderId: order.id,
           buyerChainDeadline: height ? height + 10 : 4,
           buyerReceiveAddress: finalDestinationAddress,
-          buyerSendAddress: externalWallet.address.slice(2),
+          buyerSendAddress: sliceAddress(externalWallet.address),
         };
-
+        console.log("areOrdersLocked", areOrdersLocked);
+        console.log("orderAmount: ", order.total);
         const orderAmount = areOrdersLocked ? order.total : 0;
-        const amountInUnits = Math.floor(orderAmount * 1000000);
+        const amountInUnits = Math.floor(numberToBlockchainUValue(orderAmount));
         const paddedTo = areOrdersLocked
           ? padAddress(order.sellerReceiveAddress)
           : padAddress(sliceAddress(externalWallet.address));
@@ -380,15 +381,22 @@ function TransactionSummary({
           `0x${usdcTransferMethodID}${paddedTo}${paddedAmount}${memoHex}` as `0x${string}`;
 
         await sendTransaction(wagmiConfig, {
-          to: USDC_CONTRACT_SEPOLIA || TEST_ORACLE_CONTRACT,
+          to: TEST_ORACLE_CONTRACT || USDC_CONTRACT_SEPOLIA,
           value: BigInt(0),
           data,
         });
-
-        if (i < selectedOrders.length - 1) {
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-        }
       }
+
+      toast("Transaction Status", {
+        description: (
+          <ProgressToast
+            payAssetSymbol={payAsset.symbol}
+            receiveAssetSymbol={receiveAsset.symbol}
+            duration={20000}
+          />
+        ),
+        duration: 20000,
+      });
 
       // Clear selected orders after successful buy
       onOrdersCleared();

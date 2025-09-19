@@ -22,6 +22,7 @@ interface TransactionSummaryModalProps {
   triggerClassName?: string;
   disabled?: boolean;
   onOrdersCleared: () => void;
+  showTrigger?: boolean;
 }
 
 export function TransactionSummaryModal({
@@ -36,6 +37,7 @@ export function TransactionSummaryModal({
   triggerClassName = "w-full bg-primary hover:bg-primary/90 text-primary-foreground mt-2 h-12 text-lg font-medium rounded-xl",
   disabled = false,
   onOrdersCleared,
+  showTrigger = true,
 }: TransactionSummaryModalProps) {
   const { selectedCanopyWallet } = useWallets();
   const { isConnected: isExternalConnected } = useUnifiedWallet();
@@ -53,18 +55,20 @@ export function TransactionSummaryModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        <Button
-          className={triggerClassName}
-          disabled={disabled || !hasValidTransaction}
-        >
-          {!hasRequiredWallet
-            ? "Connect Wallet"
-            : selectedOrders.length === 0 && !isSwapped
-              ? "Select Orders"
-              : "Review Transaction"}
-        </Button>
-      </DialogTrigger>
+      {showTrigger && (
+        <DialogTrigger asChild>
+          <Button
+            className={triggerClassName}
+            disabled={disabled || !hasValidTransaction}
+          >
+            {!hasRequiredWallet
+              ? "Connect Wallet"
+              : selectedOrders.length === 0 && !isSwapped
+                ? "Select Orders"
+                : "Review Transaction"}
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent
         className="p-0 w-full h-fit max-w-md overflow-hidden"
         showCloseButton={false}

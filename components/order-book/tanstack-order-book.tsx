@@ -17,6 +17,8 @@ import {
 } from "@/types/order-book-filters";
 import DepthTable from "./depth-table";
 import { useTradePairContext } from "@/context/trade-pair-context";
+import { useWallets } from "@/context/wallet";
+import { useUnifiedWallet } from "@/hooks/useUnifiedWallet";
 import OrdersTable from "./orders-table";
 
 export interface ProcessedOrder
@@ -49,6 +51,8 @@ function TanStackOrderBook({
   isSwapped,
 }: TanStackOrderBookProps) {
   const { tradePair } = useTradePairContext();
+  const { selectedCanopyWallet } = useWallets();
+  const { wallet: externalWallet } = useUnifiedWallet();
 
   const [selectedPrice, setSelectedPrice] = useState<number | null>(null);
   const [priceRange, setPriceRange] = useState<[number, number] | null>(null);
@@ -217,7 +221,23 @@ function TanStackOrderBook({
             case "available":
               return !order.buyerSendAddress; // Available orders have no buyer
             case "locked":
-              return !!order.buyerSendAddress; // Locked orders have a buyer
+              // For locked orders, only show if user is involved
+              if (!order.buyerSendAddress) return false; // Not locked
+
+              const userCanopyAddress = selectedCanopyWallet?.address?.toLowerCase();
+              const userExternalAddress = externalWallet?.address?.toLowerCase();
+
+              // Check if user is the seller (Canopy wallet)
+              const isUserSeller = userCanopyAddress &&
+                order.sellersSendAddress?.toLowerCase() === userCanopyAddress;
+
+              // Check if user is the buyer
+              const isUserBuyer = (userExternalAddress &&
+                order.buyerSendAddress?.toLowerCase() === userExternalAddress) ||
+                (userCanopyAddress &&
+                order.buyerReceiveAddress?.toLowerCase() === userCanopyAddress);
+
+              return isUserSeller || isUserBuyer;
             default:
               return true;
           }
