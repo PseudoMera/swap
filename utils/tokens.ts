@@ -9,7 +9,8 @@ export const assetToAddress = (assetId: AssetId) => {
     case "cnpy":
       return TEST_ORACLE_CONTRACT;
     case "usdc":
-      return USDC_CONTRACT_SEPOLIA;
+      return TEST_ORACLE_CONTRACT;
+    // return USDC_CONTRACT_SEPOLIA;
     default:
       return USDC_CONTRACT_SEPOLIA;
   }

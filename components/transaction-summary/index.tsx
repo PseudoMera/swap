@@ -358,8 +358,7 @@ function TransactionSummary({
           buyerReceiveAddress: finalDestinationAddress,
           buyerSendAddress: sliceAddress(externalWallet.address),
         };
-        console.log("areOrdersLocked", areOrdersLocked);
-        console.log("orderAmount: ", order.total);
+
         const orderAmount = areOrdersLocked ? order.total : 0;
         const amountInUnits = Math.floor(numberToBlockchainUValue(orderAmount));
         const paddedTo = areOrdersLocked

@@ -180,7 +180,10 @@ export const calculateTransactionStats = (
   const totalVolume = transactions.reduce((sum, tx) => sum + tx.total, 0);
   const totalFees = transactions.reduce((sum, tx) => sum + tx.fee, 0);
   const completedCount = transactions.filter(
-    (tx) => tx.status === "Completed",
+    (tx) =>
+      tx.status === "Completed" ||
+      tx.status === "Pending" ||
+      tx.status === "Open",
   ).length;
 
   return {
