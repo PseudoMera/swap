@@ -18,8 +18,15 @@ export async function POST(request: NextRequest) {
 
     const apiConfig = getApiConfigByCommittee(committee);
 
-    // Check if endpoint contains "admin" to determine which URL to use
-    const isAdminEndpoint = endpoint.includes("admin");
+    // Admin endpoints that should use ADMIN_URL
+    const adminEndpoints = [
+      "/tx-create-order",
+      "/tx-edit-order",
+      "/tx-delete-order",
+      "/keystore-import",
+    ];
+
+    const isAdminEndpoint = adminEndpoints.some(adminPath => endpoint.includes(adminPath));
     const baseUrl = isAdminEndpoint ? apiConfig.ADMIN_URL : apiConfig.QUERY_URL;
 
     // Remove leading slash if present
