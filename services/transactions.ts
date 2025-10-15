@@ -9,9 +9,6 @@ import {
   UserTransactionsPayload,
 } from "@/types/transactions";
 
-/**
- * Fetch user transaction history
- */
 export const fetchUserTransactions = async (
   address: string,
   pageNumber: number = 0,
@@ -26,7 +23,7 @@ export const fetchUserTransactions = async (
     perPage,
   };
 
-  const response = await fetch(`${apiConfig.ADMIN_URL}/txs-by-sender`, {
+  const response = await fetch(`${apiConfig.QUERY_URL}/txs-by-sender`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -43,9 +40,6 @@ export const fetchUserTransactions = async (
   return await response.json();
 };
 
-/**
- * Fetch transactions by block height
- */
 export const fetchTransactionsByHeight = async (
   height: number,
   committee: number = 0,
@@ -73,9 +67,6 @@ export const fetchTransactionsByHeight = async (
   return await response.json();
 };
 
-/**
- * Fetch specific order details
- */
 export const fetchOrderDetails = async (
   committee: number,
   orderId: string,
@@ -107,9 +98,6 @@ export const fetchOrderDetails = async (
   return await response.json();
 };
 
-/**
- * Fetch transaction history with enriched order data
- */
 export const fetchEnrichedTransactionHistory = async (
   address: string,
   pageNumber: number = 0,
@@ -204,9 +192,6 @@ export const fetchEnrichedTransactionHistory = async (
   }
 };
 
-/**
- * Fetch recent network transactions from multiple recent blocks
- */
 export const fetchRecentNetworkTransactions = async (
   currentHeight: number,
   blocksToFetch: number = 10,
