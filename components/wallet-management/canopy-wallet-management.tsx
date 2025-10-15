@@ -26,13 +26,14 @@ import {
   getValidationErrorMessage,
 } from "@/utils/keyfile-validation";
 import { ellipsizeAddress } from "@/utils/address";
-import type { CanopyKeyfile } from "@/types/wallet";
+import type { CanopyKeyfile, EncryptedCanopyKeyfile } from "@/types/wallet";
 import {
   storeKeyfilePassword,
   removeKeyfilePassword,
   hasStoredPassword,
   getKeyfilePassword,
 } from "@/utils/keyfile-session";
+import { importKeyStore } from "@/services/keystore";
 
 const canopyWallet = {
   name: "Canopy Wallet",
@@ -125,6 +126,30 @@ function CanopyWalletManagement() {
     setValidationError("");
 
     try {
+      const parsedKeyfile = JSON.parse(pendingKeyfile.content);
+
+      // Extract all encrypted keyfiles from the collection
+      const keyfileEntries = Object.entries(parsedKeyfile);
+      if (keyfileEntries.length === 0) {
+        setValidationError("No accounts found in keyfile");
+        setIsLoading(false);
+        return;
+      }
+
+      // Import all keyfiles
+      for (const [nickname, keyfileData] of keyfileEntries as [
+        string,
+        EncryptedCanopyKeyfile,
+      ][]) {
+        await importKeyStore(undefined, {
+          encrypted: keyfileData.encrypted || "",
+          keyAddress: keyfileData.keyAddress || "",
+          keyNickname: keyfileData.keyNickname || nickname,
+          publicKey: keyfileData.publicKey || "",
+          salt: keyfileData.salt || "",
+        });
+      }
+
       await secureStorage.storeKeyfile(
         pendingKeyfile.file.name,
         pendingKeyfile.content,
