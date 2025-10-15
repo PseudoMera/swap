@@ -21,6 +21,7 @@ import { useBalance } from "wagmi";
 import { ZeroXAddress } from "@/types/wallet";
 import { formatNumber, formatTokenBalance } from "@/utils/number";
 import { useTradePairContext } from "@/context/trade-pair-context";
+import { cn } from "@/lib/utils";
 
 const chains = getAllChains();
 const buyableAssets = getBuyableAssets();
@@ -210,7 +211,12 @@ function SwapCard({
               />
             </div>
           </div>
-          <div className="text-xs text-muted-foreground text-right">
+          <div
+            className={cn(
+              "text-xs text-muted-foreground text-right",
+              !hasSufficientBalance && payAmount > 0 && "text-red-500",
+            )}
+          >
             Balance: {payBalance?.toLocaleString() || "N/A"}
           </div>
         </div>
