@@ -7,7 +7,7 @@ export const ASSETS: Record<string, Asset> = {
     symbol: "CNPY",
     decimals: 6,
     chainId: "canopy",
-    committee: 2,
+    committee: 1,
     canSell: true,
     canBuy: false, // CNPY can be sold but not bought (it's the base asset)
     chainIcon: "/chains-icons/canopy-logo.svg",
@@ -19,7 +19,7 @@ export const ASSETS: Record<string, Asset> = {
     symbol: "USDC",
     decimals: 6,
     chainId: "ethereum",
-    committee: 1,
+    committee: 3,
     canSell: false, // USDC cannot be sold (it's the quote asset)
     canBuy: true, // USDC can be bought
     chainIcon: "/chains-icons/ethereum-logo.svg",

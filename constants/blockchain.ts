@@ -14,11 +14,11 @@ export const BLOCKCHAIN_COMMITEES = {
   USDC: {
     name: "USDC",
     symbol: "USDC",
-    id: 2,
+    id: 3,
   },
-  2: {
+  3: {
     name: "USDC",
     symbol: "USDC",
-    id: 2,
+    id: 3,
   },
 };

@@ -13,7 +13,7 @@ export const fetchUserTransactions = async (
   address: string,
   pageNumber: number = 0,
   perPage: number = 50,
-  committee: number = 0,
+  committee: number = 1,
 ): Promise<TransactionResponse> => {
   const apiConfig = getApiConfigByCommittee(committee);
 
@@ -42,7 +42,7 @@ export const fetchUserTransactions = async (
 
 export const fetchTransactionsByHeight = async (
   height: number,
-  committee: number = 0,
+  committee: number = 1,
 ): Promise<TransactionResponse> => {
   const apiConfig = getApiConfigByCommittee(committee);
 
@@ -70,7 +70,7 @@ export const fetchTransactionsByHeight = async (
 export const fetchOrderDetails = async (
   committee: number,
   orderId: string,
-  height: number = 0,
+  height: number = 1,
 ): Promise<Order> => {
   const payload: OrderDetailsPayload = {
     chainId: committee,

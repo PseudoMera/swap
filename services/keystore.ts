@@ -2,7 +2,7 @@ import { getApiConfigByCommittee } from "@/config/reown";
 import { EncryptedCanopyKeyfile } from "@/types/wallet";
 
 export const importKeyStore = async (
-  committee: number = 0,
+  committee: number = 1,
   keyfile: EncryptedCanopyKeyfile,
 ): Promise<string> => {
   const apiConfig = getApiConfigByCommittee(committee);

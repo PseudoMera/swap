@@ -1,6 +1,6 @@
 import {
   TEST_ORACLE_CONTRACT,
-  USDC_CONTRACT_SEPOLIA,
+  USDC_CONTRACT_ETHEREUM_MAINNET,
 } from "@/constants/tokens";
 import { AssetId } from "@/types/assets";
 
@@ -9,9 +9,8 @@ export const assetToAddress = (assetId: AssetId) => {
     case "cnpy":
       return TEST_ORACLE_CONTRACT;
     case "usdc":
-      return TEST_ORACLE_CONTRACT;
-    // return USDC_CONTRACT_SEPOLIA;
+      return USDC_CONTRACT_ETHEREUM_MAINNET;
     default:
-      return USDC_CONTRACT_SEPOLIA;
+      return USDC_CONTRACT_ETHEREUM_MAINNET;
   }
 };

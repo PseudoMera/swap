@@ -14,7 +14,7 @@ export interface AccountResponse {
 export async function fetchUserBalance(
   height: number,
   address: string,
-  committeee: number = 0,
+  committeee: number = 1,
 ): Promise<number> {
   const apiConfig = getApiConfigByCommittee(committeee);
   const response = await fetch(`${apiConfig.QUERY_URL}/account`, {

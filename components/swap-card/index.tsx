@@ -22,6 +22,7 @@ import { ZeroXAddress } from "@/types/wallet";
 import { formatNumber, formatTokenBalance } from "@/utils/number";
 import { useTradePairContext } from "@/context/trade-pair-context";
 import { cn } from "@/lib/utils";
+import { USDC_CONTRACT_ETHEREUM_MAINNET } from "@/constants/tokens";
 
 const chains = getAllChains();
 const buyableAssets = getBuyableAssets();
@@ -45,6 +46,7 @@ function SwapCard({
   const { wallet } = useUnifiedWallet();
   const { data } = useBalance({
     address: wallet?.address as ZeroXAddress,
+    token: USDC_CONTRACT_ETHEREUM_MAINNET,
   });
 
   const [baseAmount, setBaseAmount] = useState(0);

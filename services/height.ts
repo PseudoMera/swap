@@ -1,6 +1,6 @@
 import { getApiConfigByCommittee } from "@/config/reown";
 
-export async function fetchHeight(committee: number = 0): Promise<number> {
+export async function fetchHeight(committee: number = 1): Promise<number> {
   const apiConfig = getApiConfigByCommittee(committee);
   const response = await fetch(`${apiConfig.QUERY_URL}/height`, {
     method: "POST",

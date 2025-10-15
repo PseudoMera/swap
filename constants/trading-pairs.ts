@@ -8,7 +8,7 @@ export const TRADING_PAIRS: Record<string, TradingPair> = {
     quoteAsset: ASSETS.usdc, // USDC is the payment/quote asset
     displayName: "USDC/CNPY",
     isActive: true,
-    committee: 1,
+    committee: 3,
   },
 };
 

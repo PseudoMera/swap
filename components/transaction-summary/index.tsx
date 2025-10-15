@@ -17,8 +17,7 @@ import { useEffect, useState } from "react";
 import { CloseOrder, LockOrder } from "@/types/order";
 import { usePollingData } from "@/context/polling-context";
 import {
-  TEST_ORACLE_CONTRACT,
-  USDC_CONTRACT_SEPOLIA,
+  USDC_CONTRACT_ETHEREUM_MAINNET,
   usdcTransferMethodID,
 } from "@/constants/tokens";
 import { sendTransaction } from "wagmi/actions";
@@ -282,7 +281,7 @@ function TransactionSummary({
           `0x${usdcTransferMethodID}${paddedTo}${paddedAmount}${memoHex}` as `0x${string}`;
 
         return {
-          to: USDC_CONTRACT_SEPOLIA || (TEST_ORACLE_CONTRACT as `0x${string}`),
+          to: USDC_CONTRACT_ETHEREUM_MAINNET,
           value: BigInt(0),
           data,
         };
@@ -380,7 +379,7 @@ function TransactionSummary({
           `0x${usdcTransferMethodID}${paddedTo}${paddedAmount}${memoHex}` as `0x${string}`;
 
         await sendTransaction(wagmiConfig, {
-          to: TEST_ORACLE_CONTRACT || USDC_CONTRACT_SEPOLIA,
+          to: USDC_CONTRACT_ETHEREUM_MAINNET,
           value: BigInt(0),
           data,
         });
