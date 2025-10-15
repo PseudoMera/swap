@@ -157,8 +157,12 @@ export const fetchEnrichedTransactionHistory = async (
           try {
             orderData = await fetchOrderDetails(committee, orderId);
           } catch (orderError) {
-            // Continue without order data - status will default to "Open"
-            // This is expected for completed, cancelled, or expired orders
+            if (process.env.NODE_ENV === "development") {
+              console.warn(
+                `Failed to fetch order details for ${orderId}:`,
+                orderError,
+              );
+            }
           }
 
           return {
@@ -167,10 +171,9 @@ export const fetchEnrichedTransactionHistory = async (
             orderId,
           };
         } catch (error) {
-          console.error(
-            `Failed to fetch order details for tx ${tx.txHash}:`,
-            error,
-          );
+          if (process.env.NODE_ENV === "development") {
+            console.error(`fetchRecentNetworkTransactions error: ${error}`);
+          }
           // Return transaction without order data if order fetch fails
           // This allows the transaction to still be displayed in the table
           return {
@@ -269,7 +272,12 @@ export const fetchRecentNetworkTransactions = async (
           try {
             orderData = await fetchOrderDetails(committee, orderId);
           } catch (orderError) {
-            // Continue without order data - status will default to "Open"
+            if (process.env.NODE_ENV === "development") {
+              console.warn(
+                `Failed to fetch order details for ${orderId}:`,
+                orderError,
+              );
+            }
           }
 
           return {
@@ -278,6 +286,10 @@ export const fetchRecentNetworkTransactions = async (
             orderId,
           };
         } catch (error) {
+          if (process.env.NODE_ENV === "development") {
+            console.error(`fetchRecentNetworkTransactions error: ${error}`);
+          }
+
           return {
             transaction: tx,
             order: null,
