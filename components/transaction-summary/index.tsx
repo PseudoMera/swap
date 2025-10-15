@@ -22,7 +22,7 @@ import {
   usdcTransferMethodID,
 } from "@/constants/tokens";
 import { sendTransaction } from "wagmi/actions";
-import { wagmiConfig } from "@/config";
+import { wagmiConfig } from "@/config/reown";
 import { useCapabilities, useSendCalls, useAccount } from "wagmi";
 import ProgressToast from "../headless-toast/progress-toast";
 import { ProcessedOrder } from "../order-book/tanstack-order-book";

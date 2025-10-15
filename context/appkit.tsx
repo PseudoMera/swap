@@ -1,6 +1,6 @@
 "use client";
 
-import { wagmiAdapter, projectId, networks } from "@/config";
+import { wagmiAdapter, projectId, networks } from "@/config/reown";
 import { createAppKit } from "@reown/appkit/react";
 import React, { type ReactNode } from "react";
 import { cookieToInitialState, WagmiProvider, type Config } from "wagmi";

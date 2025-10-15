@@ -13,6 +13,9 @@ interface ValidatedConfig {
   EXPLORER_URL: string;
 }
 
+// KEYFILE_SECRET_LENGTH is an arbitrary number, it can be bigger or lower.
+const KEYFILE_SECRET_LENGTH = 24;
+
 function isValidUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
@@ -32,25 +35,22 @@ function isValidSecret(secret: string): boolean {
   if (isDevelopment) {
     return true;
   }
-  // Minimum 32 characters for security
-  return secret.length >= 32;
+  return secret.length >= KEYFILE_SECRET_LENGTH;
 }
 
 export function validateEnvironment(): ValidatedConfig {
   const errors: string[] = [];
   const isDevelopment = process.env.NODE_ENV === "development";
 
-  // Validate Project ID
   const PROJECT_ID = process.env.NEXT_PUBLIC_REOWN_PROJECT_ID;
   if (!PROJECT_ID) {
     errors.push("NEXT_PUBLIC_REOWN_PROJECT_ID is required");
   } else if (!isValidProjectId(PROJECT_ID)) {
     errors.push(
-      "NEXT_PUBLIC_REOWN_PROJECT_ID must be a valid 32-character hex string",
+      "NEXT_PUBLIC_REOWN_PROJECT_ID must be a valid 24-character hex string",
     );
   }
 
-  // Validate RPC URL
   const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL;
   if (!RPC_URL) {
     if (isDevelopment) {
@@ -65,11 +65,10 @@ export function validateEnvironment(): ValidatedConfig {
     errors.push("NEXT_PUBLIC_RPC_URL must be a valid HTTP/HTTPS URL");
   }
 
-  // Validate Admin RPC URL
+  // Only needed in local development, since the admin RPC is on a different port
   const ADMIN_RPC_URL = process.env.NEXT_PUBLIC_ADMIN_RPC_URL;
   if (!ADMIN_RPC_URL) {
     if (isDevelopment) {
-      // In development, use localhost default but warn
       console.warn(
         "NEXT_PUBLIC_ADMIN_RPC_URL not set, using default localhost:50003",
       );
@@ -86,7 +85,7 @@ export function validateEnvironment(): ValidatedConfig {
     errors.push("NEXT_PUBLIC_KEYFILE_SECRET is required for wallet encryption");
   } else if (!isValidSecret(KEYFILE_SECRET)) {
     errors.push(
-      "NEXT_PUBLIC_KEYFILE_SECRET must be at least 32 characters for security",
+      `NEXT_PUBLIC_KEYFILE_SECRET must be at least ${KEYFILE_SECRET_LENGTH} characters for security`,
     );
   }
 
@@ -100,13 +99,10 @@ export function validateEnvironment(): ValidatedConfig {
 
   // In production, ensure no localhost URLs
   if (!isDevelopment) {
-    if (RPC_URL?.includes("localhost") || RPC_URL?.includes("127.0.0.1")) {
+    if (RPC_URL && RPC_URL.includes("localhost")) {
       errors.push("NEXT_PUBLIC_RPC_URL cannot use localhost in production");
     }
-    if (
-      ADMIN_RPC_URL?.includes("localhost") ||
-      ADMIN_RPC_URL?.includes("127.0.0.1")
-    ) {
+    if (ADMIN_RPC_URL && ADMIN_RPC_URL.includes("localhost")) {
       errors.push(
         "NEXT_PUBLIC_ADMIN_RPC_URL cannot use localhost in production",
       );

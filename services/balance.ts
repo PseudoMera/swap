@@ -1,8 +1,4 @@
-import {
-  API_CONFIG,
-  getChainApiConfig,
-  getApiConfigByCommittee,
-} from "@/config";
+import { getChainApiConfig, getApiConfigByCommittee } from "@/config/reown";
 
 interface AccountQueryPayload {
   address: string;
@@ -18,8 +14,10 @@ export interface AccountResponse {
 export async function fetchUserBalance(
   height: number,
   address: string,
+  committeee: number = 0,
 ): Promise<number> {
-  const response = await fetch(`${API_CONFIG.QUERY_URL}/account`, {
+  const apiConfig = getApiConfigByCommittee(committeee);
+  const response = await fetch(`${apiConfig.QUERY_URL}/account`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

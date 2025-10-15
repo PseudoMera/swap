@@ -7,9 +7,8 @@ import {
   Order,
   Orders,
 } from "@/types/order";
-import { getApiConfigByCommittee } from "@/config";
+import { getApiConfigByCommittee } from "@/config/reown";
 
-// Chain-aware order fetching
 export async function fetchOrdersFromCommittee(
   height: number,
   committee: number,

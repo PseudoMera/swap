@@ -2,7 +2,7 @@
  * Secure Web Crypto API utilities for keyfile encryption/decryption
  */
 
-import { ENV_CONFIG } from "@/config";
+import { ENV_CONFIG } from "@/config/reown";
 
 export interface EncryptedData {
   encryptedData: string;

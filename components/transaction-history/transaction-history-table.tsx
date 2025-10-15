@@ -19,7 +19,7 @@ import { ProcessedTransaction } from "@/types/transactions";
 import EditCloseOrderSummaryModal from "../edit-close-order-summary/modal";
 import ExportModal from "./export-modal";
 import { getDefaultTradingPair } from "@/utils/trading-pairs";
-import { ENV_CONFIG } from "@/config";
+import { ENV_CONFIG } from "@/config/reown";
 import TransactionTypeBadge from "./transaction-type-badge";
 
 const defaultTradingPair = getDefaultTradingPair();
@@ -69,7 +69,7 @@ function TransactionHistoryTable({
 
         return (
           <a
-            href={`${ENV_CONFIG.EXPLORER_URL}/tx/${hash}`}
+            href={`${ENV_CONFIG.EXPLORER_URL}/transaction/${hash}`}
             target="_blank"
             rel="noopener noreferrer"
             className="font-mono text-blue-600 hover:underline"

@@ -1,4 +1,4 @@
-import { API_CONFIG, getApiConfigByCommittee } from "@/config";
+import { getApiConfigByCommittee } from "@/config/reown";
 import { Order } from "@/types/order";
 import {
   EnrichedTransaction,
@@ -16,14 +16,17 @@ export const fetchUserTransactions = async (
   address: string,
   pageNumber: number = 0,
   perPage: number = 50,
+  committee: number = 0,
 ): Promise<TransactionResponse> => {
+  const apiConfig = getApiConfigByCommittee(committee);
+
   const payload: UserTransactionsPayload = {
     address,
     pageNumber,
     perPage,
   };
 
-  const response = await fetch(`${API_CONFIG.QUERY_URL}/txs-by-sender`, {
+  const response = await fetch(`${apiConfig.ADMIN_URL}/txs-by-sender`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -45,12 +48,15 @@ export const fetchUserTransactions = async (
  */
 export const fetchTransactionsByHeight = async (
   height: number,
+  committee: number = 0,
 ): Promise<TransactionResponse> => {
+  const apiConfig = getApiConfigByCommittee(committee);
+
   const payload = {
     height,
   };
 
-  const response = await fetch(`${API_CONFIG.QUERY_URL}/txs-by-height`, {
+  const response = await fetch(`${apiConfig.QUERY_URL}/txs-by-height`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -71,18 +77,17 @@ export const fetchTransactionsByHeight = async (
  * Fetch specific order details
  */
 export const fetchOrderDetails = async (
-  chainId: number,
+  committee: number,
   orderId: string,
   height: number = 0,
 ): Promise<Order> => {
   const payload: OrderDetailsPayload = {
-    chainId,
+    chainId: committee,
     orderId,
     height,
   };
 
-  // Use committee-specific API config if available
-  const apiConfig = chainId ? getApiConfigByCommittee(chainId) : API_CONFIG;
+  const apiConfig = getApiConfigByCommittee(committee);
 
   const response = await fetch(`${apiConfig.QUERY_URL}/order`, {
     method: "POST",

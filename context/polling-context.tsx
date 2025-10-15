@@ -53,7 +53,7 @@ export function PollingProvider({
     refetch: refetchHeight,
   } = useQuery({
     queryKey: QUERY_KEYS.HEIGHT,
-    queryFn: fetchHeight,
+    queryFn: () => fetchHeight(),
     refetchInterval: heightInterval,
     staleTime: 0,
     refetchOnWindowFocus: false,
