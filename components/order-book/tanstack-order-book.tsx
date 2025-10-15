@@ -224,18 +224,24 @@ function TanStackOrderBook({
               // For locked orders, only show if user is involved
               if (!order.buyerSendAddress) return false; // Not locked
 
-              const userCanopyAddress = selectedCanopyWallet?.address?.toLowerCase();
-              const userExternalAddress = externalWallet?.address?.toLowerCase();
+              const userCanopyAddress =
+                selectedCanopyWallet?.address?.toLowerCase();
+              const userExternalAddress =
+                externalWallet?.address?.toLowerCase();
 
               // Check if user is the seller (Canopy wallet)
-              const isUserSeller = userCanopyAddress &&
+              const isUserSeller =
+                userCanopyAddress &&
                 order.sellersSendAddress?.toLowerCase() === userCanopyAddress;
 
               // Check if user is the buyer
-              const isUserBuyer = (userExternalAddress &&
-                order.buyerSendAddress?.toLowerCase() === userExternalAddress) ||
+              const isUserBuyer =
+                (userExternalAddress &&
+                  order.buyerSendAddress?.toLowerCase() ===
+                    userExternalAddress) ||
                 (userCanopyAddress &&
-                order.buyerReceiveAddress?.toLowerCase() === userCanopyAddress);
+                  order.buyerReceiveAddress?.toLowerCase() ===
+                    userCanopyAddress);
 
               return isUserSeller || isUserBuyer;
             default:
@@ -278,6 +284,8 @@ function TanStackOrderBook({
     orderStatus,
     spreadFilter,
     sizeCategoryThresholds,
+    externalWallet?.address,
+    selectedCanopyWallet?.address,
   ]);
 
   // Aggregate orders by price for depth view (top 10 only)
