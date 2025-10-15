@@ -14,7 +14,7 @@ const createRpcUrls = (queryUrl: string, adminUrl?: string) => {
     // Production: same base URL with different paths
     return {
       query: `${queryUrl}/v1/query`,
-      admin: `${queryUrl}/v1/admin`,
+      admin: `${adminUrl}/v1/admin`,
     };
   }
 };
