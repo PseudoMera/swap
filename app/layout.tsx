@@ -13,6 +13,7 @@ import Footer from "@/components/footer/Footer";
 import { ThemeProvider } from "next-themes";
 import Header from "@/components/header/header";
 import QueryProvider from "@/context/query-provider-context";
+import PageTransition from "@/components/animations/page-transition";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -59,7 +60,7 @@ export default async function RootLayout({
                   >
                     <Header />
                     <main className="w-full max-w-screen-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
-                      {children}
+                      <PageTransition>{children}</PageTransition>
                     </main>
                     <Footer />
                     <Toaster richColors />

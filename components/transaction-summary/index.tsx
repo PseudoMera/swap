@@ -426,7 +426,6 @@ function TransactionSummary({
 
   return (
     <div className="h-full w-full flex flex-col bg-background">
-      {/* Header */}
       <div className="p-6 pb-2 flex flex-row items-center justify-between">
         <h2 className="text-xl font-bold">Transaction Summary</h2>
         <Button size="icon" variant="ghost" onClick={onClose}>
@@ -434,9 +433,7 @@ function TransactionSummary({
         </Button>
       </div>
 
-      {/* Content */}
       <div className="flex-1 p-6 flex flex-col gap-4 overflow-y-auto">
-        {/* Pay Section */}
         <AssetCard
           asset={payAsset}
           label="You pay"
@@ -444,14 +441,12 @@ function TransactionSummary({
           balance={payBalance}
         />
 
-        {/* Arrow Down */}
         <div className="flex justify-center">
           <div className="rounded-full bg-muted/50 w-10 h-10 flex items-center justify-center">
             <ArrowDown className="h-4 w-4 text-muted-foreground" />
           </div>
         </div>
 
-        {/* Receive Section */}
         <AssetCard
           asset={receiveAsset}
           label="You receive"
@@ -459,7 +454,6 @@ function TransactionSummary({
           balance={receiveBalance}
         />
 
-        {/* Transaction Summary */}
         {!isSwapped && (
           <div className="space-y-2">
             <div className="flex justify-between items-center">
@@ -469,7 +463,6 @@ function TransactionSummary({
               </span>
             </div>
 
-            {/* Order Details */}
             <div className="space-y-1 text-sm max-h-40 overflow-y-auto">
               {selectedOrders.map((order) => (
                 <div
@@ -487,7 +480,6 @@ function TransactionSummary({
               ))}
             </div>
 
-            {/* Totals */}
             <div className="border-t pt-2 space-y-1">
               <div className="flex justify-between font-medium">
                 <span>
@@ -503,7 +495,6 @@ function TransactionSummary({
           </div>
         )}
 
-        {/* Destination Address */}
         <Card>
           <CardHeader>
             <CardTitle className="text-muted-foreground text-sm">
@@ -512,7 +503,6 @@ function TransactionSummary({
           </CardHeader>
           <CardContent>
             {isSellOrder ? (
-              // Sell Order: Show dropdown with external wallet
               <Select
                 value={selectedDestination}
                 onValueChange={setSelectedDestination}
@@ -563,7 +553,6 @@ function TransactionSummary({
                 </SelectContent>
               </Select>
             ) : (
-              // Buy Order: Show fixed destination based on order type
               <div className="bg-card rounded-lg p-3 flex items-center gap-3 border">
                 <Image
                   src="/chains-icons/ethereum-logo.svg"
@@ -587,13 +576,11 @@ function TransactionSummary({
           </CardContent>
         </Card>
 
-        {/* Estimated Time */}
         <div className="flex justify-between items-center text-sm">
           <span className="text-muted-foreground">Estimated Time</span>
           <span className="font-medium">{estimatedTime}</span>
         </div>
 
-        {/* Transaction Progress Indicator */}
         {transactionProgress.isProcessing && (
           <div className="rounded-lg bg-muted/50 p-4 border-l-4 border-primary">
             <div className="flex items-center justify-between mb-2">
@@ -618,7 +605,6 @@ function TransactionSummary({
           </div>
         )}
 
-        {/* Confirm Button */}
         <Button
           onClick={isSwapped ? handleSellOrder : handleBuyOrder}
           disabled={transactionProgress.isProcessing}
