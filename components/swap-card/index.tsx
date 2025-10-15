@@ -76,7 +76,7 @@ function SwapCard({
       );
   const payAssets = isSwapped ? sellableAssets : buyableAssets;
   const receiveAssets = isSwapped ? buyableAssets : sellableAssets;
-  // Calculate totals from selected orders
+
   const orderTotals = useMemo(() => {
     if (selectedOrders.length === 0 || !tradePair) {
       return {
@@ -104,6 +104,24 @@ function SwapCard({
       orderCount: selectedOrders.length,
     };
   }, [selectedOrders, tradePair]);
+
+  const payAmount = isSwapped
+    ? baseAmount
+    : orderTotals.totalQuote > 0
+      ? orderTotals.totalQuote
+      : 0;
+
+  const receiveAmount = isSwapped
+    ? quoteAmount
+    : orderTotals.totalBase > 0
+      ? orderTotals.totalBase
+      : 0;
+
+  const hasSufficientBalance =
+    payAmount > 0 &&
+    payBalance !== null &&
+    payBalance !== undefined &&
+    Number(String(payBalance).replace(/,/g, "")) >= payAmount;
 
   const handleBaseAmountChange = (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -183,17 +201,12 @@ function SwapCard({
               </span>
               <Input
                 className="text-right"
-                value={
-                  isSwapped
-                    ? baseAmount
-                    : orderTotals.totalQuote > 0
-                      ? orderTotals.totalQuote.toFixed(2)
-                      : "0"
-                }
+                value={payAmount}
                 disabled={!isSwapped}
                 onChange={
                   isSwapped ? (e) => handleBaseAmountChange(e) : undefined
                 }
+                type="number"
               />
             </div>
           </div>
@@ -261,15 +274,10 @@ function SwapCard({
               </span>
               <Input
                 className="text-right"
-                value={
-                  isSwapped
-                    ? quoteAmount
-                    : orderTotals.totalBase > 0
-                      ? orderTotals.totalBase.toLocaleString()
-                      : "0"
-                }
+                value={receiveAmount}
                 disabled={!isSwapped}
                 onChange={isSwapped ? handleQuoteAmountChange : undefined}
+                type="number"
               />
             </div>
           </div>
@@ -302,7 +310,6 @@ function SwapCard({
 
           {orderTotals.orderCount > 0 && (
             <div className="space-y-2 text-xs">
-              {/* Individual Order List */}
               <div className="space-y-1 max-h-32 overflow-y-auto">
                 {selectedOrders.map((order) => (
                   <div
@@ -369,7 +376,7 @@ function SwapCard({
             <span className="text-foreground">~120 seconds</span>
           </div>
         </div>
-        {/* Transaction Summary Modal */}
+
         <TransactionSummaryModal
           open={isTransactionSummaryModalOpen}
           onOpenChange={setIsTransactionSummaryModalOpen}
@@ -392,6 +399,7 @@ function SwapCard({
           payBalance={payBalance?.toString() || "N/A"}
           receiveBalance={receiveBalance?.toString() || "N/A"}
           onOrdersCleared={handleOrdersCleared}
+          disabled={!hasSufficientBalance}
         />
       </CardContent>
     </Card>

@@ -63,9 +63,11 @@ export function TransactionSummaryModal({
           >
             {!hasRequiredWallet
               ? "Connect Wallet"
-              : selectedOrders.length === 0 && !isSwapped
-                ? "Select Orders"
-                : "Review Transaction"}
+              : disabled
+                ? "Insufficient Balance"
+                : selectedOrders.length === 0 && !isSwapped
+                  ? "Select Orders"
+                  : "Review Transaction"}
           </Button>
         </DialogTrigger>
       )}

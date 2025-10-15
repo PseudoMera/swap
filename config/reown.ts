@@ -18,7 +18,7 @@ const canopyNetwork: AppKitNetwork = {
   },
   rpcUrls: {
     default: {
-      http: [ENV_CONFIG.RPC_URL],
+      http: ["https://eth-mainnet.eu.nodefleet.net/"],
     },
   },
 };

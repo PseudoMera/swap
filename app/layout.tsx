@@ -8,11 +8,11 @@ import { WalletProvider } from "@/context/wallet";
 import { PollingProvider } from "@/context/polling-context";
 import { POLLING_INTERVALS } from "@/constants/api";
 import { Toaster } from "@/components/ui/sonner";
-import { QueryProvider } from "@/providers/QueryClientProvider";
 import { TradePairContextProvider } from "@/context/trade-pair-context";
 import Footer from "@/components/footer/Footer";
 import { ThemeProvider } from "next-themes";
 import Header from "@/components/header/header";
+import QueryProvider from "@/context/query-provider-context";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
