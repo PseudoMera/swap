@@ -1,4 +1,3 @@
-import { getApiConfigByCommittee } from "@/config/reown";
 import { Order } from "@/types/order";
 import {
   EnrichedTransaction,
@@ -15,20 +14,22 @@ export const fetchUserTransactions = async (
   perPage: number = 50,
   committee: number = 1,
 ): Promise<TransactionResponse> => {
-  const apiConfig = getApiConfigByCommittee(committee);
-
   const payload: UserTransactionsPayload = {
     address,
     pageNumber,
     perPage,
   };
 
-  const response = await fetch(`${apiConfig.QUERY_URL}/txs-by-sender`, {
+  const response = await fetch("/api/proxy", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      endpoint: "/txs-by-sender",
+      committee,
+      data: payload,
+    }),
   });
 
   if (!response.ok) {
@@ -44,18 +45,20 @@ export const fetchTransactionsByHeight = async (
   height: number,
   committee: number = 1,
 ): Promise<TransactionResponse> => {
-  const apiConfig = getApiConfigByCommittee(committee);
-
   const payload = {
     height,
   };
 
-  const response = await fetch(`${apiConfig.QUERY_URL}/txs-by-height`, {
+  const response = await fetch("/api/proxy", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      endpoint: "/txs-by-height",
+      committee,
+      data: payload,
+    }),
   });
 
   if (!response.ok) {
@@ -78,14 +81,16 @@ export const fetchOrderDetails = async (
     height,
   };
 
-  const apiConfig = getApiConfigByCommittee(committee);
-
-  const response = await fetch(`${apiConfig.QUERY_URL}/order`, {
+  const response = await fetch("/api/proxy", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      endpoint: "/order",
+      committee,
+      data: payload,
+    }),
   });
 
   if (!response.ok) {

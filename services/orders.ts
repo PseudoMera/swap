@@ -7,19 +7,21 @@ import {
   Order,
   Orders,
 } from "@/types/order";
-import { getApiConfigByCommittee } from "@/config/reown";
 
 export async function fetchOrdersFromCommittee(
   height: number,
   committee: number,
 ): Promise<Order[]> {
-  const apiConfig = getApiConfigByCommittee(committee);
-  const response = await fetch(`${apiConfig.QUERY_URL}/orders`, {
+  const response = await fetch("/api/proxy", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ height, id: committee }),
+    body: JSON.stringify({
+      endpoint: "/orders",
+      committee,
+      data: { height, id: committee },
+    }),
   });
   if (!response.ok)
     throw new Error(`Failed to fetch orders from committee: ${committee}`);
@@ -32,13 +34,16 @@ export async function fetchOrdersFromCommittee(
 }
 
 export const createOrder = async (payload: CreateOrder): Promise<string> => {
-  const apiConfig = getApiConfigByCommittee(Number(payload.committees));
-  const response = await fetch(`${apiConfig.ADMIN_URL}/tx-create-order`, {
+  const response = await fetch("/api/proxy", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      endpoint: "/tx-create-order",
+      committee: Number(payload.committees),
+      data: payload,
+    }),
   });
   if (!response.ok) throw new Error("Failed to create order");
 
@@ -48,29 +53,35 @@ export const createOrder = async (payload: CreateOrder): Promise<string> => {
 export const editOrder = async (
   payload: EditOrder,
 ): Promise<EditOrderResponse> => {
-  const apiConfig = getApiConfigByCommittee(Number(payload.committees));
-  const response = await fetch(`${apiConfig.ADMIN_URL}/tx-edit-order`, {
+  const response = await fetch("/api/proxy", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      endpoint: "/tx-edit-order",
+      committee: Number(payload.committees),
+      data: payload,
+    }),
   });
-  if (!response.ok) throw new Error("Failed to create order");
+  if (!response.ok) throw new Error("Failed to edit order");
   return await response.json();
 };
 
 export const deleteOrder = async (
   payload: DeleteOrder,
 ): Promise<DeleteOrderResponse> => {
-  const apiConfig = getApiConfigByCommittee(Number(payload.committees));
-  const response = await fetch(`${apiConfig.ADMIN_URL}/tx-delete-order`, {
+  const response = await fetch("/api/proxy", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      endpoint: "/tx-delete-order",
+      committee: Number(payload.committees),
+      data: payload,
+    }),
   });
-  if (!response.ok) throw new Error("Failed to create order");
+  if (!response.ok) throw new Error("Failed to delete order");
   return await response.json();
 };

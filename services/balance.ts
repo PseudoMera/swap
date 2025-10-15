@@ -1,4 +1,4 @@
-import { getChainApiConfig, getApiConfigByCommittee } from "@/config/reown";
+import { getChainApiConfig } from "@/config/reown";
 
 interface AccountQueryPayload {
   address: string;
@@ -16,13 +16,16 @@ export async function fetchUserBalance(
   address: string,
   committeee: number = 1,
 ): Promise<number> {
-  const apiConfig = getApiConfigByCommittee(committeee);
-  const response = await fetch(`${apiConfig.QUERY_URL}/account`, {
+  const response = await fetch("/api/proxy", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ height, address }),
+    body: JSON.stringify({
+      endpoint: "/account",
+      committee: committeee,
+      data: { height, address },
+    }),
   });
   if (!response.ok) throw new Error("Failed to fetch balance");
   const data = await response.json();
@@ -52,13 +55,16 @@ export async function fetchUserBalanceByCommittee(
   committee: number,
   payload: AccountQueryPayload,
 ): Promise<AccountResponse> {
-  const apiConfig = getApiConfigByCommittee(committee);
-  const response = await fetch(`${apiConfig.QUERY_URL}/account`, {
+  const response = await fetch("/api/proxy", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      endpoint: "/account",
+      committee,
+      data: payload,
+    }),
   });
   if (!response.ok)
     throw new Error(`Failed to fetch balance for committee: ${committee}`);
