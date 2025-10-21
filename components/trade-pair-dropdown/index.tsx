@@ -1,5 +1,5 @@
 import { useTradePairContext } from "@/context/trade-pair-context";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "../ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger } from "../ui/select";
 import { TRADING_PAIRS_LIST } from "@/constants/trading-pairs";
 import Image from "next/image";
 
@@ -15,30 +15,80 @@ function TradePairDropdown() {
     }
   };
 
+  // Group trading pairs by quote asset chain
+  const pairsByChain = TRADING_PAIRS_LIST.reduce((acc, pair) => {
+    const chainId = pair.quoteAsset.chainId;
+    if (!acc[chainId]) {
+      acc[chainId] = {
+        chainName: pair.quoteAsset.chainId,
+        chainIcon: pair.quoteAsset.chainIcon,
+        pairs: []
+      };
+    }
+    acc[chainId].pairs.push(pair);
+    return acc;
+  }, {} as Record<string, { chainName: string; chainIcon: string; pairs: typeof TRADING_PAIRS_LIST }>);
+
   return (
     <Select value={tradePair.displayName} onValueChange={handlePairChange}>
       <SelectTrigger>
-        <Image
-          src={tradePair.quoteAsset.assetIcon}
-          alt={tradePair.displayName}
-          width={24}
-          height={24}
-          className="mr-2"
-        />
-        {tradePair.displayName}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
+            <Image
+              src={tradePair.quoteAsset.chainIcon}
+              alt={`${tradePair.quoteAsset.chainId} chain`}
+              width={20}
+              height={20}
+              className="rounded-full"
+            />
+            <Image
+              src={tradePair.baseAsset.chainIcon}
+              alt={`${tradePair.baseAsset.chainId} chain`}
+              width={20}
+              height={20}
+              className="rounded-full"
+            />
+          </div>
+          <span>{tradePair.displayName}</span>
+        </div>
       </SelectTrigger>
       <SelectContent>
-        {TRADING_PAIRS_LIST.map((pair) => (
-          <SelectItem key={pair.id} value={pair.displayName}>
-            <Image
-              src={pair.quoteAsset.assetIcon}
-              alt={pair.displayName}
-              width={24}
-              height={24}
-              className="mr-2"
-            />
-            {pair.displayName}
-          </SelectItem>
+        {Object.values(pairsByChain).map((group) => (
+          <SelectGroup key={group.chainName}>
+            <SelectLabel className="flex items-center gap-2 capitalize">
+              <Image
+                src={group.chainIcon}
+                alt={group.chainName}
+                width={16}
+                height={16}
+                className="rounded-full"
+              />
+              {group.chainName}
+            </SelectLabel>
+            {group.pairs.map((pair) => (
+              <SelectItem key={pair.id} value={pair.displayName}>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    <Image
+                      src={pair.quoteAsset.chainIcon}
+                      alt={`${pair.quoteAsset.chainId} chain`}
+                      width={20}
+                      height={20}
+                      className="rounded-full"
+                    />
+                    <Image
+                      src={pair.baseAsset.chainIcon}
+                      alt={`${pair.baseAsset.chainId} chain`}
+                      width={20}
+                      height={20}
+                      className="rounded-full"
+                    />
+                  </div>
+                  <span>{pair.displayName}</span>
+                </div>
+              </SelectItem>
+            ))}
+          </SelectGroup>
         ))}
       </SelectContent>
     </Select>
