@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     if (!endpoint) {
       return NextResponse.json(
         { error: "Missing endpoint parameter" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -26,11 +26,15 @@ export async function POST(request: NextRequest) {
       "/keystore-import",
     ];
 
-    const isAdminEndpoint = adminEndpoints.some(adminPath => endpoint.includes(adminPath));
+    const isAdminEndpoint = adminEndpoints.some((adminPath) =>
+      endpoint.includes(adminPath),
+    );
     const baseUrl = isAdminEndpoint ? apiConfig.ADMIN_URL : apiConfig.QUERY_URL;
 
     // Remove leading slash if present
-    const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
+    const cleanEndpoint = endpoint.startsWith("/")
+      ? endpoint.slice(1)
+      : endpoint;
     const url = `${baseUrl}/${cleanEndpoint}`;
 
     console.log(`[Proxy] POST ${url}`);
@@ -55,9 +59,13 @@ export async function POST(request: NextRequest) {
       responseData = JSON.parse(responseText);
     } catch (parseError) {
       console.error(`[Proxy] Failed to parse JSON response:`, responseText);
+      console.error(`[Proxy] ${parseError}`);
       return NextResponse.json(
-        { error: "Invalid JSON response from backend", rawResponse: responseText },
-        { status: 502 }
+        {
+          error: "Invalid JSON response from backend",
+          rawResponse: responseText,
+        },
+        { status: 502 },
       );
     }
 
@@ -65,7 +73,7 @@ export async function POST(request: NextRequest) {
       console.error(`[Proxy] Error ${response.status}:`, responseData);
       return NextResponse.json(
         { error: responseData },
-        { status: response.status }
+        { status: response.status },
       );
     }
 
@@ -73,8 +81,10 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("[Proxy] Error:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Proxy request failed" },
-      { status: 500 }
+      {
+        error: error instanceof Error ? error.message : "Proxy request failed",
+      },
+      { status: 500 },
     );
   }
 }

@@ -3,9 +3,7 @@
 import { useState, useCallback } from "react";
 import SwapCard from "@/components/swap-card";
 import RecentTransactionsCard from "@/components/recent-transactions";
-import TanStackOrderBook, {
-  ProcessedOrder,
-} from "@/components/order-book/tanstack-order-book";
+import OrderBook, { ProcessedOrder } from "@/components/order-book";
 
 function Home() {
   const [selectedOrders, setSelectedOrders] = useState<ProcessedOrder[]>([]);
@@ -44,7 +42,7 @@ function Home() {
         <RecentTransactionsCard />
       </div>
       <div className="lg:col-span-2 flex flex-col gap-6">
-        <TanStackOrderBook
+        <OrderBook
           onOrderSelect={handleOrderSelect}
           onOrderRemove={handleOrderRemove}
           selectedOrders={selectedOrders}

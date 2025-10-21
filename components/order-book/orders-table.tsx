@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { ProcessedOrder } from "./tanstack-order-book";
+import { ProcessedOrder } from ".";
 
 interface OrdersTableProps {
   data: ProcessedOrder[];

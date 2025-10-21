@@ -44,7 +44,7 @@ interface TanStackOrderBookProps {
   isSwapped: boolean;
 }
 
-function TanStackOrderBook({
+function OrderBook({
   onOrderSelect,
   onOrderRemove,
   selectedOrders,
@@ -468,7 +468,6 @@ function TanStackOrderBook({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Market Depth Table */}
         <div>
           <DepthTable
             data={aggregatedOrders}
@@ -478,9 +477,7 @@ function TanStackOrderBook({
           />
         </div>
 
-        {/* Individual Orders Table */}
         <div>
-          {/* Filter Controls */}
           <OrderFilters
             allProcessedOrders={allProcessedOrders}
             tradingPair={tradePair}
@@ -502,7 +499,6 @@ function TanStackOrderBook({
             onClearAllFilters={handleClearFilter}
           />
 
-          {/* Price Selection Filter (from depth table) */}
           {selectedPrice !== null && (
             <div className="flex items-center justify-between mb-3 p-3 bg-muted/50 rounded-md">
               <div className="flex items-center gap-2">
@@ -540,4 +536,4 @@ function TanStackOrderBook({
   );
 }
 
-export default TanStackOrderBook;
+export default OrderBook;
