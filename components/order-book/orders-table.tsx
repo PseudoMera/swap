@@ -206,7 +206,7 @@ function OrdersTable({
           )}{" "}
           of {data.length} orders
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center flex-wrap space-x-2">
           <Button
             variant="outline"
             size="sm"

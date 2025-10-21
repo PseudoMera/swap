@@ -7,7 +7,8 @@ import {
   ColumnDef,
 } from "@tanstack/react-table";
 import { useMemo } from "react";
-import { AggregatedOrder } from "./tanstack-order-book";
+import { AggregatedOrder } from ".";
+import { cn } from "@/lib/utils";
 
 interface DepthTableProps {
   data: AggregatedOrder[];
@@ -89,7 +90,7 @@ function DepthTable({
   }
 
   return (
-    <div className="border rounded-md">
+    <div className="border rounded-md overflow-hidden">
       <table className="w-full border-0">
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
@@ -119,19 +120,19 @@ function DepthTable({
             return (
               <tr
                 key={row.id}
-                className={`border-b border-transparent last:border-b-0 hover:opacity-80 transition-all cursor-pointer relative bg-success-light ${
-                  isSelected ? "ring-2 ring-primary ring-inset rounded-lg" : ""
-                }`}
+                className={cn(
+                  "sm:relative border-b border-transparent last:border-b-0 hover:opacity-80 cursor-pointer bg-success-light",
+                  isSelected && "ring-2 ring-primary ring-inset rounded-lg",
+                )}
                 onClick={() => onPriceSelect(row.original.price)}
               >
                 {row.getVisibleCells().map((cell, cellIdx) => (
-                  <td key={cell.id} className="p-3">
+                  <td key={cell.id} className="sm:static relative p-3">
                     {cellIdx === 0 && (
                       <div
-                        className="absolute top-0 left-0 h-full rounded-2xl bg-primary dark:bg-primary/60"
+                        className={`absolute top-0 left-0 h-full rounded-2xl bg-primary dark:bg-primary/60 z-0`}
                         style={{
                           width: `${row.original.volumePercentage}%`,
-                          zIndex: 0,
                         }}
                       />
                     )}
