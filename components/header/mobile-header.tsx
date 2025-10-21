@@ -8,29 +8,16 @@ import {
 } from "../ui/sheet";
 import { Button } from "../ui/button";
 import { usePathname } from "next/navigation";
-import { useTradePairContext } from "@/context/trade-pair-context";
-import { TRADING_PAIRS_LIST } from "@/constants/trading-pairs";
 import { navLinks } from "@/constants/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import Image from "next/image";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "../ui/select";
 import WalletManagementPopover from "../wallet-management/popover";
 import ThemeToggle from "../theme-toggle";
 import { NotificationBell } from "../notifications/notification-bell";
+import TradePairDropdown from "../trade-pair-dropdown";
 
 function MobileHeader() {
   const pathname = usePathname();
-  const { tradePair, updateSelectedPair } = useTradePairContext();
-
-  const handlePairChange = (value: string) => {
-    const newPair = TRADING_PAIRS_LIST.find(
-      (pair) => pair.displayName === value,
-    );
-    if (newPair) {
-      updateSelectedPair(newPair);
-    }
-  };
 
   return (
     <section className="ml-auto">
@@ -68,35 +55,7 @@ function MobileHeader() {
           </nav>
           <div className="flex flex-col gap-4 px-6 py-4">
             <div className="flex justify-between">
-              <Select
-                value={tradePair.displayName}
-                onValueChange={handlePairChange}
-              >
-                <SelectTrigger>
-                  <Image
-                    src={tradePair.quoteAsset.assetIcon}
-                    alt={tradePair.displayName}
-                    width={24}
-                    height={24}
-                    className="mr-2"
-                  />
-                  {tradePair.displayName}
-                </SelectTrigger>
-                <SelectContent>
-                  {TRADING_PAIRS_LIST.map((pair) => (
-                    <SelectItem key={pair.id} value={pair.displayName}>
-                      <Image
-                        src={pair.quoteAsset.assetIcon}
-                        alt={pair.displayName}
-                        width={24}
-                        height={24}
-                        className="mr-2"
-                      />
-                      {pair.displayName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <TradePairDropdown />
               <div className="flex items-center gap-2">
                 <NotificationBell />
                 <ThemeToggle />
