@@ -20,9 +20,12 @@ import {
   USDC_CONTRACT_ETHEREUM_MAINNET,
   usdcTransferMethodID,
 } from "@/constants/tokens";
-import { sendTransaction } from "wagmi/actions";
-import { wagmiConfig } from "@/config/reown";
-import { useCapabilities, useSendCalls, useAccount } from "wagmi";
+import {
+  useCapabilities,
+  useSendCalls,
+  useAccount,
+  useSendTransaction,
+} from "wagmi";
 import ProgressToast from "../headless-toast/progress-toast";
 import { ProcessedOrder } from "../order-book/tanstack-order-book";
 import { ellipsizeAddress, padAddress, sliceAddress } from "@/utils/address";
@@ -62,6 +65,7 @@ function TransactionSummary({
   const { data: capabilities } = useCapabilities();
   const { sendCallsAsync } = useSendCalls();
   const { chainId: currentChainId } = useAccount();
+  const { sendTransactionAsync } = useSendTransaction();
 
   const [selectedDestination, setSelectedDestination] = useState<string>("");
   const [transactionProgress, setTransactionProgress] = useState<{
@@ -141,9 +145,8 @@ function TransactionSummary({
         address: selectedCanopyWallet?.address || "",
         committees: tradePair.committee.toString(),
         data: sliceAddress(assetToAddress(tradePair.quoteAsset.id)),
-        amount: numberToBlockchainUValue(Number(receiveAmount)),
-        receiveAmount: numberToBlockchainUValue(Number(payAmount)),
-        // Use the calculated destination address
+        amount: numberToBlockchainUValue(Number(payAmount)),
+        receiveAmount: numberToBlockchainUValue(Number(receiveAmount)),
         receiveAddress: sliceAddress(finalDestinationAddress),
         memo: "",
         fee: 0,
@@ -163,6 +166,7 @@ function TransactionSummary({
       });
 
       onClose();
+      onOrdersCleared();
     } catch (error) {
       toast("Error", {
         description: `Failed to create order: ${error}`,
@@ -378,7 +382,7 @@ function TransactionSummary({
         const data =
           `0x${usdcTransferMethodID}${paddedTo}${paddedAmount}${memoHex}` as `0x${string}`;
 
-        await sendTransaction(wagmiConfig, {
+        await sendTransactionAsync({
           to: USDC_CONTRACT_ETHEREUM_MAINNET,
           value: BigInt(0),
           data,
