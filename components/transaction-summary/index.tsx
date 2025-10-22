@@ -20,19 +20,16 @@ import {
   USDC_CONTRACT_ETHEREUM_MAINNET,
   usdcTransferMethodID,
 } from "@/constants/tokens";
-import {
-  useCapabilities,
-  useSendCalls,
-  useAccount,
-  useSendTransaction,
-} from "wagmi";
+import { useCapabilities, useSendCalls, useAccount } from "wagmi";
 import ProgressToast from "../headless-toast/progress-toast";
-import { ProcessedOrder } from "../order-book/tanstack-order-book";
+import { ProcessedOrder } from "../order-book";
 import { ellipsizeAddress, padAddress, sliceAddress } from "@/utils/address";
 import { useTradePairContext } from "@/context/trade-pair-context";
 import { assetToAddress } from "@/utils/tokens";
 import { getKeyfilePassword } from "@/utils/keyfile-session";
 import AssetCard from "../asset-card";
+import { sendTransaction } from "wagmi/actions";
+import { wagmiConfig } from "@/config/reown";
 
 interface TransactionSummaryProps {
   selectedOrders: ProcessedOrder[];
@@ -65,7 +62,6 @@ function TransactionSummary({
   const { data: capabilities } = useCapabilities();
   const { sendCallsAsync } = useSendCalls();
   const { chainId: currentChainId } = useAccount();
-  const { sendTransactionAsync } = useSendTransaction();
 
   const [selectedDestination, setSelectedDestination] = useState<string>("");
   const [transactionProgress, setTransactionProgress] = useState<{
@@ -382,7 +378,7 @@ function TransactionSummary({
         const data =
           `0x${usdcTransferMethodID}${paddedTo}${paddedAmount}${memoHex}` as `0x${string}`;
 
-        await sendTransactionAsync({
+        await sendTransaction(wagmiConfig, {
           to: USDC_CONTRACT_ETHEREUM_MAINNET,
           value: BigInt(0),
           data,
