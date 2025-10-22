@@ -16,10 +16,10 @@ import { useUnifiedWallet } from "@/hooks/useUnifiedWallet";
 import { useMemo, useState, useEffect, useRef } from "react";
 import { blockchainUValueToNumber } from "@/utils/blockchain";
 import { ellipsizeAddress } from "@/utils/address";
-import { ProcessedOrder } from "../order-book/tanstack-order-book";
 import { useTradePairContext } from "@/context/trade-pair-context";
 import { toast } from "sonner";
 import { TransactionSummaryModal } from "../transaction-summary/modal";
+import { ProcessedOrder } from "../order-book";
 
 interface NotificationBellProps {
   className?: string;

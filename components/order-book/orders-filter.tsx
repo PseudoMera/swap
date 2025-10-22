@@ -11,11 +11,11 @@ import {
   SpreadFilter as SpreadFilterType,
 } from "@/types/order-book-filters";
 import { TradingPair } from "@/types/trading-pair";
-import { ProcessedOrder } from "./tanstack-order-book";
 import RangeFilter from "./range-filter";
 import SizeCategoryFilter from "./size-category-filter";
 import OrderStatusFilter from "./order-status-filter";
 import SpreadFilter from "./spread-filter";
+import { ProcessedOrder } from ".";
 
 interface OrderFiltersProps {
   allProcessedOrders: ProcessedOrder[];
