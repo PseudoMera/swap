@@ -45,28 +45,28 @@ export function NotificationBell({ className }: NotificationBellProps) {
     return orders
       .filter((order) => {
         // Must be locked (has buyer)
-        if (!order.buyerSendAddress) return false;
+        if (!order?.buyerSendAddress) return false;
 
         // Check if user is the seller
         const isUserSeller =
           userCanopyAddress &&
-          order.sellersSendAddress?.toLowerCase() === userCanopyAddress;
+          order?.sellersSendAddress?.toLowerCase() === userCanopyAddress;
 
         // Check if user is the buyer
         const isUserBuyer =
           (userExternalAddress &&
-            order.buyerSendAddress?.toLowerCase() === userExternalAddress) ||
+            order?.buyerSendAddress?.toLowerCase() === userExternalAddress) ||
           (userCanopyAddress &&
-            order.buyerReceiveAddress?.toLowerCase() === userCanopyAddress);
+            order?.buyerReceiveAddress?.toLowerCase() === userCanopyAddress);
 
         return isUserSeller || isUserBuyer;
       })
       .map((order) => {
         const amountForSale = blockchainUValueToNumber(
-          order.amountForSale || 0,
+          order?.amountForSale || 0,
         );
         const requestedAmount = blockchainUValueToNumber(
-          order.requestedAmount || 0,
+          order?.requestedAmount || 0,
         );
         const price = amountForSale > 0 ? requestedAmount / amountForSale : 0;
 
@@ -91,9 +91,9 @@ export function NotificationBell({ className }: NotificationBellProps) {
       // Check if user is the buyer (needs to close the order)
       const isUserBuyer =
         (userExternalAddress &&
-          order.buyerSendAddress?.toLowerCase() === userExternalAddress) ||
+          order?.buyerSendAddress?.toLowerCase() === userExternalAddress) ||
         (userCanopyAddress &&
-          order.buyerReceiveAddress?.toLowerCase() === userCanopyAddress);
+          order?.buyerReceiveAddress?.toLowerCase() === userCanopyAddress);
 
       return isUserBuyer;
     }).length;
@@ -106,9 +106,9 @@ export function NotificationBell({ className }: NotificationBellProps) {
 
       const isUserBuyer =
         (userExternalAddress &&
-          order.buyerSendAddress?.toLowerCase() === userExternalAddress) ||
+          order?.buyerSendAddress?.toLowerCase() === userExternalAddress) ||
         (userCanopyAddress &&
-          order.buyerReceiveAddress?.toLowerCase() === userCanopyAddress);
+          order?.buyerReceiveAddress?.toLowerCase() === userCanopyAddress);
 
       return isUserBuyer ? "buyer" : "seller";
     },

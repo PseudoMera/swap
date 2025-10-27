@@ -70,7 +70,7 @@ export function PollingProvider({
     dataUpdatedAt: ordersUpdatedAt,
   } = useQuery({
     queryKey: [QUERY_KEYS.ORDERS, height],
-    queryFn: () => fetchOrdersFromCommittee(height || 0, 0),
+    queryFn: () => fetchOrdersFromCommittee(height || 0, 3),
     refetchInterval: height ? ordersInterval : false, // Only poll if we have height
     enabled: Boolean(height && height > 0),
     staleTime: ordersInterval, // Cache for the polling interval
