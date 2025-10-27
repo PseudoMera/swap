@@ -8,6 +8,7 @@ import { fetchHeight } from "@/services/height";
 import { QUERY_KEYS, POLLING_INTERVALS } from "@/constants/api";
 import { fetchUserBalance } from "@/services/balance";
 import { useWallets } from "./wallet";
+import { useTradePairContext } from "./trade-pair-context";
 
 interface PollingContextValue {
   orders: Order[] | undefined;
@@ -44,6 +45,7 @@ export function PollingProvider({
   balanceInterval = POLLING_INTERVALS.BALANCE,
   heightInterval = POLLING_INTERVALS.HEIGHT,
 }: PollingProviderProps) {
+  const { tradePair } = useTradePairContext();
   const { selectedCanopyWallet } = useWallets();
 
   const {
@@ -70,7 +72,7 @@ export function PollingProvider({
     dataUpdatedAt: ordersUpdatedAt,
   } = useQuery({
     queryKey: [QUERY_KEYS.ORDERS, height],
-    queryFn: () => fetchOrdersFromCommittee(height || 0, 3),
+    queryFn: () => fetchOrdersFromCommittee(height || 0, tradePair.committee),
     refetchInterval: height ? ordersInterval : false, // Only poll if we have height
     enabled: Boolean(height && height > 0),
     staleTime: ordersInterval, // Cache for the polling interval
