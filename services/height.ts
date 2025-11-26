@@ -1,4 +1,6 @@
-export async function fetchHeight(committee: number = 1): Promise<number> {
+export async function fetchHeight(
+  committee: number = 3,
+): Promise<{ height: number }> {
   const response = await fetch("/api/proxy", {
     method: "POST",
     headers: {

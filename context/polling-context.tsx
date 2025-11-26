@@ -22,7 +22,11 @@ interface PollingContextValue {
   canopyBalanceError: Error | null;
   refetchCanopyBalance: () => void;
 
-  height: number | undefined;
+  height:
+    | {
+        height: number;
+      }
+    | undefined;
   heightLoading: boolean;
   heightError: Error | null;
   refetchHeight: () => void;
@@ -72,9 +76,10 @@ export function PollingProvider({
     dataUpdatedAt: ordersUpdatedAt,
   } = useQuery({
     queryKey: [QUERY_KEYS.ORDERS, height],
-    queryFn: () => fetchOrdersFromCommittee(height || 0, tradePair.committee),
+    queryFn: () =>
+      fetchOrdersFromCommittee(height?.height || 0, tradePair.committee),
     refetchInterval: height ? ordersInterval : false, // Only poll if we have height
-    enabled: Boolean(height && height > 0),
+    enabled: Boolean(height && height.height > 0),
     staleTime: ordersInterval, // Cache for the polling interval
     gcTime: ordersInterval * 2, // Keep in cache for 2x polling interval
     refetchOnWindowFocus: false,
@@ -92,7 +97,10 @@ export function PollingProvider({
   } = useQuery({
     queryKey: QUERY_KEYS.USER_BALANCE,
     queryFn: () =>
-      fetchUserBalance(height || 0, selectedCanopyWallet?.address ?? ""),
+      fetchUserBalance(
+        height?.height || 0,
+        selectedCanopyWallet?.address ?? "",
+      ),
     refetchInterval: balanceInterval,
     staleTime: 0,
     placeholderData: keepPreviousData,

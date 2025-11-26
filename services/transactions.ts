@@ -12,7 +12,7 @@ export const fetchUserTransactions = async (
   address: string,
   pageNumber: number = 0,
   perPage: number = 50,
-  committee: number = 1,
+  committee: number = 3,
 ): Promise<TransactionResponse> => {
   const payload: UserTransactionsPayload = {
     address,
@@ -43,7 +43,7 @@ export const fetchUserTransactions = async (
 
 export const fetchTransactionsByHeight = async (
   height: number,
-  committee: number = 1,
+  committee: number = 3,
 ): Promise<TransactionResponse> => {
   const payload = {
     height,
@@ -73,7 +73,7 @@ export const fetchTransactionsByHeight = async (
 export const fetchOrderDetails = async (
   committee: number,
   orderId: string,
-  height: number = 1,
+  height: number = 3,
 ): Promise<Order> => {
   const payload: OrderDetailsPayload = {
     chainId: committee,

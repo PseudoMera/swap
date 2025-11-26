@@ -33,7 +33,7 @@ function RecentTransactionsCard() {
     error,
   } = useQuery({
     queryKey: ["recent-network-transactions"],
-    queryFn: () => fetchRecentNetworkTransactions(height || 0, 10),
+    queryFn: () => fetchRecentNetworkTransactions(height?.height || 0, 10),
     refetchInterval: 30000,
     staleTime: 15000,
     retry: 1,

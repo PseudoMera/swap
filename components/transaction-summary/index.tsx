@@ -257,7 +257,7 @@ function TransactionSummary({
         const lockOrder: LockOrder = {
           chain_id: order.committee,
           orderId: order.id,
-          buyerChainDeadline: height ? height + 10 : 10,
+          buyerChainDeadline: height ? height.height + 10 : 10,
           buyerReceiveAddress: finalDestinationAddress,
           buyerSendAddress: externalWallet.address,
         };
@@ -353,7 +353,7 @@ function TransactionSummary({
         const lockOrder: LockOrder = {
           chain_id: order.committee,
           orderId: order.id,
-          buyerChainDeadline: height ? height + 10 : 4,
+          buyerChainDeadline: height ? height.height + 10 : 4,
           buyerReceiveAddress: finalDestinationAddress,
           buyerSendAddress: sliceAddress(externalWallet.address),
         };

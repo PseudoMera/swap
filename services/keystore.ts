@@ -1,7 +1,7 @@
 import { EncryptedCanopyKeyfile } from "@/types/wallet";
 
 export const importKeyStore = async (
-  committee: number = 1,
+  committee: number = 3,
   keyfile: EncryptedCanopyKeyfile,
 ): Promise<string> => {
   const response = await fetch("/api/proxy", {
