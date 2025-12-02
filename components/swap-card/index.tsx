@@ -170,7 +170,7 @@ function SwapCard({
         </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
-        <div className="rounded-xl bg-muted/50 p-4 flex flex-col gap-2">
+        <div className="rounded-xl bg-muted/50 p-4 flex flex-col gap-2 border border-border/50">
           <div className="grid grid-cols-[60px_1fr_120px] gap-2">
             <div className="flex flex-col gap-2">
               <span className="text-muted-foreground text-sm">Chain</span>
@@ -241,17 +241,17 @@ function SwapCard({
             Balance: {payBalance?.toLocaleString() || "N/A"}
           </div>
         </div>
-        <div className="flex justify-center">
+        <div className="flex justify-center -my-2 relative z-10">
           <Button
             variant="ghost"
             size="icon"
             onClick={handleSwapDirection}
-            className="rounded-full bg-muted/50 w-10 h-10 flex items-center justify-center hover:bg-muted transition-colors"
+            className="rounded-full bg-primary/10 border-2 border-primary/20 w-12 h-12 flex items-center justify-center hover:bg-primary/20 hover:border-primary/30 shadow-sm hover:shadow-md active:scale-95"
           >
-            <ArrowDown className="text-muted-foreground" />
+            <ArrowDown className="text-primary h-5 w-5" />
           </Button>
         </div>
-        <div className="rounded-xl bg-muted/50 p-4 flex flex-col gap-2">
+        <div className="rounded-xl bg-muted/50 p-4 flex flex-col gap-2 border border-border/50">
           <div className="grid grid-cols-[60px_1fr_120px] gap-2">
             <div className="flex flex-col gap-2">
               <span className="text-muted-foreground text-sm">Chain</span>
@@ -316,7 +316,7 @@ function SwapCard({
           </div>
         </div>
 
-        <div className="rounded-xl bg-muted/50 p-4">
+        <div className="rounded-xl bg-muted/50 p-4 border border-border/50">
           <div className="flex items-center justify-between text-muted-foreground text-base mb-2">
             <span>Orders</span>
             <div className="flex items-center gap-2">
