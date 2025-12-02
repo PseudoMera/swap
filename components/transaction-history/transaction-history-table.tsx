@@ -18,11 +18,9 @@ import StatusBadge from "./status-badge";
 import { ProcessedTransaction } from "@/types/transactions";
 import EditCloseOrderSummaryModal from "../edit-close-order-summary/modal";
 import ExportModal from "./export-modal";
-import { getDefaultTradingPair } from "@/utils/trading-pairs";
 import { ENV_CONFIG } from "@/config/reown";
 import TransactionTypeBadge from "./transaction-type-badge";
-
-const defaultTradingPair = getDefaultTradingPair();
+import { getDefaultTradingPair } from "@/utils/trading-pairs";
 
 interface TransactionHistoryTableProps {
   data: ProcessedTransaction[];
@@ -365,7 +363,7 @@ function TransactionHistoryTable({
           open={isEditCloseModalOpen}
           onOpenChange={setIsEditCloseModalOpen}
           tradingPair={
-            defaultTradingPair ?? selectedTransaction?.tradingPairInfo
+            selectedTransaction?.tradingPairInfo || getDefaultTradingPair()
           }
           isBuySide={true}
           payAmount={

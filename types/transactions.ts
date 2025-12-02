@@ -1,4 +1,5 @@
 import { Order } from "./order";
+import { TradingPair } from "./trading-pair";
 
 export enum TransactionType {
   CREATE_ORDER = "createOrder",
@@ -9,12 +10,6 @@ export enum TransactionType {
 }
 
 export type TransactionStatus = "Open" | "Pending" | "Completed";
-
-export interface TradingPairInfo {
-  displayName: string;
-  baseAsset: { symbol: string };
-  quoteAsset: { symbol: string };
-}
 
 export interface ProcessedTransaction {
   id: string;
@@ -27,7 +22,7 @@ export interface ProcessedTransaction {
   total: number;
   fee: number;
   status: TransactionStatus;
-  tradingPairInfo: TradingPairInfo;
+  tradingPairInfo: TradingPair;
   rawData: {
     transaction: EnrichedTransaction["transaction"];
     order: Order | null;

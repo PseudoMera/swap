@@ -1,15 +1,15 @@
 import { Order } from "@/types/order";
 import { blockchainUValueToNumber } from "./blockchain";
-import { getDefaultTradingPair } from "./trading-pairs";
+import { getAllTradingPairs } from "./trading-pairs";
 import {
   EnrichedTransaction,
   ProcessedTransaction,
-  TradingPairInfo,
   TransactionFilters,
   TransactionStats,
   TransactionStatus,
   TransactionType,
 } from "@/types/transactions";
+import { TradingPair } from "@/types/trading-pair";
 
 /**
  * Determine order status based on buyer address fields
@@ -47,27 +47,42 @@ export const calculateRate = (
 };
 
 /**
- * Get trading pair from committee ID
- * Returns the trading pair object with proper base/quote asset info
+ * Get trading pair from committee ID and contract address
+ * Returns the full trading pair object based on committee and contract address
  */
 export const getTradingPairFromCommittee = (
   committee: number,
-): TradingPairInfo => {
+  contractAddress?: string,
+): TradingPair => {
   try {
-    // For now, we only support the CNPY/USDC pair
-    const defaultPair = getDefaultTradingPair();
-    return {
-      displayName: defaultPair.displayName,
-      baseAsset: defaultPair.baseAsset, // CNPY (being sold)
-      quoteAsset: defaultPair.quoteAsset, // USDC (being received)
-    };
+    const allPairs = getAllTradingPairs();
+
+    // If contract address is provided, use it for precise matching
+    if (contractAddress) {
+      // Normalize addresses for comparison (remove 0x prefix and convert to lowercase)
+      const normalizedAddress = contractAddress.toLowerCase().replace(/^0x/, "");
+      const matchingPair = allPairs.find((pair) => {
+        const pairAddress = pair.contractAddress.toLowerCase().replace(/^0x/, "");
+        return pairAddress === normalizedAddress;
+      });
+
+      if (matchingPair) {
+        return matchingPair;
+      }
+    }
+
+    // Fallback to committee-based matching
+    const matchingPair = allPairs.find((pair) => pair.committee === committee);
+    if (matchingPair) {
+      return matchingPair;
+    }
+
+    // Fallback to first available pair if no match
+    return allPairs[0];
   } catch (error) {
     console.error("Error getting trading pair:", error);
-    return {
-      displayName: "USDC/CNPY",
-      baseAsset: { symbol: "CNPY" },
-      quoteAsset: { symbol: "USDC" },
-    };
+    const allPairs = getAllTradingPairs();
+    return allPairs[0];
   }
 };
 
@@ -138,10 +153,11 @@ export const processTransactionData = (
   const total = requestedAmount; // Amount of USDC
   const price = calculateRate(amountForSale, requestedAmount);
 
-  // Get committee from transaction
+  // Get committee and contract address from transaction
   const committee =
     transaction.transaction.msg.chainId || transaction.transaction.chainID;
-  const tradingPair = getTradingPairFromCommittee(committee);
+  const contractAddress = transaction.transaction.msg.data; // Contract address is stored in data field
+  const tradingPair = getTradingPairFromCommittee(committee, contractAddress);
 
   return {
     id: transaction.txHash,
