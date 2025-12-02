@@ -1,7 +1,11 @@
 import { TRADING_PAIRS } from "@/constants/trading-pairs";
 import { TradingPair } from "@/types/trading-pair";
+import { ASSETS } from "@/constants/assets";
 
-export const getTradingPairById = (pairId: string): TradingPair => {
+export type TradingPairId = keyof typeof TRADING_PAIRS;
+export type AssetSymbol = (typeof ASSETS)[keyof typeof ASSETS]["symbol"];
+
+export const getTradingPairById = (pairId: TradingPairId): TradingPair => {
   const pair = TRADING_PAIRS[pairId];
   if (!pair) {
     throw new Error(`Trading pair not found: ${pairId}`);
@@ -10,8 +14,8 @@ export const getTradingPairById = (pairId: string): TradingPair => {
 };
 
 export const getTradingPairByAssets = (
-  baseSymbol: string,
-  quoteSymbol: string,
+  baseSymbol: AssetSymbol,
+  quoteSymbol: AssetSymbol,
 ): TradingPair => {
   const pair = Object.values(TRADING_PAIRS).find(
     (p) =>
