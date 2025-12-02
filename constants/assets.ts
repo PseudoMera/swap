@@ -25,4 +25,16 @@ export const ASSETS: Record<string, Asset> = {
     chainIcon: "/chains-icons/ethereum-logo.svg",
     assetIcon: "/chains-icons/usdc-logo.svg",
   },
+  usdt: {
+    id: "usdt",
+    name: "Tether USD",
+    symbol: "USDT",
+    decimals: 6,
+    chainId: "ethereum",
+    committee: 3,
+    canSell: false,
+    canBuy: true,
+    chainIcon: "/chains-icons/ethereum-logo.svg",
+    assetIcon: "/chains-icons/usdt-logo.svg",
+  },
 } as const;

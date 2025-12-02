@@ -20,6 +20,7 @@ import { useTradePairContext } from "@/context/trade-pair-context";
 import { useWallets } from "@/context/wallet";
 import { useUnifiedWallet } from "@/hooks/useUnifiedWallet";
 import OrdersTable from "./orders-table";
+import { filterOrdersByCommitteeAndTradePair } from "@/utils/orders";
 
 export interface ProcessedOrder
   extends Omit<Order, "amountForSale" | "requestedAmount"> {
@@ -76,10 +77,7 @@ function OrderBook({
     if (!tradePair) return [];
 
     try {
-      const targetCommittee = tradePair.quoteAsset.committee;
-
-      return orders
-        .filter((order) => order && order.committee === targetCommittee)
+      return filterOrdersByCommitteeAndTradePair(orders, tradePair)
         .map((order) => {
           const amountForSale = blockchainUValueToNumber(
             order.amountForSale || 0,
@@ -133,10 +131,7 @@ function OrderBook({
     if (!tradePair) return [];
 
     try {
-      const targetCommittee = tradePair.quoteAsset.committee;
-
-      const allOrders = orders
-        .filter((order) => order && order.committee === targetCommittee)
+      const allOrders = filterOrdersByCommitteeAndTradePair(orders, tradePair)
         .map((order) => {
           const amountForSale = blockchainUValueToNumber(
             order.amountForSale || 0,
@@ -504,8 +499,7 @@ function OrderBook({
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium">Filtered by price:</span>
                 <span className="font-mono text-foreground font-semibold">
-                  {selectedPrice.toFixed(4)}{" "}
-                  {tradePair?.quoteAsset.symbol || "USDC"}
+                  {selectedPrice.toFixed(4)} {tradePair?.quoteAsset.symbol}
                 </span>
                 <span className="text-sm text-muted-foreground">
                   ({processedOrders.length} orders)

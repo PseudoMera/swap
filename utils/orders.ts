@@ -1,6 +1,8 @@
-import { FlattenOrder, Orders } from "@/types/order";
+import { FlattenOrder, Order, Orders } from "@/types/order";
 import { blockchainUValueToNumber } from "./blockchain";
 import { COMMITTEES_ID_NAME_MAP } from "@/constants/orders";
+import { TradingPair } from "@/types/trading-pair";
+import { sliceAddress } from "./address";
 
 export const flattenOrder = (orders: Orders[]): FlattenOrder[] => {
   if (!orders) return [];
@@ -16,6 +18,24 @@ export const flattenOrder = (orders: Orders[]): FlattenOrder[] => {
       buyerChainDeadline: order.buyerChainDeadline,
       buyerSendAddress: order.buyerSendAddress,
       buyerReceiveAddress: order.buyerReceiveAddress,
+      data: order.data,
     })),
+  );
+};
+
+export const filterOrdersByCommitteeAndTradePair = (
+  orders: Order[],
+  tradePair: TradingPair,
+): Order[] => {
+  if (!orders) return [];
+
+  const targetCommittee = tradePair.quoteAsset.committee;
+
+  return orders.filter(
+    (order) =>
+      order &&
+      order.committee === targetCommittee &&
+      order.data.toLowerCase() ===
+        sliceAddress(tradePair.contractAddress.toLowerCase()),
   );
 };

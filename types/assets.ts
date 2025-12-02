@@ -1,4 +1,4 @@
-export type AssetId = "usdc" | "cnpy";
+export type AssetId = "usdc" | "cnpy" | "usdt";
 
 export interface Asset {
   id: AssetId;

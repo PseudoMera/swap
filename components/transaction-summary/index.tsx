@@ -16,16 +16,12 @@ import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { CloseOrder, LockOrder } from "@/types/order";
 import { usePollingData } from "@/context/polling-context";
-import {
-  USDC_CONTRACT_ETHEREUM_MAINNET,
-  usdcTransferMethodID,
-} from "@/constants/tokens";
+import { ERC20_TRANSFER_METHOD_ID } from "@/constants/tokens";
 import { useCapabilities, useSendCalls, useAccount } from "wagmi";
 import ProgressToast from "../headless-toast/progress-toast";
 import { ProcessedOrder } from "../order-book";
 import { ellipsizeAddress, padAddress, sliceAddress } from "@/utils/address";
 import { useTradePairContext } from "@/context/trade-pair-context";
-import { assetToAddress } from "@/utils/tokens";
 import { getKeyfilePassword } from "@/utils/keyfile-session";
 import AssetCard from "../asset-card";
 import { sendTransaction } from "wagmi/actions";
@@ -140,7 +136,7 @@ function TransactionSummary({
       await createOrder({
         address: selectedCanopyWallet?.address || "",
         committees: tradePair.committee.toString(),
-        data: sliceAddress(assetToAddress(tradePair.quoteAsset.id)),
+        data: sliceAddress(tradePair.contractAddress),
         amount: numberToBlockchainUValue(Number(payAmount)),
         receiveAmount: numberToBlockchainUValue(Number(receiveAmount)),
         receiveAddress: sliceAddress(finalDestinationAddress),
@@ -184,37 +180,6 @@ function TransactionSummary({
     try {
       const chainId = currentChainId || 1;
       const atomicStatus = capabilities?.[chainId]?.atomic?.status;
-
-      // Known chains that support batch transactions (based on MetaMask docs)
-      // https://docs.metamask.io/wallet/how-to/send-transactions/send-batch-transactions
-      // const KNOWN_BATCH_SUPPORTED_CHAINS = [
-      //   // Ethereum
-      //   1, // Ethereum Mainnet
-      //   11155111, // Sepolia
-      //   // Gnosis
-      //   100, // Gnosis Mainnet
-      //   10200, // Chiado
-      //   // BNB Smart Chain
-      //   56, // BNB Smart Chain Mainnet
-      //   97, // BNB Smart Chain Testnet
-      //   // OP Stack
-      //   10, // OP Mainnet
-      //   11155420, // OP Sepolia
-      //   8453, // Base Mainnet
-      //   84532, // Base Sepolia
-      //   // Polygon
-      //   137, // Polygon Mainnet
-      //   80002, // Polygon Amoy
-      //   // Arbitrum
-      //   42161, // Arbitrum One
-      //   42170, // Arbitrum Nova
-      //   421614, // Arbitrum Sepolia
-      //   // Other
-      //   1301, // Unichain Mainnet
-      //   1300, // Unichain Sepolia
-      //   80084, // Berachain Mainnet
-      //   80085, // Berachain Bepolia
-      // ];
 
       const canBatch =
         selectedOrders.length > 1 &&
@@ -278,10 +243,10 @@ function TransactionSummary({
           .join("");
 
         const data =
-          `0x${usdcTransferMethodID}${paddedTo}${paddedAmount}${memoHex}` as `0x${string}`;
+          `0x${ERC20_TRANSFER_METHOD_ID}${paddedTo}${paddedAmount}${memoHex}` as `0x${string}`;
 
         return {
-          to: USDC_CONTRACT_ETHEREUM_MAINNET,
+          to: tradePair.contractAddress as `0x${string}`,
           value: BigInt(0),
           data,
         };
@@ -376,10 +341,10 @@ function TransactionSummary({
           .join("");
 
         const data =
-          `0x${usdcTransferMethodID}${paddedTo}${paddedAmount}${memoHex}` as `0x${string}`;
+          `0x${ERC20_TRANSFER_METHOD_ID}${paddedTo}${paddedAmount}${memoHex}` as `0x${string}`;
 
         await sendTransaction(wagmiConfig, {
-          to: USDC_CONTRACT_ETHEREUM_MAINNET,
+          to: tradePair.contractAddress as `0x${string}`,
           value: BigInt(0),
           data,
         });

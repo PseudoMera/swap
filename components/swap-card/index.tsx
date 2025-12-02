@@ -22,7 +22,9 @@ import { ZeroXAddress } from "@/types/wallet";
 import { formatNumber, formatTokenBalance } from "@/utils/number";
 import { useTradePairContext } from "@/context/trade-pair-context";
 import { cn } from "@/lib/utils";
-import { USDC_CONTRACT_ETHEREUM_MAINNET } from "@/constants/tokens";
+import { getTradingPairByAssets } from "@/utils/trading-pairs";
+import { AssetId } from "@/types/assets";
+import { toast } from "sonner";
 
 const chains = getAllChains();
 const buyableAssets = getBuyableAssets();
@@ -41,12 +43,12 @@ function SwapCard({
   handleSwapDirection,
   isSwapped,
 }: SwapCardProps) {
-  const { tradePair } = useTradePairContext();
+  const { tradePair, updateSelectedPair } = useTradePairContext();
   const { canopyBalance } = usePollingData();
   const { wallet } = useUnifiedWallet();
   const { data } = useBalance({
     address: wallet?.address as ZeroXAddress,
-    token: USDC_CONTRACT_ETHEREUM_MAINNET,
+    token: tradePair.contractAddress as `0x`,
   });
 
   const [baseAmount, setBaseAmount] = useState(0);
@@ -144,6 +146,20 @@ function SwapCard({
     setQuoteAmount(0);
   };
 
+  const handleAssetChange = (assetId: AssetId) => {
+    const newQuoteAsset = buyableAssets.find((asset) => asset.id === assetId);
+    if (newQuoteAsset) {
+      try {
+        const newPair = getTradingPairByAssets("CNPY", newQuoteAsset.symbol);
+        updateSelectedPair(newPair);
+        onClearOrders(); // Clear orders when switching pairs
+      } catch (error) {
+        toast.error("Failed to update trading pair");
+        console.error(error);
+      }
+    }
+  };
+
   return (
     <Card className="max-w-md w-full mx-auto">
       <CardHeader className="pb-2 flex flex-row items-center justify-between">
@@ -178,7 +194,10 @@ function SwapCard({
             </div>
             <div className="flex flex-col gap-2">
               <span className="text-muted-foreground text-sm">Asset</span>
-              <Select value={payAsset.id || ""}>
+              <Select
+                value={payAsset.id || ""}
+                onValueChange={(value) => handleAssetChange(value as AssetId)}
+              >
                 <SelectTrigger className="w-full">
                   <Image
                     src={payAsset.assetIcon}
@@ -256,7 +275,10 @@ function SwapCard({
             </div>
             <div className="flex flex-col gap-2">
               <span className="text-muted-foreground text-sm">Asset</span>
-              <Select value={receiveAsset.id || ""}>
+              <Select
+                value={receiveAsset.id || ""}
+                onValueChange={(value) => handleAssetChange(value as AssetId)}
+              >
                 <SelectTrigger className="w-full">
                   <Image
                     src={receiveAsset.assetIcon}
@@ -362,7 +384,7 @@ function SwapCard({
           )}
         </div>
 
-        <div className="rounded-xl bg-muted/50 p-4 flex flex-col gap-1 text-sm">
+        {/*<div className="rounded-xl bg-muted/50 p-4 flex flex-col gap-1 text-sm">
           <div className="flex justify-between">
             <span className="text-muted-foreground">
               {orderTotals.orderCount > 0 ? "Average Rate" : "Last Rate"}
@@ -383,7 +405,7 @@ function SwapCard({
             <span className="text-muted-foreground">Estimated Time</span>
             <span className="text-foreground">~120 seconds</span>
           </div>
-        </div>
+        </div>*/}
 
         <TransactionSummaryModal
           open={isTransactionSummaryModalOpen}

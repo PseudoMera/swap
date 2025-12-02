@@ -7,4 +7,5 @@ export interface TradingPair {
   displayName: string; // e.g., "USDC/CNPY"
   isActive: boolean;
   committee: number;
+  contractAddress: string;
 }

@@ -12,6 +12,7 @@ export interface Order {
   requestedAmount: number;
   sellerReceiveAddress: Address;
   sellersSendAddress: Address;
+  data: string;
   // fields that only appear when the order is locked
   buyerSendAddress?: Address;
   buyerReceiveAddress?: Address;
@@ -85,6 +86,7 @@ export type FlattenOrder = {
   buyerSendAddress?: Address;
   buyerChainDeadline?: number;
   buyerReceiveAddress?: Address;
+  data: string;
 };
 
 // Transaction History Types

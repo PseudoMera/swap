@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ProcessedOrder } from ".";
+import { useTradePairContext } from "@/context/trade-pair-context";
 
 interface OrdersTableProps {
   data: ProcessedOrder[];
@@ -32,13 +33,15 @@ function OrdersTable({
   selectedOrders,
   isSwapped,
 }: OrdersTableProps) {
+  const { tradePair } = useTradePairContext();
+
   const [sorting, setSorting] = useState<SortingState>([]);
 
   const columns: ColumnDef<ProcessedOrder>[] = useMemo(
     () => [
       {
         accessorKey: "price",
-        header: "Price (USDC)",
+        header: `Price (${tradePair.quoteAsset.symbol})`,
         cell: ({ getValue }) => {
           const price = getValue() as number;
           return (
@@ -51,7 +54,7 @@ function OrdersTable({
       },
       {
         accessorKey: "amountForSale",
-        header: "Amount (CNPY)",
+        header: `Amount (${tradePair.baseAsset.symbol})`,
         cell: ({ getValue }) => {
           const amount = getValue() as number;
           return <span className="font-mono">{amount.toLocaleString()}</span>;
@@ -59,7 +62,7 @@ function OrdersTable({
       },
       {
         accessorKey: "total",
-        header: "Total (USDC)",
+        header: `Total (${tradePair.quoteAsset.symbol})`,
         cell: ({ getValue }) => {
           const total = getValue() as number;
           return <span className="font-mono">{total.toFixed(2)}</span>;
@@ -105,7 +108,7 @@ function OrdersTable({
         },
       },
     ],
-    [isSwapped, onOrderRemove, onOrderSelect, selectedOrders],
+    [isSwapped, onOrderRemove, onOrderSelect, selectedOrders, tradePair],
   );
 
   const table = useReactTable({

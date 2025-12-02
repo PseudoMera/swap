@@ -9,6 +9,7 @@ import {
 import { useMemo } from "react";
 import { AggregatedOrder } from ".";
 import { cn } from "@/lib/utils";
+import { useTradePairContext } from "@/context/trade-pair-context";
 
 interface DepthTableProps {
   data: AggregatedOrder[];
@@ -23,11 +24,13 @@ function DepthTable({
   onPriceSelect,
   selectedPrice,
 }: DepthTableProps) {
+  const { tradePair } = useTradePairContext();
+
   const columns: ColumnDef<AggregatedOrder>[] = useMemo(
     () => [
       {
         accessorKey: "price",
-        header: "Price (USDC)",
+        header: `Price (${tradePair.quoteAsset.symbol})`,
         cell: ({ getValue }) => {
           const price = getValue() as number;
           return (
@@ -39,7 +42,7 @@ function DepthTable({
       },
       {
         accessorKey: "totalAmount",
-        header: "Amount (CNPY)",
+        header: `Amount (${tradePair.baseAsset.symbol})`,
         cell: ({ getValue }) => {
           const amount = getValue() as number;
           return (
@@ -51,7 +54,7 @@ function DepthTable({
       },
       {
         accessorKey: "totalValue",
-        header: "Total (USDC)",
+        header: `Total (${tradePair.quoteAsset.symbol})`,
         cell: ({ getValue }) => {
           const total = getValue() as number;
           return (
@@ -60,7 +63,7 @@ function DepthTable({
         },
       },
     ],
-    [],
+    [tradePair],
   );
 
   const table = useReactTable({
