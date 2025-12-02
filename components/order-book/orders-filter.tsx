@@ -170,7 +170,23 @@ function OrderFilters({
   ]);
 
   if (!allProcessedOrders || allProcessedOrders.length === 0) {
-    return null;
+    return (
+      <Card className="mb-6 bg-card border-border">
+        <CardContent className="py-8">
+          <div className="flex flex-col items-center justify-center gap-3 text-center">
+            <div className="rounded-full bg-muted/50 p-3">
+              <Filter className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <div className="space-y-1">
+              <p className="font-medium text-foreground">No Filters Available</p>
+              <p className="text-sm text-muted-foreground max-w-sm">
+                Filters will appear here once orders are available for this trading pair.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (

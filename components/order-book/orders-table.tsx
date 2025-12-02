@@ -11,7 +11,7 @@ import {
   SortingState,
 } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ProcessedOrder } from ".";
 import { useTradePairContext } from "@/context/trade-pair-context";
@@ -143,15 +143,24 @@ function OrdersTable({
 
   if (data.length === 0) {
     return (
-      <div className="text-center py-8 text-muted-foreground">
-        No orders available
+      <div className="border rounded-md p-12 flex flex-col items-center justify-center gap-4 bg-muted/20">
+        <div className="rounded-full bg-muted/50 p-4">
+          <TrendingUp className="h-10 w-10 text-muted-foreground" />
+        </div>
+        <div className="text-center space-y-2">
+          <p className="font-semibold text-lg text-foreground">No Orders Found</p>
+          <p className="text-sm text-muted-foreground max-w-md">
+            There are no orders matching your current filters. Try adjusting your filters or check back later for new orders.
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="border rounded-md">
-      <table className="w-full">
+    <div className="border rounded-md h-full flex flex-col">
+      <div className="flex-1 overflow-auto">
+        <table className="w-full">
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id} className="bg-muted/50 border-b">
@@ -193,9 +202,10 @@ function OrdersTable({
           ))}
         </tbody>
       </table>
+      </div>
 
       {/* Pagination Controls */}
-      <div className="flex items-center justify-between p-3 border-t bg-muted/20">
+      <div className="flex items-center justify-between p-3 border-t bg-muted/20 mt-auto">
         <div className="text-sm text-muted-foreground">
           Showing{" "}
           {table.getState().pagination.pageIndex *

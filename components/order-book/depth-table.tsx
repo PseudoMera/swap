@@ -10,6 +10,7 @@ import { useMemo } from "react";
 import { AggregatedOrder } from ".";
 import { cn } from "@/lib/utils";
 import { useTradePairContext } from "@/context/trade-pair-context";
+import { DollarSign } from "lucide-react";
 
 interface DepthTableProps {
   data: AggregatedOrder[];
@@ -86,15 +87,24 @@ function DepthTable({
 
   if (data.length === 0) {
     return (
-      <div className="text-center py-4 text-muted-foreground">
-        No depth data available
+      <div className="border rounded-md p-8 flex flex-col items-center justify-center gap-4 bg-muted/20">
+        <div className="rounded-full bg-muted/50 p-4">
+          <DollarSign className="h-8 w-8 text-muted-foreground" />
+        </div>
+        <div className="text-center space-y-1">
+          <p className="font-medium text-foreground">No Market Depth</p>
+          <p className="text-sm text-muted-foreground max-w-sm">
+            There are currently no orders at any price level for this trading pair.
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="border rounded-md overflow-hidden">
-      <table className="w-full border-0">
+    <div className="border rounded-md overflow-hidden h-full flex flex-col">
+      <div className="flex-1 overflow-auto">
+        <table className="w-full border-0">
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id} className="bg-muted/50 border-b">
@@ -147,6 +157,7 @@ function DepthTable({
           })}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }
