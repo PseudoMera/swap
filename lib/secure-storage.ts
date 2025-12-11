@@ -27,57 +27,48 @@ export interface KeyfileMetadata {
 }
 
 export class SecureKeyfileStorage {
-  private static readonly DB_NAME = "canopy_keyfiles";
-  private static readonly DB_VERSION = 1;
-  private static readonly STORE_NAME = "keyfiles";
+  private static readonly STORAGE_KEY = "canopy_keyfiles";
   private static readonly MAX_KEYFILES = 10; // Limit storage
 
-  private db: IDBDatabase | null = null;
-
   /**
-   * Initialize IndexedDB connection
+   * Initialize storage (no-op for localStorage, kept for compatibility)
    */
   async init(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open(
-        SecureKeyfileStorage.DB_NAME,
-        SecureKeyfileStorage.DB_VERSION,
-      );
+    // No initialization needed for localStorage
+    return Promise.resolve();
+  }
 
-      request.onerror = () => {
-        reject(new Error("Failed to open IndexedDB"));
-      };
+  /**
+   * Get all stored keyfiles from localStorage
+   */
+  private getAllStoredKeyfiles(): StoredKeyfile[] {
+    try {
+      const data = localStorage.getItem(SecureKeyfileStorage.STORAGE_KEY);
+      if (!data) return [];
+      return JSON.parse(data);
+    } catch (error) {
+      console.error("Failed to parse stored keyfiles:", error);
+      return [];
+    }
+  }
 
-      request.onsuccess = () => {
-        this.db = request.result;
-        resolve();
-      };
-
-      request.onupgradeneeded = (event) => {
-        const db = (event.target as IDBOpenDBRequest).result;
-
-        if (!db.objectStoreNames.contains(SecureKeyfileStorage.STORE_NAME)) {
-          const store = db.createObjectStore(SecureKeyfileStorage.STORE_NAME, {
-            keyPath: "id",
-          });
-          store.createIndex("filename", "filename", { unique: false });
-          store.createIndex("createdAt", "createdAt", { unique: false });
-        }
-      };
-    });
+  /**
+   * Save all keyfiles to localStorage
+   */
+  private saveAllKeyfiles(keyfiles: StoredKeyfile[]): void {
+    localStorage.setItem(
+      SecureKeyfileStorage.STORAGE_KEY,
+      JSON.stringify(keyfiles),
+    );
   }
 
   /**
    * Store an encrypted keyfile
    */
   async storeKeyfile(filename: string, keyfileData: string): Promise<string> {
-    if (!this.db) {
-      throw new Error("Database not initialized");
-    }
-
     try {
       // Check storage limit
-      const existingKeyfiles = await this.listKeyfiles();
+      const existingKeyfiles = this.getAllStoredKeyfiles();
       if (existingKeyfiles.length >= SecureKeyfileStorage.MAX_KEYFILES) {
         throw new Error(
           `Maximum ${SecureKeyfileStorage.MAX_KEYFILES} keyfiles allowed`,
@@ -87,13 +78,16 @@ export class SecureKeyfileStorage {
       // Validate keyfile format and extract account addresses
       const parsedKeyfile = JSON.parse(keyfileData);
       const validationResult = validateKeyfileFormat(parsedKeyfile);
-      
+
       if (!validationResult.isValid) {
-        throw new Error(`Invalid keyfile format: ${validationResult.errors.join(', ')}`);
+        throw new Error(
+          `Invalid keyfile format: ${validationResult.errors.join(", ")}`,
+        );
       }
-      
-      const accountAddresses = validationResult.accounts?.map(account => account.Address) || [];
-      const keyfileFormat = validationResult.format || 'plain';
+
+      const accountAddresses =
+        validationResult.accounts?.map((account) => account.Address) || [];
+      const keyfileFormat = validationResult.format || "plain";
 
       // Encrypt keyfile data
       const encryptedKeyfile = await CryptoUtils.encrypt(keyfileData);
@@ -116,18 +110,11 @@ export class SecureKeyfileStorage {
         hash,
       };
 
-      // Store in IndexedDB
-      return new Promise((resolve, reject) => {
-        const transaction = this.db!.transaction(
-          [SecureKeyfileStorage.STORE_NAME],
-          "readwrite",
-        );
-        const store = transaction.objectStore(SecureKeyfileStorage.STORE_NAME);
-        const request = store.add(storedKeyfile);
+      // Add to existing keyfiles and save
+      existingKeyfiles.push(storedKeyfile);
+      this.saveAllKeyfiles(existingKeyfiles);
 
-        request.onsuccess = () => resolve(id);
-        request.onerror = () => reject(new Error("Failed to store keyfile"));
-      });
+      return id;
     } catch (error) {
       throw new Error(`Failed to store keyfile: ${error}`);
     }
@@ -137,130 +124,82 @@ export class SecureKeyfileStorage {
    * Retrieve and decrypt a keyfile
    */
   async getKeyfile(id: string): Promise<string> {
-    if (!this.db) {
-      throw new Error("Database not initialized");
-    }
+    try {
+      const keyfiles = this.getAllStoredKeyfiles();
+      const storedKeyfile = keyfiles.find((kf) => kf.id === id);
 
-    return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction(
-        [SecureKeyfileStorage.STORE_NAME],
-        "readwrite",
+      if (!storedKeyfile) {
+        throw new Error("Keyfile not found");
+      }
+
+      // Decrypt keyfile data
+      const decryptedData = await CryptoUtils.decrypt(
+        storedKeyfile.encryptedKeyfile,
       );
-      const store = transaction.objectStore(SecureKeyfileStorage.STORE_NAME);
-      const request = store.get(id);
 
-      request.onsuccess = async () => {
-        const storedKeyfile: StoredKeyfile = request.result;
+      // Verify integrity
+      const hash = await CryptoUtils.hash(decryptedData);
+      if (hash !== storedKeyfile.hash) {
+        throw new Error("Keyfile integrity check failed");
+      }
 
-        if (!storedKeyfile) {
-          reject(new Error("Keyfile not found"));
-          return;
-        }
+      // Update last accessed time
+      storedKeyfile.lastAccessedAt = Date.now();
+      this.saveAllKeyfiles(keyfiles);
 
-        try {
-          // Decrypt keyfile data
-          const decryptedData = await CryptoUtils.decrypt(
-            storedKeyfile.encryptedKeyfile,
-          );
-
-          // Verify integrity
-          const hash = await CryptoUtils.hash(decryptedData);
-          if (hash !== storedKeyfile.hash) {
-            reject(new Error("Keyfile integrity check failed"));
-            return;
-          }
-
-          // Update last accessed time
-          storedKeyfile.lastAccessedAt = Date.now();
-          store.put(storedKeyfile);
-
-          resolve(decryptedData);
-        } catch (error) {
-          reject(new Error(`Failed to decrypt keyfile: ${error}`));
-        }
-      };
-
-      request.onerror = () => reject(new Error("Failed to retrieve keyfile"));
-    });
+      return decryptedData;
+    } catch (error) {
+      throw new Error(`Failed to retrieve keyfile: ${error}`);
+    }
   }
 
   /**
    * List all stored keyfile metadata (without decrypting)
    */
   async listKeyfiles(): Promise<KeyfileMetadata[]> {
-    if (!this.db) {
-      throw new Error("Database not initialized");
-    }
-
-    return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction(
-        [SecureKeyfileStorage.STORE_NAME],
-        "readonly",
+    try {
+      const storedKeyfiles = this.getAllStoredKeyfiles();
+      const keyfiles: KeyfileMetadata[] = storedKeyfiles.map(
+        (stored: StoredKeyfile) => ({
+          id: stored.id,
+          filename: stored.filename,
+          accountAddresses: stored.accountAddresses,
+          keyfileFormat: stored.keyfileFormat || "plain", // Fallback for old records
+          createdAt: stored.createdAt,
+          lastAccessedAt: stored.lastAccessedAt,
+        }),
       );
-      const store = transaction.objectStore(SecureKeyfileStorage.STORE_NAME);
-      const request = store.getAll();
 
-      request.onsuccess = () => {
-        const keyfiles: KeyfileMetadata[] = request.result.map(
-          (stored: StoredKeyfile) => ({
-            id: stored.id,
-            filename: stored.filename,
-            accountAddresses: stored.accountAddresses,
-            keyfileFormat: stored.keyfileFormat || 'plain', // Fallback for old records
-            createdAt: stored.createdAt,
-            lastAccessedAt: stored.lastAccessedAt,
-          }),
-        );
-
-        // Sort by last accessed (most recent first)
-        keyfiles.sort((a, b) => b.lastAccessedAt - a.lastAccessedAt);
-        resolve(keyfiles);
-      };
-
-      request.onerror = () => reject(new Error("Failed to list keyfiles"));
-    });
+      // Sort by last accessed (most recent first)
+      keyfiles.sort((a, b) => b.lastAccessedAt - a.lastAccessedAt);
+      return keyfiles;
+    } catch (error) {
+      throw new Error(`Failed to list keyfiles: ${error}`);
+    }
   }
 
   /**
    * Delete a stored keyfile
    */
   async deleteKeyfile(id: string): Promise<void> {
-    if (!this.db) {
-      throw new Error("Database not initialized");
+    try {
+      const keyfiles = this.getAllStoredKeyfiles();
+      const filtered = keyfiles.filter((kf) => kf.id !== id);
+      this.saveAllKeyfiles(filtered);
+    } catch (error) {
+      throw new Error(`Failed to delete keyfile: ${error}`);
     }
-
-    return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction(
-        [SecureKeyfileStorage.STORE_NAME],
-        "readwrite",
-      );
-      const store = transaction.objectStore(SecureKeyfileStorage.STORE_NAME);
-      const request = store.delete(id);
-
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(new Error("Failed to delete keyfile"));
-    });
   }
 
   /**
    * Clear all stored keyfiles (security cleanup)
    */
   async clearAll(): Promise<void> {
-    if (!this.db) {
-      throw new Error("Database not initialized");
+    try {
+      localStorage.removeItem(SecureKeyfileStorage.STORAGE_KEY);
+    } catch (error) {
+      throw new Error(`Failed to clear keyfiles: ${error}`);
     }
-
-    return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction(
-        [SecureKeyfileStorage.STORE_NAME],
-        "readwrite",
-      );
-      const store = transaction.objectStore(SecureKeyfileStorage.STORE_NAME);
-      const request = store.clear();
-
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(new Error("Failed to clear keyfiles"));
-    });
   }
 
   /**
@@ -305,33 +244,11 @@ export class SecureKeyfileStorage {
   async keyfileExists(keyfileData: string): Promise<boolean> {
     try {
       const hash = await CryptoUtils.hash(keyfileData);
-      const keyfiles = await this.getAllStoredKeyfiles();
+      const keyfiles = this.getAllStoredKeyfiles();
       return keyfiles.some((kf) => kf.hash === hash);
     } catch {
       return false;
     }
-  }
-
-  /**
-   * Get all stored keyfiles (for internal use)
-   */
-  private async getAllStoredKeyfiles(): Promise<StoredKeyfile[]> {
-    if (!this.db) {
-      throw new Error("Database not initialized");
-    }
-
-    return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction(
-        [SecureKeyfileStorage.STORE_NAME],
-        "readonly",
-      );
-      const store = transaction.objectStore(SecureKeyfileStorage.STORE_NAME);
-      const request = store.getAll();
-
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () =>
-        reject(new Error("Failed to get stored keyfiles"));
-    });
   }
 
   /**
@@ -342,13 +259,10 @@ export class SecureKeyfileStorage {
   }
 
   /**
-   * Close database connection
+   * Close storage (no-op for localStorage, kept for compatibility)
    */
   close(): void {
-    if (this.db) {
-      this.db.close();
-      this.db = null;
-    }
+    // No cleanup needed for localStorage
   }
 }
 

@@ -26,14 +26,18 @@ import {
   getValidationErrorMessage,
 } from "@/utils/keyfile-validation";
 import { ellipsizeAddress } from "@/utils/address";
-import type { CanopyKeyfile, EncryptedCanopyKeyfile } from "@/types/wallet";
+import type {
+  CanopyKeyfile,
+  CanopyKeyfileCollection,
+  EncryptedCanopyKeyfile,
+} from "@/types/wallet";
 import {
   storeKeyfilePassword,
   removeKeyfilePassword,
   hasStoredPassword,
   getKeyfilePassword,
 } from "@/utils/keyfile-session";
-import { importKeyStore } from "@/services/keystore";
+import { decryptPrivateKey } from "@/lib/crypto/wallet";
 
 const canopyWallet = {
   name: "Canopy Wallet",
@@ -122,8 +126,8 @@ function CanopyWalletManagement() {
       return;
     }
 
-    setIsLoading(true);
     setValidationError("");
+    setIsLoading(true);
 
     try {
       const parsedKeyfile = JSON.parse(pendingKeyfile.content);
@@ -136,19 +140,9 @@ function CanopyWalletManagement() {
         return;
       }
 
-      // Import all keyfiles
-      for (const [nickname, keyfileData] of keyfileEntries as [
-        string,
-        EncryptedCanopyKeyfile,
-      ][]) {
-        await importKeyStore(undefined, {
-          encrypted: keyfileData.encrypted || "",
-          keyAddress: keyfileData.keyAddress || "",
-          keyNickname: keyfileData.keyNickname || nickname,
-          publicKey: keyfileData.publicKey || "",
-          salt: keyfileData.salt || "",
-        });
-      }
+      // Validate password by attempting to decrypt the first account's private key
+      const firstAccount = keyfileEntries[0][1] as EncryptedCanopyKeyfile;
+      await decryptPrivateKey(firstAccount, password);
 
       await secureStorage.storeKeyfile(
         pendingKeyfile.file.name,
@@ -163,9 +157,16 @@ function CanopyWalletManagement() {
       setPassword("");
       setSelectedFile(null);
     } catch (err) {
-      setValidationError(
-        `Failed to store keyfile: ${err instanceof Error ? err.message : "Unknown error"}`,
-      );
+      console.error(err);
+      if (err instanceof Error && err.message.includes("password")) {
+        setValidationError(
+          "Invalid password. Please check your password and try again.",
+        );
+      } else {
+        setValidationError(
+          `Failed to store keyfile: ${err instanceof Error ? err.message : "Unknown error"}`,
+        );
+      }
     } finally {
       setIsLoading(false);
     }
@@ -221,17 +222,58 @@ function CanopyWalletManagement() {
     setValidationError("");
   };
 
-  const handleAddressSelect = (keyfileId: string, address: string) => {
+  const handleAddressSelect = async (keyfileId: string, address: string) => {
     const keyfile = storedKeyfiles.find((kf) => kf.id === keyfileId);
     if (!keyfile) return;
 
-    setSelectedCanopyWallet({
-      address,
-      keyfileId,
-      filename: keyfile.filename,
-    });
+    try {
+      // Fetch the encrypted keyfile data for this address
+      const rawKeyfile = await secureStorage.getKeyfile(keyfileId);
+      const parsedData = JSON.parse(rawKeyfile);
+      const validationResult = validateKeyfileFormat(parsedData);
 
-    setExpandedKeyfile(null);
+      if (!validationResult.isValid) {
+        throw new Error(
+          `Invalid keyfile format: ${validationResult.errors.join(", ")}`,
+        );
+      }
+
+      if (validationResult.format !== "encrypted") {
+        throw new Error(
+          `Keyfile must be in encrypted format, got: ${validationResult.format}`,
+        );
+      }
+
+      // Find the encrypted keyfile entry for this address
+      const collection = parsedData as CanopyKeyfileCollection;
+      const encryptedKeyfile = Object.values(collection).find(
+        (encKeyfile) =>
+          encKeyfile.keyAddress.toLowerCase() === address.toLowerCase(),
+      );
+
+      if (!encryptedKeyfile) {
+        const availableAddresses = Object.values(collection).map(
+          (kf) => kf.keyAddress,
+        );
+        throw new Error(
+          `Address ${address} not found in keyfile. Available: ${availableAddresses.join(", ")}`,
+        );
+      }
+
+      setSelectedCanopyWallet({
+        address,
+        keyfileId,
+        filename: keyfile.filename,
+        encryptedKeyfile,
+      });
+
+      setExpandedKeyfile(null);
+    } catch (error) {
+      console.error("Failed to load keyfile:", error);
+      setValidationError(
+        error instanceof Error ? error.message : "Failed to load keyfile",
+      );
+    }
   };
 
   const handleRemoveKeyfile = async (keyfileId: string) => {

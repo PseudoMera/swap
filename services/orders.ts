@@ -7,6 +7,7 @@ import {
   Order,
   Orders,
 } from "@/types/order";
+import { SendRawTransactionRequest } from "@/types/wallet";
 
 export async function fetchOrdersFromCommittee(
   height: number,
@@ -84,4 +85,39 @@ export const deleteOrder = async (
   });
   if (!response.ok) throw new Error("Failed to delete order");
   return await response.json();
+};
+
+export const submitSignedTransaction = async (
+  signedTx: SendRawTransactionRequest,
+  committee: number,
+): Promise<{
+  transactionHash: string;
+  status: string;
+  submittedAt: string;
+}> => {
+  const response = await fetch("/api/proxy", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      endpoint: "/v1/tx",
+      committee,
+      data: signedTx.raw_transaction,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || "Transaction submission failed");
+  }
+
+  // Response is just the transaction hash string
+  const txHash = await response.text();
+
+  return {
+    transactionHash: txHash.replace(/"/g, ""), // Remove quotes if present
+    status: "submitted",
+    submittedAt: new Date().toISOString(),
+  };
 };

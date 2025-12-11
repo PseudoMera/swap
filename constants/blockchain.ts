@@ -22,3 +22,5 @@ export const BLOCKCHAIN_COMMITEES = {
     id: 3,
   },
 };
+
+export const MINIMUN_FEE = 10_000;
