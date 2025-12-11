@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getApiConfigByCommittee } from "@/config/reown";
+import { getApiConfigByCommittee, ENV_CONFIG } from "@/config/reown";
 
 /**
  * API Proxy to bypass CORS restrictions
@@ -18,26 +18,32 @@ export async function POST(request: NextRequest) {
 
     const apiConfig = getApiConfigByCommittee(committee);
 
-    // Admin endpoints that should use ADMIN_URL
-    const adminEndpoints = [
-      "/tx-create-order",
-      "/tx-edit-order",
-      "/tx-delete-order",
-      "/keystore-import",
-    ];
+    // Determine which base URL to use
+    let baseUrl: string;
 
-    const isAdminEndpoint = adminEndpoints.some((adminPath) =>
-      endpoint.includes(adminPath),
-    );
-    const baseUrl = isAdminEndpoint ? apiConfig.ADMIN_URL : apiConfig.QUERY_URL;
+    // /v1/tx should use RPC_URL (port 50002)
+    if (endpoint === "/v1/tx") {
+      baseUrl = ENV_CONFIG.RPC_URL;
+    } else {
+      // Admin endpoints that should use ADMIN_URL
+      const adminEndpoints = [
+        "/tx-create-order",
+        "/tx-edit-order",
+        "/tx-delete-order",
+        "/keystore-import",
+      ];
+
+      const isAdminEndpoint = adminEndpoints.some((adminPath) =>
+        endpoint.includes(adminPath),
+      );
+      baseUrl = isAdminEndpoint ? apiConfig.ADMIN_URL : apiConfig.QUERY_URL;
+    }
 
     // Remove leading slash if present
     const cleanEndpoint = endpoint.startsWith("/")
       ? endpoint.slice(1)
       : endpoint;
     const url = `${baseUrl}/${cleanEndpoint}`;
-
-    console.log(`[Proxy] POST ${url}`);
 
     const response = await fetch(url, {
       method: "POST",
@@ -47,13 +53,21 @@ export async function POST(request: NextRequest) {
       body: data ? JSON.stringify(data) : undefined,
     });
 
-    const contentType = response.headers.get("content-type");
     const responseText = await response.text();
 
     console.log(`[Proxy] Response status: ${response.status}`);
-    console.log(`[Proxy] Content-Type: ${contentType}`);
     console.log(`[Proxy] Response body: ${responseText.substring(0, 200)}`);
 
+    // /v1/tx returns plain text (transaction hash), not JSON
+    if (endpoint === "/v1/tx") {
+      if (!response.ok) {
+        console.error(`[Proxy] Error ${response.status}:`, responseText);
+        return new NextResponse(responseText, { status: response.status });
+      }
+      return new NextResponse(responseText, { status: 200 });
+    }
+
+    // All other endpoints return JSON
     let responseData;
     try {
       responseData = JSON.parse(responseText);

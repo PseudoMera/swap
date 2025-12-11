@@ -8,7 +8,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
 import { ArrowDown, X } from "lucide-react";
-import { createOrder } from "@/services/orders";
+import { submitSignedTransaction } from "@/services/orders";
 import { useWallets } from "@/context/wallet";
 import { useUnifiedWallet } from "@/hooks/useUnifiedWallet";
 import { numberToBlockchainUValue } from "@/utils/blockchain";
@@ -26,6 +26,8 @@ import { getKeyfilePassword } from "@/utils/keyfile-session";
 import AssetCard from "../asset-card";
 import { sendTransaction } from "wagmi/actions";
 import { wagmiConfig } from "@/config/reown";
+import { createSignedOrder } from "@/lib/crypto/utils/order";
+import { MINIMUN_FEE } from "@/constants/blockchain";
 
 interface TransactionSummaryProps {
   selectedOrders: ProcessedOrder[];
@@ -65,6 +67,7 @@ function TransactionSummary({
     total: number;
     isProcessing: boolean;
   }>({ current: 0, total: 0, isProcessing: false });
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const payAsset = isSwapped ? tradePair.baseAsset : tradePair.quoteAsset;
   const receiveAsset = isSwapped ? tradePair.quoteAsset : tradePair.baseAsset;
@@ -132,19 +135,30 @@ function TransactionSummary({
       return;
     }
 
+    setIsLoading(true);
+
     try {
-      await createOrder({
-        address: selectedCanopyWallet?.address || "",
-        committees: tradePair.committee.toString(),
-        data: sliceAddress(tradePair.contractAddress),
-        amount: numberToBlockchainUValue(Number(payAmount)),
-        receiveAmount: numberToBlockchainUValue(Number(receiveAmount)),
-        receiveAddress: sliceAddress(finalDestinationAddress),
-        memo: "",
-        fee: 0,
-        submit: true,
-        password: password,
-      });
+      const signedTx = await createSignedOrder(
+        selectedCanopyWallet,
+        password,
+        {
+          chainId: tradePair.committee,
+          data: sliceAddress(tradePair.contractAddress),
+          amountForSale: numberToBlockchainUValue(Number(payAmount)),
+          requestedAmount: numberToBlockchainUValue(Number(receiveAmount)),
+          sellerReceiveAddress: sliceAddress(finalDestinationAddress),
+          sellersSendAddress: selectedCanopyWallet?.address || "",
+        },
+        {
+          networkID: tradePair.committee,
+          chainID: 1,
+          currentHeight: height?.height || 0,
+          fee: MINIMUN_FEE,
+        },
+      );
+
+      // Submit the signed transaction to the Canopy network
+      await submitSignedTransaction(signedTx, tradePair.committee);
 
       toast("Transaction Status", {
         description: (
@@ -165,6 +179,8 @@ function TransactionSummary({
         duration: 5000,
         richColors: true,
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -184,8 +200,6 @@ function TransactionSummary({
       const canBatch =
         selectedOrders.length > 1 &&
         (atomicStatus === "supported" || atomicStatus === "ready");
-      // ||
-      // KNOWN_BATCH_SUPPORTED_CHAINS.includes(chainId)
 
       if (canBatch) {
         await handleBatchTransactions();
@@ -571,10 +585,12 @@ function TransactionSummary({
 
         <Button
           onClick={isSwapped ? handleSellOrder : handleBuyOrder}
-          disabled={transactionProgress.isProcessing}
+          disabled={transactionProgress.isProcessing || isLoading}
           className="w-full h-12 text-lg font-medium rounded-xl mt-auto bg-primary text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Confirm
+          {transactionProgress.isProcessing || isLoading
+            ? "Processing..."
+            : "Confirm"}
         </Button>
       </div>
     </div>

@@ -15,9 +15,12 @@ import {
   ChainType,
   WalletType,
   type CanopyWalletAccount,
+  type EncryptedCanopyKeyfile,
+  type CanopyKeyfileCollection,
 } from "@/types/wallet";
 import { secureStorage, type KeyfileMetadata } from "@/lib/secure-storage";
 import { hasStoredPassword } from "@/utils/keyfile-session";
+import { validateKeyfileFormat } from "@/utils/keyfile-validation";
 
 interface WalletContextType {
   // External wallet connection functions
@@ -40,6 +43,52 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
   const { disconnect } = useDisconnect();
 
+  /**
+   * Helper to extract encrypted keyfile for a specific address
+   */
+  const getEncryptedKeyfileForAddress = useCallback(
+    async (
+      keyfileId: string,
+      address: string,
+    ): Promise<EncryptedCanopyKeyfile> => {
+      const rawKeyfile = await secureStorage.getKeyfile(keyfileId);
+      const parsedData = JSON.parse(rawKeyfile);
+      const validationResult = validateKeyfileFormat(parsedData);
+
+      if (!validationResult.isValid) {
+        throw new Error(
+          `Invalid keyfile format: ${validationResult.errors.join(", ")}`,
+        );
+      }
+
+      if (validationResult.format !== "encrypted") {
+        throw new Error(
+          `Keyfile must be in encrypted format, got: ${validationResult.format}`,
+        );
+      }
+
+      // Find the encrypted keyfile entry for this address
+      const collection = parsedData as CanopyKeyfileCollection;
+      const availableAddresses = Object.values(collection).map(
+        (kf) => kf.keyAddress,
+      );
+
+      const entry = Object.values(collection).find(
+        (encKeyfile) =>
+          encKeyfile.keyAddress.toLowerCase() === address.toLowerCase(),
+      );
+
+      if (!entry) {
+        throw new Error(
+          `Address ${address} not found in keyfile. Available: ${availableAddresses.join(", ")}`,
+        );
+      }
+
+      return entry;
+    },
+    [],
+  );
+
   const refreshStoredKeyfiles = useCallback(async () => {
     try {
       const keyfiles = await secureStorage.listKeyfiles();
@@ -47,7 +96,9 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
       // Clear selection if selected keyfile no longer exists or has no password
       if (selectedCanopyWallet) {
-        const keyfile = keyfiles.find((kf) => kf.id === selectedCanopyWallet.keyfileId);
+        const keyfile = keyfiles.find(
+          (kf) => kf.id === selectedCanopyWallet.keyfileId,
+        );
         if (!keyfile || !hasStoredPassword(keyfile.filename)) {
           setSelectedCanopyWallet(null);
         }
@@ -55,19 +106,35 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
       // Auto-select first keyfile with stored password if none selected
       if (!selectedCanopyWallet && keyfiles.length > 0) {
-        const keyfileWithPassword = keyfiles.find((kf) => hasStoredPassword(kf.filename));
-        if (keyfileWithPassword && keyfileWithPassword.accountAddresses.length > 0) {
-          setSelectedCanopyWallet({
-            address: keyfileWithPassword.accountAddresses[0],
-            keyfileId: keyfileWithPassword.id,
-            filename: keyfileWithPassword.filename,
-          });
+        const keyfileWithPassword = keyfiles.find((kf) =>
+          hasStoredPassword(kf.filename),
+        );
+        if (
+          keyfileWithPassword &&
+          keyfileWithPassword.accountAddresses.length > 0
+        ) {
+          const address = keyfileWithPassword.accountAddresses[0];
+          try {
+            const encryptedKeyfile = await getEncryptedKeyfileForAddress(
+              keyfileWithPassword.id,
+              address,
+            );
+
+            setSelectedCanopyWallet({
+              address,
+              keyfileId: keyfileWithPassword.id,
+              filename: keyfileWithPassword.filename,
+              encryptedKeyfile,
+            });
+          } catch (error) {
+            console.error("Failed to auto-select wallet:", error);
+          }
         }
       }
     } catch (error) {
       console.error("Failed to refresh stored keyfiles:", error);
     }
-  }, [selectedCanopyWallet]);
+  }, [selectedCanopyWallet, getEncryptedKeyfileForAddress]);
 
   // Hook for external wallet connections (MetaMask, etc.)
   const { connect: connectEVM } = useAppKitWallet({
@@ -83,7 +150,6 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         try {
           await connectEVM("metamask");
         } catch (error) {
-          console.error("Failed to connect wallet:", error);
           throw error;
         }
       }
